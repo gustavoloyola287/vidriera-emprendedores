@@ -30,4 +30,6 @@ public class Emprendedor {
     
     private Boolean activo;
 
+    
+
 }
