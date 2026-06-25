@@ -1,0 +1,3 @@
+import { Emprendedor
+    
+ } from "../Types/Emprendedor";
