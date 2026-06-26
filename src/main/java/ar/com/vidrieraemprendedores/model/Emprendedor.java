@@ -1,35 +1,30 @@
 package ar.com.vidrieraemprendedores.model;
 
-import lombok.NoArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import jakarta.persistence.Id;
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Getter @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class Emprendedor { 
+@Table(name = "emprendedores") 
+@Data // Genera getters, setters
+@NoArgsConstructor 
+@AllArgsConstructor 
+public class Emprendedor {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) 
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // ID Autoincremental
     private Long id;
 
-    private String nombre;
-    
+    private String nombreCompleto;
+    private String nombreEmprendimiento;
     private String descripcion;
-    
-    private String imagenUrl;
-    
-    private String contacto;
-    
-    private String redesSociales;
-    
-    private Boolean activo;  
+    private String email;
+    private String telefono;
 
+    
 }
