@@ -20,15 +20,24 @@ const emprendedores : Emprendedor [] = [
     activo: true
     }
 ];
-return <div>(<h1>Vidriera virtual VCP</h1>)
-    </div>;
-<input type="Texto"
-placeholder="Buscar emprendimiento "/>
-{emprendedores.map ((emprendedor)=>((
-    <div key={emprendedor.id}>
+return (
+    <div>
+
+    <h1>Vidriera Virtual VCP</h1>
+
+    <input
+        type="text"
+        placeholder="Buscar emprendimiento..."
+    />
+
+    {emprendedores.map((emprendedor) => (
+        <div key={emprendedor.id}>
         <h2>{emprendedor.nombre}</h2>
         <p>{emprendedor.descripcion}</p>
+        </div>
+    ))}
+
     </div>
-))}
+);
 }
 export default Home
