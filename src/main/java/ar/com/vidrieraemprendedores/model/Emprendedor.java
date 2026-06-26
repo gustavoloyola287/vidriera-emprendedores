@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "emprendedores") 
-@Data // Genera getters, setters
+@Data // Genera getters, setters detras de escena cuando se compila el proyecto
 @NoArgsConstructor 
 @AllArgsConstructor 
 public class Emprendedor {
@@ -25,6 +25,8 @@ public class Emprendedor {
     private String descripcion;
     private String email;
     private String telefono;
+
+    
 
     
 }
