@@ -1,4 +1,4 @@
-import { Emprendedor } from "../Types/Emprendedor";
+import { type Emprendedor } from "../Types/Emprendedor";
 import CardEmprendedor from "../Components/CardEmprendedor";
 function Home (){
 const emprendedores : Emprendedor [] = [

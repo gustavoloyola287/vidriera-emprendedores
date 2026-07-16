@@ -1,4 +1,4 @@
-import { Emprendedor } from "../Types/Emprendedor";
+import { type Emprendedor } from "../Types/Emprendedor";
 
 interface CardEmprendedorProps{
     emprendedor:Emprendedor;
