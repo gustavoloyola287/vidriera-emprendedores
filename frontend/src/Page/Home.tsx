@@ -1,4 +1,5 @@
 import { Emprendedor } from "../Types/Emprendedor";
+import CardEmprendedor from "../Components/CardEmprendedor";
 function Home (){
 const emprendedores : Emprendedor [] = [
     {
@@ -31,13 +32,13 @@ return (
     />
 
     {emprendedores.map((emprendedor) => (
-        <div key={emprendedor.id}>
-        <h2>{emprendedor.nombre}</h2>
-        <p>{emprendedor.descripcion}</p>
-        </div>
-    ))}
-
-    </div>
+    <CardEmprendedor
+    key= {emprendedor.id}
+    emprendedor = {emprendedor}    />
+    
+    
+))}
+</div>
 );
 }
 export default Home
