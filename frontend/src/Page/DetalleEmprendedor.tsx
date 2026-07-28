@@ -1,2 +1,4 @@
 import { Emprendedor } from "../Types/Emprendedor";
-interface DetalleEmprendedorprops Emprendedor 
+interface DetalleEmprendedorprops Emprendedor {
+    
+}
