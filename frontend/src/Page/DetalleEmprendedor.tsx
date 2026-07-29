@@ -11,7 +11,7 @@ function DetalleEmprendedorprops (props: DetalleEmprendedorprops){
             <p>{props.emprendedor.descripcion}</p>
             </div>
             <div>
-            <p><h2>{props.emprendedor.contacto}</h2></p>
+            <h2>{props.emprendedor.contacto}</h2>
             <p>{props.emprendedor.redesSociales}</p>
             </div>
             <div><button>volver</button></div>
