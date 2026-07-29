@@ -2,7 +2,7 @@ import { Emprendedor } from "../Types/Emprendedor";
 interface DetalleEmprendedorprops  {
     emprendedor : Emprendedor;
 }
-function DetalleEmprendedorprops (props: DetalleEmprendedorprops){
+function DetalleEmprendedor (props: DetalleEmprendedorprops){
 
     return(
         <div>
@@ -21,3 +21,4 @@ function DetalleEmprendedorprops (props: DetalleEmprendedorprops){
     );
 
 }
+export default DetalleEmprendedor
