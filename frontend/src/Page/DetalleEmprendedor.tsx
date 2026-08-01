@@ -1,20 +1,19 @@
-import { Emprendedor } from "../Types/Emprendedor";
-interface DetalleEmprendedorprops  {
+import { type Emprendedor } from "../Types/Emprendedor";
+interface DetalleEmprendedorProps  {
     emprendedor : Emprendedor;
 }
-function DetalleEmprendedor (props: DetalleEmprendedorprops){
+function DetalleEmprendedor (props: DetalleEmprendedorProps){
 
     return(
         <div>
-            <div><img src={props.emprendedor.imagenUrl} alt={props.emprendedor.nombre} /></div>
-            <div><h1>{props.emprendedor.nombre}</h1>
+            
+            <div><h1>{props.emprendedor.nombreCompleto}</h1>
             <p>{props.emprendedor.descripcion}</p>
             </div>
             <div>
                 <h2>contacto</h2>
-            <p>{props.emprendedor.contacto}</p>
-                <h3>Redes Sociales</h3>
-            <p>{props.emprendedor.redesSociales}</p>
+            <p>{props.emprendedor.email}</p>
+            <p>{props.emprendedor.telefono}</p>
             </div>
             <div><button>volver</button></div>
         </div>

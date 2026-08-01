@@ -5,21 +5,20 @@ function Home (){
 const emprendedores : Emprendedor [] = [
     {
     id: 1,
-    nombre: "Panadería Ana",
+    nombreCompleto: "Panadería Ana",
     descripcion: "Tortas artesanales",
-    imagenUrl: "",
-    contacto: "351123456",
-    redesSociales: "@panaderiaana",
-    activo: true
+    nombreEmprendimiento: "Panadería Ana",
+    email: "panaderiaana@email.com",
+    telefono: "351123456"
+
     },
     {
     id: 2,
-    nombre: "Tejidos Marta",
+    nombreCompleto: "Tejidos Marta",
     descripcion: "Amigurumis tejidos a mano",
-    imagenUrl: "",
-    contacto: "351987654",
-    redesSociales: "@tejidosmarta",
-    activo: true
+    nombreEmprendimiento: "Tejidos Marta",
+    email: "tejidosmarta@email.com",
+    telefono: "351987654"
     }
 ];
 return (

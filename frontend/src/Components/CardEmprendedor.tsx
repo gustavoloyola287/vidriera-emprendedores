@@ -6,9 +6,11 @@ interface CardEmprendedorProps{
 function CardEmprendedor (props: CardEmprendedorProps){
     return (
         <div>
-            <img src={props.emprendedor.imagenUrl} alt={props.emprendedor.nombre} />
-            <h1>{props.emprendedor.nombre}</h1>
+            <h1>{props.emprendedor.nombreCompleto}</h1>
             <p>{props.emprendedor.descripcion}</p>
+            <p>{props.emprendedor.nombreEmprendimiento}</p>
+            <p>{props.emprendedor.email}</p>
+            <p>{props.emprendedor.telefono}</p>
             <button>Ver Perfil</button>
         </div>
     );

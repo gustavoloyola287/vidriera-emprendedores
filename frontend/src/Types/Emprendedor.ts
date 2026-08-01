@@ -1,9 +1,9 @@
 export interface Emprendedor {
     id: number;
-    nombre: string;
+    nombreCompleto: string;
     descripcion: string;
-    imagenUrl: string;
-    contacto: string;
-    redesSociales: string;
-    activo: boolean;
+    nombreEmprendimiento: string;
+    email: string;
+    telefono: string;
+    
 }
