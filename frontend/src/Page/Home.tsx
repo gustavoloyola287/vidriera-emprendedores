@@ -1,6 +1,5 @@
 import { type Emprendedor } from "../Types/Emprendedor";
 import CardEmprendedor from "../Components/CardEmprendedor";
-import DetalleEmprendedor from "./DetalleEmprendedor";
 function Home (){
 const emprendedores : Emprendedor [] = [
     {
@@ -21,6 +20,10 @@ const emprendedores : Emprendedor [] = [
     telefono: "351987654"
     }
 ];
+const verPerfil = (id: number) => {
+    console.log("Ver perfil del emprendedor con ID:", id);
+    
+}
 return (
     <div>
 
@@ -34,7 +37,9 @@ return (
     {emprendedores.map((emprendedor) => (
     <CardEmprendedor
     key= {emprendedor.id}
-    emprendedor = {emprendedor}    />
+    emprendedor = {emprendedor}
+    verPerfil = {verPerfil}
+    />
     
     
 ))}

@@ -2,16 +2,16 @@ import { type Emprendedor } from "../Types/Emprendedor";
 
 interface CardEmprendedorProps{
     emprendedor:Emprendedor;
+    verPerfil: (id: number) => void;
 }
 function CardEmprendedor (props: CardEmprendedorProps){
     return (
         <div>
-            <h1>{props.emprendedor.nombreCompleto}</h1>
+            <h2>{props.emprendedor.nombreEmprendimiento}</h2>
+            <p>{props.emprendedor.nombreCompleto}</p>
             <p>{props.emprendedor.descripcion}</p>
-            <p>{props.emprendedor.nombreEmprendimiento}</p>
-            <p>{props.emprendedor.email}</p>
-            <p>{props.emprendedor.telefono}</p>
-            <button>Ver Perfil</button>
+            <button onClick={() => props.verPerfil(props.emprendedor.id)}>Ver Perfil
+            </button>
         </div>
     );
 }
