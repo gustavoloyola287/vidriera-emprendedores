@@ -1,0 +1,517 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+/* =========================
+   VARIABLES GENERALES
+========================= */
+
+:root {
+    --azul-principal: #0072b8;
+    --azul-oscuro: #005a91;
+    --azul-claro: #e8f4fb;
+
+    --blanco: #ffffff;
+    --gris-fondo: #f5f5f5;
+    --gris-claro: #e5e5e5;
+    --gris-texto: #555555;
+    --gris-oscuro: #333333;
+
+    --rojo-error: #c62828;
+    --verde-exito: #2e7d32;
+
+    --sombra: 0 3px 12px rgba(0, 0, 0, 0.10);
+
+    --radio: 8px;
+}
+
+/* =========================
+   RESET
+========================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    min-width: 320px;
+    background-color: var(--gris-fondo);
+    color: var(--gris-oscuro);
+
+    font-family: 'Poppins', sans-serif;
+}
+
+/* =========================
+   TITULOS
+========================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Jost', sans-serif;
+    color: var(--azul-oscuro);
+}
+
+h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+h3 {
+    font-size: 1.4rem;
+}
+
+/* =========================
+   NAVBAR
+========================= */
+
+nav {
+    width: 100%;
+    min-height: 70px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 7%;
+
+    background-color: var(--blanco);
+    border-bottom: 4px solid var(--azul-principal);
+
+    box-shadow: var(--sombra);
+}
+
+nav h2 {
+    color: var(--azul-principal);
+    margin: 0;
+}
+
+nav div {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+nav a {
+    color: var(--gris-oscuro);
+    text-decoration: none;
+    font-weight: 500;
+
+    transition: color 0.2s ease;
+}
+
+nav a:hover {
+    color: var(--azul-principal);
+}
+
+nav button {
+    width: auto;
+    margin: 0;
+}
+
+/* =========================
+   CONTENIDO PRINCIPAL
+========================= */
+
+main {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 0;
+}
+
+section {
+    margin-bottom: 3rem;
+}
+
+/* =========================
+   HOME
+========================= */
+
+.home {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 0;
+}
+
+.home-header {
+    margin-bottom: 2rem;
+}
+
+.home-header p {
+    color: var(--gris-texto);
+}
+
+/* =========================
+   BUSCADOR
+========================= */
+
+input[type="text"] {
+    width: 100%;
+    max-width: 600px;
+
+    padding: 13px 16px;
+
+    border: 1px solid var(--gris-claro);
+    border-radius: var(--radio);
+
+    background-color: var(--blanco);
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+input[type="text"]:focus {
+    border-color: var(--azul-principal);
+
+    box-shadow: 0 0 0 3px var(--azul-claro);
+}
+
+/* =========================
+   CONTENEDOR DE CARDS
+========================= */
+
+.cards-container {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(280px, 1fr));
+
+    gap: 1.5rem;
+
+    margin-top: 2rem;
+}
+
+/* =========================
+   CARD EMPRENDEDOR
+========================= */
+
+.card-emprendedor {
+    background-color: var(--blanco);
+
+    border-radius: var(--radio);
+
+    overflow: hidden;
+
+    box-shadow: var(--sombra);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.card-emprendedor:hover {
+    transform: translateY(-4px);
+
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.14);
+}
+
+.card-emprendedor img {
+    width: 100%;
+    height: 200px;
+
+    object-fit: cover;
+}
+
+.card-contenido {
+    padding: 1.5rem;
+}
+
+.card-contenido h2,
+.card-contenido h3 {
+    margin-bottom: 0.5rem;
+}
+
+.card-contenido p {
+    color: var(--gris-texto);
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+/* =========================
+   BOTONES
+========================= */
+
+button {
+    border: none;
+    border-radius: var(--radio);
+
+    padding: 11px 20px;
+
+    background-color: var(--azul-principal);
+    color: var(--blanco);
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+button:hover {
+    background-color: var(--azul-oscuro);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* =========================
+   FORMULARIOS
+========================= */
+
+form {
+    width: 100%;
+    max-width: 550px;
+
+    background-color: var(--blanco);
+
+    padding: 2rem;
+
+    border-radius: var(--radio);
+
+    box-shadow: var(--sombra);
+}
+
+form div {
+    margin-bottom: 1.2rem;
+}
+
+label {
+    display: block;
+
+    margin-bottom: 0.4rem;
+
+    color: var(--gris-oscuro);
+
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+input[type="email"],
+input[type="password"],
+input[type="tel"] {
+    width: 100%;
+
+    padding: 12px 14px;
+
+    border: 1px solid var(--gris-claro);
+    border-radius: var(--radio);
+
+    font-family: 'Poppins', sans-serif;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="tel"]:focus {
+    border-color: var(--azul-principal);
+
+    box-shadow: 0 0 0 3px var(--azul-claro);
+}
+
+/* =========================
+   MENSAJES
+========================= */
+
+form p {
+    margin-bottom: 1rem;
+}
+
+form p:first-of-type {
+    color: var(--rojo-error);
+}
+
+.error {
+    color: var(--rojo-error);
+}
+
+.success {
+    color: var(--verde-exito);
+}
+
+/* =========================
+   DETALLE EMPRENDEDOR
+========================= */
+
+.detalle-emprendedor {
+    width: 90%;
+    max-width: 900px;
+
+    margin: 3rem auto;
+
+    background-color: var(--blanco);
+
+    padding: 2.5rem;
+
+    border-radius: var(--radio);
+
+    box-shadow: var(--sombra);
+}
+
+.detalle-emprendedor h1 {
+    margin-bottom: 1rem;
+}
+
+.detalle-emprendedor h2 {
+    margin-top: 2rem;
+    margin-bottom: 0.8rem;
+}
+
+.detalle-emprendedor p {
+    color: var(--gris-texto);
+    line-height: 1.7;
+    margin-bottom: 0.5rem;
+}
+
+/* =========================
+   IMAGEN / LOGO
+========================= */
+
+.logo {
+    width: 55px;
+    height: 55px;
+
+    object-fit: contain;
+}
+
+.imagen-emprendimiento {
+    width: 100%;
+    max-height: 400px;
+
+    object-fit: cover;
+
+    border-radius: var(--radio);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+
+    nav {
+        flex-direction: column;
+        gap: 1rem;
+
+        padding: 1rem;
+    }
+
+    nav div {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .home {
+        padding: 2rem 0;
+    }
+
+    .detalle-emprendedor {
+        padding: 1.5rem;
+    }
+
+    form {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+
+    nav h2 {
+        font-size: 1.3rem;
+    }
+
+    nav div {
+        gap: 0.8rem;
+    }
+
+    h1 {
+        font-size: 1.7rem;
+    }
+
+    button {
+        width: 100%;
+    }
+    @media (max-width: 768px) {
+
+    .navbar {
+        padding: 15px 20px;
+
+        flex-direction: column;
+        gap: 15px;
+    }
+
+
+    .navbar-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+
+    .home {
+        padding: 35px 20px;
+    }
+
+
+    .home-titulo {
+        font-size: 34px;
+    }
+
+
+    .detalle-emprendedor {
+        margin: 30px 20px;
+        padding: 25px;
+    }
+
+
+    .detalle-titulo {
+        font-size: 30px;
+    }
+
+
+    .login-container,
+    .registro-container {
+        padding: 30px 20px;
+    }
+
+}
+}
