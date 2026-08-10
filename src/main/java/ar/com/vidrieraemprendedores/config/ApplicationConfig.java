@@ -1,5 +1,5 @@
-package ar.com.vidrieraemprendedores.config;
 
+package ar.com.vidrieraemprendedores.config;
 
 import ar.com.vidrieraemprendedores.repository.EmprendedorRepository;
 import org.springframework.context.annotation.Bean;
@@ -25,19 +25,24 @@ public class ApplicationConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> emprendedorRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Emprendedor no encontrado con el email: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "Emprendedor no encontrado con el email: " + username
+                ));
     }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService());
+        DaoAuthenticationProvider authProvider =
+                new DaoAuthenticationProvider(userDetailsService());
+
         authProvider.setPasswordEncoder(passwordEncoder());
+
         return authProvider;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
@@ -46,3 +51,4 @@ public class ApplicationConfig {
         return new BCryptPasswordEncoder();
     }
 }
+

@@ -1,81 +1,90 @@
 package ar.com.vidrieraemprendedores.model;
 
+import java.util.Collection;
 import java.util.List;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "emprendedores") 
-@Data // Genera getters, setters detras de escena cuando se compila el proyecto
-@NoArgsConstructor 
-@AllArgsConstructor 
-
+@Table(name = "emprendedores")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Emprendedor implements UserDetails {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // ID Autoincremental
-    private Long id;
 
-    private String nombreCompleto;
-    private String nombreEmprendimiento;
-    private String descripcion;
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
 
-    @Column(unique = true, nullable = false)    // Unico y obligatorio
-    private String email;
+private String nombreCompleto;
+private String nombreEmprendimiento;
+private String descripcion;
 
-    private String telefono;
+@Column(unique = true, nullable = false)
+private String email;
 
-   
-    //-- Campos para la seguridad de la aplicacion (Spring Security) --//
-    @Column(nullable = false)    // Obligatorio
-    private String password;
+private String telefono;
 
-    @Enumerated(EnumType.STRING)
-    private Rol rol;
+@Column(nullable = false)
+private String password;
 
-    //-- Implementacion de metodos de la interfaz UserDetails --//
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(rol != null ? rol.name() : "ROLE_EMPRENDEDOR"));
-    }
+@Enumerated(EnumType.STRING)
+private Rol rol;
 
-    @Override
-    public String getUsername() {
-        return this.email;     /// El email es el username para Spring Security
-    }
+@Override
+public Collection<? extends GrantedAuthority> getAuthorities() {
+    return List.of(
+            new SimpleGrantedAuthority(
+                    rol != null ? rol.name() : "ROLE_EMPRENDEDOR"
+            )
+    );
+}
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;    // La cuenta nunca expira
-    }
+@Override
+public String getPassword() {
+    return this.password;
+}
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;    // La cuenta nunca se bloquea
-    }
+@Override
+public String getUsername() {
+    return this.email;
+}
 
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;    // Las credenciales nunca expiran
-    }
+@Override
+public boolean isAccountNonExpired() {
+    return true;
+}
 
-    @Override
-    public boolean isEnabled() {
-        return true;    // La cuenta siempre esta habilitada
-    }
-    
+@Override
+public boolean isAccountNonLocked() {
+    return true;
+}
+
+@Override
+public boolean isCredentialsNonExpired() {
+    return true;
+}
+
+@Override
+public boolean isEnabled() {
+    return true;
+}
 
 
-    
 }
