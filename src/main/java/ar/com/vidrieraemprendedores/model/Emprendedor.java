@@ -47,7 +47,7 @@ public class Emprendedor implements UserDetails {
     //-- Implementacion de metodos de la interfaz UserDetails --//
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(rol != null ? rol.name() : "ROLE_EMPRENDEDOR"));
+        return List.of(new SimpleGrantedAuthority(rol != null ? rol.name() : Rol.ROLE_EMPRENDEDOR.name()));
     }
 
     @Override
