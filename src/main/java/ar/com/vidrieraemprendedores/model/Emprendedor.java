@@ -41,7 +41,7 @@ private String email;
 
 private String telefono;
 
-@Column(nullable = false)
+@Column(nullable = false, columnDefinition = "VARCHAR(255) DEFAULT '12345678'")
 private String password;
 
 @Enumerated(EnumType.STRING)
