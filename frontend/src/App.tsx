@@ -1,13 +1,15 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Home from "./Page/Home";
-import Login from "./Page/Login";
-import RegistroEmprendedor from "./Page/RegistroEmprendedor";
-import DetalleEmprendedor from "./Page/DetalleEmprendedor";
+import Navbar from './components/Navbar';
+import Home from "./page/Home";
+import Login from "./page/Login";
+import RegistroEmprendedor from "./page/RegistroEmprendedor";
+import DetalleEmprendedor from "./page/DetalleEmprendedor";
 
 function App() {
     return (
         <BrowserRouter>
+            <Navbar />
             <Routes>
                 <Route path="/" element={<Home />} />
 
