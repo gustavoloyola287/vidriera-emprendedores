@@ -47,7 +47,7 @@ function RegistroEmprendedor() {
         return true;
     }
 
-    function manejarSubmit(event: React.FormEvent<HTMLFormElement>) {
+    async function manejarSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
         if (!validarDatos()) {
@@ -60,14 +60,41 @@ function RegistroEmprendedor() {
         // Acá después conectamos con el backend
         // mediante POST /auth/register
 
-        console.log({
+    try {
+    const respuesta = await fetch('http://localhost:8080/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
             nombreCompleto,
             nombreEmprendimiento,
             email,
             telefono,
-            clave
-        });
+            password: clave
+        })
+    });
 
+    // 1. Detección de Error HTTP (Ej: 400 Bad Request)
+    if (!respuesta.ok) {
+        const mensajeError = await respuesta.text(); 
+        // Lanzamos el error para que salte al catch
+        throw new Error(mensajeError || "El email ya está registrado o los datos son inválidos.");
+    }
+
+    // Si llega acá, es un status 200/201 OK
+    setMensaje("¡Registro exitoso! Ya podés iniciar sesión.");
+
+} catch (err: any) {
+    // 2. Detección de Error de Red o Excepción
+    // Si err proviene de red, dirá "Failed to fetch"
+    if (err.message === "Failed to fetch") {
+        setError("No se pudo conectar con el servidor. Revisá tu conexión o si el backend está corriendo.");
+    } else {
+        // Muestra el mensaje del backend (Ej: 400 Bad Request)
+        setError(err.message);
+    }
+} finally {
+    setCargando(false);
+}
         setMensaje("Datos válidos. Listo para registrar.");
         setCargando(false);
     }
@@ -79,8 +106,10 @@ function RegistroEmprendedor() {
             <form onSubmit={manejarSubmit}>
 
                 <div>
-                    <label>Nombre completo</label>
+                    <label htmlFor="nombreCompleto">Nombre completo</label>
                     <input
+                        id="nombreCompleto"
+                        name="nombreCompleto"
                         type="text"
                         value={nombreCompleto}
                         onChange={(event) =>
@@ -90,8 +119,10 @@ function RegistroEmprendedor() {
                 </div>
 
                 <div>
-                    <label>Nombre del emprendimiento</label>
+                    <label htmlFor="nombreEmprendimiento">Nombre del emprendimiento</label>
                     <input
+                        id="nombreEmprendimiento"
+                        name="nombreEmprendimiento"
                         type="text"
                         value={nombreEmprendimiento}
                         onChange={(event) =>
@@ -101,8 +132,10 @@ function RegistroEmprendedor() {
                 </div>
 
                 <div>
-                    <label>Email</label>
+                    <label htmlFor="email">Email</label>
                     <input
+                        id="email"
+                        name="email"
                         type="email"
                         value={email}
                         onChange={(event) =>
@@ -112,8 +145,10 @@ function RegistroEmprendedor() {
                 </div>
 
                 <div>
-                    <label>Teléfono</label>
+                    <label htmlFor="telefono">Teléfono</label>
                     <input
+                        id="telefono"
+                        name="telefono"
                         type="tel"
                         value={telefono}
                         onChange={(event) =>
@@ -123,8 +158,10 @@ function RegistroEmprendedor() {
                 </div>
 
                 <div>
-                    <label>Contraseña</label>
+                    <label htmlFor="clave">Contraseña</label>
                     <input
+                        id="clave"
+                        name="password"
                         type="password"
                         value={clave}
                         onChange={(event) =>
@@ -134,8 +171,10 @@ function RegistroEmprendedor() {
                 </div>
 
                 <div>
-                    <label>Confirmar contraseña</label>
+                    <label htmlFor="confirmarClave">Confirmar contraseña</label>
                     <input
+                        id="confirmarClave"
+                        name="confirmarClave"
                         type="password"
                         value={confirmarClave}
                         onChange={(event) =>
