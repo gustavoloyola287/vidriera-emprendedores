@@ -1,25 +1,17 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../Context/AuthContext';
 
-interface NavbarProps {
-  user?: {
-    nombre?: string;
-    email?: string;
-    rol?: string;
-  } | null;
-  onLogout?: () => void;
-}
-
-export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
+export const Navbar: React.FC = () => {
+  const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    if (onLogout) onLogout();
+    logout();
     navigate('/login');
   };
 
   return (
-    // Agregamos navbar-dark y data-bs-theme="dark" para que el botón hamburguesa se vuelva blanco
     <nav 
       className="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm" 
       data-bs-theme="dark"
@@ -30,13 +22,12 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
         {/* Logo estilo VCP | gob */}
         <Link to="/" className="navbar-brand fw-bold fs-4 d-flex align-items-center text-white text-decoration-none">
           vcp<span style={{ color: '#00A3B5', fontWeight: '300' }}>|</span>gob
-          {/* Cambiamos a text-white-50 para que resalte claramente en el fondo oscuro */}
           <span className="fs-6 text-white-50 ms-2 d-none d-sm-inline fw-normal">
             Vidriera Virtual
           </span>
         </Link>
 
-        {/* Botón Hamburguesa ajustado para fondo oscuro */}
+        {/* Botón Hamburguesa para Mobile */}
         <button
           className="navbar-toggler border-0 focus-ring-none"
           type="button"
@@ -59,20 +50,10 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             </li>
           </ul>
 
-          {/* Estado de Autenticación */}
+          {/* Estado de Autenticación Condicional */}
           <div className="d-flex align-items-lg-center flex-column flex-lg-row gap-2 mt-2 mt-lg-0">
-            {user ? (
+            {isAuthenticated ? (
               <>
-                <span className="badge rounded-pill text-white bg-secondary bg-opacity-20 px-3 py-2 border border-secondary align-self-start align-self-lg-center">
-                  {user.nombre || user.email}
-                </span>
-
-                {user.rol === 'ADMIN' && (
-                  <Link to="/admin" className="btn btn-outline-light btn-sm w-100 w-lg-auto">
-                    Panel Admin
-                  </Link>
-                )}
-
                 <Link to="/mis-productos" className="btn btn-outline-light btn-sm w-100 w-lg-auto">
                   Mis Productos
                 </Link>
