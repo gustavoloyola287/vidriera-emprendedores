@@ -2,6 +2,7 @@ package ar.com.vidrieraemprendedores.model;
 
 import java.util.Collection;
 import java.util.List;
+import java.time.LocalDateTime;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -46,6 +47,14 @@ private String password;
 
 @Enumerated(EnumType.STRING)
 private Rol rol;
+
+// Recuperacion de contraseña
+@Column(name = "reset_password_token")
+private String resetPasswordToken;
+
+@Column(name = "reset_password_token_expiration")
+private LocalDateTime resetPasswordTokenExpiry;
+
 
 @Override
 public Collection<? extends GrantedAuthority> getAuthorities() {
