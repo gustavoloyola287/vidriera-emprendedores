@@ -1,6 +1,6 @@
 package ar.com.vidrieraemprendedores.controller;
 
-import ar.com.vidrieraemprendedores.model.Categoria;
+import ar.com.vidrieraemprendedores.models.Categoria;
 import ar.com.vidrieraemprendedores.service.ICategoriaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

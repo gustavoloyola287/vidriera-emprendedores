@@ -1,6 +1,6 @@
 package ar.com.vidrieraemprendedores.service;
 
-import ar.com.vidrieraemprendedores.model.Emprendedor;
+import ar.com.vidrieraemprendedores.models.Emprendedor;
 import ar.com.vidrieraemprendedores.repository.EmprendedorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

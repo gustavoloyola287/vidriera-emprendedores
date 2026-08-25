@@ -1,4 +1,4 @@
-package ar.com.vidrieraemprendedores.model;
+package ar.com.vidrieraemprendedores.models;
 
 public enum Rol {
     ROLE_EMPRENDEDOR,

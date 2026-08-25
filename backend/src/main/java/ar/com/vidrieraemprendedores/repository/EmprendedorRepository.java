@@ -1,6 +1,6 @@
 package ar.com.vidrieraemprendedores.repository;
 
-import ar.com.vidrieraemprendedores.model.Emprendedor;
+import ar.com.vidrieraemprendedores.models.Emprendedor;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 

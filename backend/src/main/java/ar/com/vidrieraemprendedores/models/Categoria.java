@@ -1,4 +1,4 @@
-package ar.com.vidrieraemprendedores.model;
+package ar.com.vidrieraemprendedores.models;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
