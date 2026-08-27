@@ -1,6 +1,9 @@
 package ar.com.vidrieraemprendedores.service;
 
+
+import ar.com.vidrieraemprendedores.models.Categoria;
 import ar.com.vidrieraemprendedores.models.Producto;
+import ar.com.vidrieraemprendedores.repository.CategoriaRepository;
 import ar.com.vidrieraemprendedores.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,10 +15,21 @@ import java.util.List;
 public class ProductoService implements IProductoService {
 
     private final ProductoRepository productoRepository;
+    private final CategoriaRepository categoriaRepository;
 
     @Override
     public List<Producto> listarProductos() {
         return productoRepository.findAll();
+    }
+
+    @Override
+    public List<Categoria> listarCategorias() {
+        return categoriaRepository.findAll();
+    }
+
+    @Override
+    public List<Producto> listarPorEmprendedor(Long emprendedorId) {
+        return productoRepository.findByEmprendedorId(emprendedorId);
     }
 
     @Override
