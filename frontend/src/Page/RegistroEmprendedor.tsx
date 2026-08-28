@@ -56,47 +56,45 @@ function RegistroEmprendedor() {
 
         setCargando(true);
         setMensaje("");
+        setError("");
 
-        // Acá después conectamos con el backend
-        // mediante POST /auth/register
+        try {
+            const respuesta = await fetch('http://localhost:8080/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombreCompleto,
+                    nombreEmprendimiento,
+                    email,
+                    telefono,
+                    password: clave
+                })
+            });
 
-    try {
-    const respuesta = await fetch('http://localhost:8080/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            nombreCompleto,
-            nombreEmprendimiento,
-            email,
-            telefono,
-            password: clave
-        })
-    });
+            if (!respuesta.ok) {
+                const mensajeError = await respuesta.text(); 
+                throw new Error(mensajeError || "El email ya está registrado o los datos son inválidos.");
+            }
 
-    // 1. Detección de Error HTTP (Ej: 400 Bad Request)
-    if (!respuesta.ok) {
-        const mensajeError = await respuesta.text(); 
-        // Lanzamos el error para que salte al catch
-        throw new Error(mensajeError || "El email ya está registrado o los datos son inválidos.");
-    }
+            setMensaje("¡Registro exitoso! Ya podés iniciar sesión.");
+            
+            // Limpiar formulario al registrar con éxito
+            setNombreCompleto("");
+            setNombreEmprendimiento("");
+            setEmail("");
+            setTelefono("");
+            setClave("");
+            setConfirmarClave("");
 
-    // Si llega acá, es un status 200/201 OK
-    setMensaje("¡Registro exitoso! Ya podés iniciar sesión.");
-
-} catch (err: any) {
-    // 2. Detección de Error de Red o Excepción
-    // Si err proviene de red, dirá "Failed to fetch"
-    if (err.message === "Failed to fetch") {
-        setError("No se pudo conectar con el servidor. Revisá tu conexión o si el backend está corriendo.");
-    } else {
-        // Muestra el mensaje del backend (Ej: 400 Bad Request)
-        setError(err.message);
-    }
-} finally {
-    setCargando(false);
-}
-        setMensaje("Datos válidos. Listo para registrar.");
-        setCargando(false);
+        } catch (err: any) {
+            if (err.message === "Failed to fetch") {
+                setError("No se pudo conectar con el servidor. Revisá tu conexión o si el backend está corriendo.");
+            } else {
+                setError(err.message);
+            }
+        } finally {
+            setCargando(false);
+        }
     }
 
     return (
@@ -104,7 +102,6 @@ function RegistroEmprendedor() {
             <h1>Registrar emprendedor</h1>
 
             <form onSubmit={manejarSubmit}>
-
                 <div>
                     <label htmlFor="nombreCompleto">Nombre completo</label>
                     <input
@@ -112,9 +109,7 @@ function RegistroEmprendedor() {
                         name="nombreCompleto"
                         type="text"
                         value={nombreCompleto}
-                        onChange={(event) =>
-                            setNombreCompleto(event.target.value)
-                        }
+                        onChange={(event) => setNombreCompleto(event.target.value)}
                     />
                 </div>
 
@@ -125,9 +120,7 @@ function RegistroEmprendedor() {
                         name="nombreEmprendimiento"
                         type="text"
                         value={nombreEmprendimiento}
-                        onChange={(event) =>
-                            setNombreEmprendimiento(event.target.value)
-                        }
+                        onChange={(event) => setNombreEmprendimiento(event.target.value)}
                     />
                 </div>
 
@@ -138,9 +131,7 @@ function RegistroEmprendedor() {
                         name="email"
                         type="email"
                         value={email}
-                        onChange={(event) =>
-                            setEmail(event.target.value)
-                        }
+                        onChange={(event) => setEmail(event.target.value)}
                     />
                 </div>
 
@@ -151,9 +142,7 @@ function RegistroEmprendedor() {
                         name="telefono"
                         type="tel"
                         value={telefono}
-                        onChange={(event) =>
-                            setTelefono(event.target.value)
-                        }
+                        onChange={(event) => setTelefono(event.target.value)}
                     />
                 </div>
 
@@ -164,9 +153,7 @@ function RegistroEmprendedor() {
                         name="password"
                         type="password"
                         value={clave}
-                        onChange={(event) =>
-                            setClave(event.target.value)
-                        }
+                        onChange={(event) => setClave(event.target.value)}
                     />
                 </div>
 
@@ -177,20 +164,19 @@ function RegistroEmprendedor() {
                         name="confirmarClave"
                         type="password"
                         value={confirmarClave}
-                        onChange={(event) =>
-                            setConfirmarClave(event.target.value)
-                        }
+                        onChange={(event) => setConfirmarClave(event.target.value)}
                     />
                 </div>
 
-                {error && <p>{error}</p>}
+                {/* Mensaje de Error (Rojo) */}
+                {error && <p style={{ color: "red" }}>{error}</p>}
 
-                {mensaje && <p>{mensaje}</p>}
+                {/* Mensaje de Éxito (Verde) */}
+                {mensaje && <p style={{ color: "green" }}>{mensaje}</p>}
 
                 <button type="submit" disabled={cargando}>
                     {cargando ? "Registrando..." : "Registrarse"}
                 </button>
-
             </form>
         </div>
     );
