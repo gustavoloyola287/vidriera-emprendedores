@@ -42,17 +42,19 @@ public class SecurityConfig {
                     "/api/auth/**"
                 ).permitAll()
 
-                // LECTURA PÚBLICA: Permite a los visitantes ver emprendedores, productos y categorías (solo GET)
+                // LECTURA PÚBLICA: Permite a los visitantes ver emprendedores, productos, categorías y FOTOS (solo GET)
                 .requestMatchers(HttpMethod.GET,
                     "/emprendedores/**",
                     "/api/emprendedores/**",
                     "/productos/**",
                     "/api/productos/**",
                     "/categorias/**",
-                    "/api/categorias/**"
+                    "/api/categorias/**",
+                    "/fotos/**",
+                    "/api/fotos/**"
                 ).permitAll()
 
-                // Cualquier otra petición (POST, PUT, DELETE en productos/categorías) requiere token JWT
+                // Cualquier otra petición (POST, PUT, DELETE en productos/categorías/fotos) requiere token JWT
                 .anyRequest().authenticated()
             )
             // No guardamos sesión en servidor (STATELESS)
