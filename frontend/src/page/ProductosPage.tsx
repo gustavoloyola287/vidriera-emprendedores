@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Navbar } from '../components/Navbar';
+//import { Navbar } from '../components/Navbar';
 import { productoService } from '../services/productoService';
-import type { Producto }  from '../types/Producto';
+import type { Producto } from '../types/Producto';
 
 export const ProductosPage = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -14,8 +14,20 @@ export const ProductosPage = () => {
   const [precio, setPrecio] = useState<number | ''>('');
   const [imagenUrl, setImagenUrl] = useState('');
 
-  // ID de prueba o recuperado del contexto de autenticación
-  const emprendedorId = 1;
+  // Recuperación de datos del Emprendedor desde el almacenamiento local
+  const [nombreEmprendedor, setNombreEmprendedor] = useState('');
+  const [emprendedorId, setEmprendedorId] = useState<number>(1);
+
+  useEffect(() => {
+    // Leemos el nombre guardado durante el Login
+    const nombreGuardado = localStorage.getItem('nombreEmprendedor') || 'Emprendedor Registrado';
+    const idGuardado = localStorage.getItem('emprendedorId');
+
+    setNombreEmprendedor(nombreGuardado);
+    if (idGuardado) {
+      setEmprendedorId(Number(idGuardado));
+    }
+  }, []);
 
   const cargarProductos = () => {
     setLoading(true);
@@ -27,7 +39,7 @@ export const ProductosPage = () => {
 
   useEffect(() => {
     cargarProductos();
-  }, []);
+  }, [emprendedorId]);
 
   const handleEliminar = async (id: number) => {
     if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
@@ -63,10 +75,15 @@ export const ProductosPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      {/* <Navbar /> */}
       <div className="container py-5">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1 className="h3 font-bold text-gray-800 mb-0">Gestión de Mis Productos</h1>
+          <div>
+            <h1 className="h3 font-bold text-gray-800 mb-0">Gestión de Mis Productos</h1>
+            {nombreEmprendedor && (
+              <small className="text-muted">Emprendimiento: {nombreEmprendedor}</small>
+            )}
+          </div>
           <button
             className="btn btn-primary"
             onClick={() => setMostrarModal(true)}
@@ -128,7 +145,7 @@ export const ProductosPage = () => {
           </div>
         )}
 
-        {/* Modal simple de Bootstrap/Custom para agregar producto */}
+        {/* Modal para agregar producto */}
         {mostrarModal && (
           <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <div className="modal-dialog">
@@ -139,6 +156,18 @@ export const ProductosPage = () => {
                 </div>
                 <form onSubmit={handleSubmit}>
                   <div className="modal-body">
+                    
+                    {/* Campo Emprendedor (Solo lectura) */}
+                    <div className="mb-3">
+                      <label className="form-label font-bold">Emprendedor / Marca</label>
+                      <input
+                        type="text"
+                        className="form-control bg-light"
+                        value={nombreEmprendedor}
+                        disabled
+                      />
+                    </div>
+
                     <div className="mb-3">
                       <label className="form-label">Nombre del Producto</label>
                       <input
@@ -165,7 +194,7 @@ export const ProductosPage = () => {
                         className="form-control"
                         required
                         value={precio}
-                        onChange={(e) => setPrecio(Number(e.target.value))}
+                        onChange={(e) => setPrecio(e.target.value === '' ? '' : Number(e.target.value))}
                       />
                     </div>
                     <div className="mb-3">

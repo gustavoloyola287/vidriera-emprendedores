@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; 
 
 function Login() {
     const [email, setEmail] = useState("");
     const [clave, setClave] = useState("");
     const [error, setError] = useState("");
     const [cargando, setCargando] = useState(false);
+
+    const navigate = useNavigate();
+
+    // Asegura que los campos arranquen limpios cada vez que entra a la pantalla
+    useEffect(() => {
+        setEmail("");
+        setClave("");
+    }, []);
 
     function validarDatos(): boolean {
         if (email.trim() === "") {
@@ -21,7 +30,7 @@ function Login() {
         return true;
     }
 
-    function manejarSubmit(event: React.FormEvent<HTMLFormElement>) {
+    async function manejarSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
         if (!validarDatos()) {
@@ -29,39 +38,107 @@ function Login() {
         }
 
         setCargando(true);
+        setError("");
 
-        // Acá después conectamos con el backend y JWT
+        try {
+            const respuesta = await fetch('http://localhost:8080/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    email: email, 
+                    password: clave 
+                })
+            });
+
+            if (!respuesta.ok) {
+                const mensajeError = await respuesta.text(); 
+                throw new Error(mensajeError || "Credenciales inválidas. Verificá tu email y contraseña.");
+            }
+
+            const datos = await respuesta.json(); 
+
+            localStorage.setItem("token", datos.token);
+            const nombreGuardar = datos.nombreEmprendimiento || datos.nombreCompleto || datos.nombre || email;
+            localStorage.setItem("nombreEmprendedor", nombreGuardar);
+
+            if (datos.id) {
+                localStorage.setItem("emprendedorId", datos.id);
+            }
+
+            // Limpiamos los campos del estado antes de navegar
+            setEmail("");
+            setClave("");
+
+            navigate("/productos");
+
+        } catch (err: any) {
+            if (err.message === "Failed to fetch") {
+                setError("No se pudo conectar con el servidor. Revisá tu conexión o si el backend está corriendo.");
+            } else {
+                setError(err.message);
+            }
+        } finally {
+            setCargando(false);
+        }
     }
 
     return (
-        <div>
-            <h1>Iniciar sesión</h1>
+        <div style={{ maxWidth: "400px", margin: "50px auto", padding: "20px", border: "1px solid #ccc", borderRadius: "8px", boxShadow: "0 2px 5px rgba(0,0,0,0.1)" }}>
+            <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Iniciar sesión</h1>
 
-            <form onSubmit={manejarSubmit}>
+            {/* autoComplete="off" evita sugerencias en el formulario */}
+            <form onSubmit={manejarSubmit} autoComplete="off">
 
-                <div>
-                    <label>Email</label>
+                <div style={{ marginBottom: "15px" }}>
+                    <label style={{ display: "block", marginBottom: "5px" }}>Email</label>
                     <input
                         type="email"
+                        name="email_login_field"
+                        autoComplete="new-password"
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+                        placeholder="ejemplo@correo.com"
+                        required
                     />
                 </div>
 
-                <div>
-                    <label>Contraseña</label>
+                <div style={{ marginBottom: "15px" }}>
+                    <label style={{ display: "block", marginBottom: "5px" }}>Contraseña</label>
                     <input
                         type="password"
+                        name="password_login_field"
+                        autoComplete="new-password"
                         value={clave}
                         onChange={(event) => setClave(event.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+                        placeholder="••••••••"
+                        required
                     />
                 </div>
 
-                {error && <p>{error}</p>}
+                {error && <p style={{ color: "red", textAlign: "center", fontSize: "14px" }}>{error}</p>}
 
-                <button type="submit" disabled={cargando}>
+                <button 
+                    type="submit" 
+                    disabled={cargando}
+                    style={{
+                        width: "100%",
+                        padding: "10px",
+                        backgroundColor: cargando ? "#ccc" : "#007bff",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: cargando ? "not-allowed" : "pointer",
+                        fontSize: "16px"
+                    }}
+                >
                     {cargando ? "Ingresando..." : "Iniciar sesión"}
                 </button>
+
+                <p style={{ textAlign: "center", marginTop: "15px", fontSize: "14px" }}>
+                    ¿No tienes cuenta? <a href="/registro">Regístrate acá</a>
+                </p>
 
             </form>
         </div>

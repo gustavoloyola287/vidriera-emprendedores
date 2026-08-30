@@ -1,9 +1,9 @@
 package ar.com.vidrieraemprendedores.config;
 
-
 import ar.com.vidrieraemprendedores.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -31,46 +31,48 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Activamos CORS con nuestra configuración
+            // 1. Activamos CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // Deshabilitamos CSRF porque trabajamos con una API REST stateless con tokens JWT
+            // Deshabilitamos CSRF para API REST stateless
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // Endpoints libres (Auth y lectura de emprendedores/categorías/etc.)
+                // Endpoints de autenticación (Login y Registro) libres
                 .requestMatchers(
                     "/auth/**",
-                    "/api/emprendedores/**",
-                    "/emprendedores/**",
-                    "/api/v1/emprendedores/**"
+                    "/api/auth/**"
                 ).permitAll()
-                // Cualquier otra petición requerirá estar autenticado
+
+                // LECTURA PÚBLICA: Permite a los visitantes ver emprendedores, productos y categorías (solo GET)
+                .requestMatchers(HttpMethod.GET,
+                    "/emprendedores/**",
+                    "/api/emprendedores/**",
+                    "/productos/**",
+                    "/api/productos/**",
+                    "/categorias/**",
+                    "/api/categorias/**"
+                ).permitAll()
+
+                // Cualquier otra petición (POST, PUT, DELETE en productos/categorías) requiere token JWT
                 .anyRequest().authenticated()
             )
-            // No guardamos sesión en el servidor (STATELESS)
+            // No guardamos sesión en servidor (STATELESS)
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authenticationProvider(authenticationProvider)
-            // Agregamos nuestro filtro de JWT antes del filtro de usuario/contraseña estándar
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // 2. Definimos las reglas de CORS para React / Vite
+    // 2. Configuración de CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Puerto donde corre el frontend de tu compañero
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-        
-        // Métodos HTTP permitidos
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        
-        // Cabeceras permitidas
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
-        
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

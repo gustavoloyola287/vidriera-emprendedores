@@ -6,6 +6,7 @@ import Login from "./page/Login";
 import RegistroEmprendedor from "./page/RegistroEmprendedor";
 import DetalleEmprendedor from "./page/DetalleEmprendedor";
 import { ProductosPage } from "./page/ProductosPage";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function App() {
     return (
@@ -17,6 +18,13 @@ function App() {
                 <Route path="/registro" element={<RegistroEmprendedor />} />
                 <Route path="/emprendedor/:id" element={<DetalleEmprendedor />} />
                 <Route path="/productos" element={<ProductosPage />} />
+
+                {/* Ruta protegida */}
+                <Route path="/productos" element={<ProtectedRoute><ProductosPage /></ProtectedRoute>} />
+
+                {/* Ruta por defecto */}
+               
+
             </Routes>
         </BrowserRouter>
     );
