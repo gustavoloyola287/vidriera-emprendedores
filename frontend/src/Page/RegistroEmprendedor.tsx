@@ -178,7 +178,6 @@ function RegistroEmprendedor() {
                         type="text"
                         value={nombreCompleto}
                         onChange={(event) => setNombreCompleto(event.target.value)}
-                        onChange={(event) => setNombreCompleto(event.target.value)}
                     />
                 </div>
 
@@ -189,7 +188,6 @@ function RegistroEmprendedor() {
                         name="nombreEmprendimiento"
                         type="text"
                         value={nombreEmprendimiento}
-                        onChange={(event) => setNombreEmprendimiento(event.target.value)}
                         onChange={(event) => setNombreEmprendimiento(event.target.value)}
                     />
                 </div>
@@ -213,7 +211,6 @@ function RegistroEmprendedor() {
                         type="email"
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
-                        onChange={(event) => setEmail(event.target.value)}
                     />
                 </div>
 
@@ -224,7 +221,6 @@ function RegistroEmprendedor() {
                         name="telefono"
                         type="tel"
                         value={telefono}
-                        onChange={(event) => setTelefono(event.target.value)}
                         onChange={(event) => setTelefono(event.target.value)}
                     />
                 </div>
@@ -237,7 +233,6 @@ function RegistroEmprendedor() {
                         type="password"
                         value={clave}
                         onChange={(event) => setClave(event.target.value)}
-                        onChange={(event) => setClave(event.target.value)}
                     />
                 </div>
 
@@ -248,7 +243,6 @@ function RegistroEmprendedor() {
                         name="confirmarClave"
                         type="password"
                         value={confirmarClave}
-                        onChange={(event) => setConfirmarClave(event.target.value)}
                         onChange={(event) => setConfirmarClave(event.target.value)}
                     />
                 </div>
