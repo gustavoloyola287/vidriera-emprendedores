@@ -9,6 +9,8 @@ import { ProductosPage } from "./Page/ProductosPage";
 import Footer from "./Components/Footer";
 import { ProtectedRoute } from "./Components/ProtectedRoute";
 import { AuthProvider } from "./Context/AuthContext";
+import { RecuperarPassword } from "./Page/RecuperarPasword";
+import { RestablecerPassword } from "./Page/RestablecerPasword";
 
 function App() {
     return (
@@ -23,7 +25,8 @@ function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/registro" element={<RegistroEmprendedor />} />
                     <Route path="/emprendedor/:id" element={<DetalleEmprendedor />} />
-                    
+                    <Route path="/recuperar-password" element={<RecuperarPassword />} />
+                    <Route path="/restablecer-password" element={<RestablecerPassword />} />
                     {/* Ruta protegida de productos */}
                     <Route 
                         path="/productos" 

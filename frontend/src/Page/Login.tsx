@@ -1,156 +1,130 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../Context/AuthContext';
+import  api  from '../Services/api'; // Usamos la instancia centralizada de Axios
 
 export const Login: React.FC = () => {
-    const [email, setEmail] = useState('');
-    const [clave, setClave] = useState('');
-    const [error, setError] = useState<string | null>(null);
-    const [cargando, setCargando] = useState(false);
-
-    const { login } = useAuth();
     const navigate = useNavigate();
+    const { login } = useAuth();
 
-    // Asegura que los campos arranquen limpios cada vez que entra a la pantalla
-    useEffect(() => {
-        setEmail("");
-        setClave("");
-    }, []);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
-    function validarDatos(): boolean {
-        if (email.trim() === '') {
-        setError('Ingrese su email');
-        return false;
-        }
-
-        if (clave.trim() === '') {
-        setError('Ingrese su contraseña');
-        return false;
-        }
-
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
         setError(null);
-        return true;
-    }
 
-    async function manejarSubmit(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
+        const emailTrimmed = email.trim().toLowerCase();
 
-        if (!validarDatos()) {
+        if (!emailTrimmed || !password) {
+        setError('Por favor complete todos los campos.');
         return;
         }
 
-        setCargando(true);
-        setError("");
+        setLoading(true);
 
         try {
-        setError("");
+        // Usamos api para apuntar automáticamente a http://localhost:8080/api
+        const response = await api.post('/auth/login', {
+            email: emailTrimmed,
+            password,
+        });
 
-        try {
-            const response = await fetch('http://localhost:8080/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email, password: clave })
-            });
+        const { token } = response.data;
 
-            if (!response.ok) {
-                const mensajeError = await response.text();
-                throw new Error(mensajeError || 'Credenciales inválidas. Verificá tu email y contraseña.');
-            }
+        // 1. Guardamos el token en localStorage para el interceptor de api.ts
+        localStorage.setItem('token', token);
 
-            const datos = await response.json();
+        // 2. Actualizamos el estado global de autenticación
+        login(token);
 
-            // Actualiza el contexto de autenticación (main)
-            if (datos.token) {
-                login(datos.token);
-                // También guardamos en localStorage para compatibilidad con código previo
-                localStorage.setItem('token', datos.token);
-            }
-
-            const nombreGuardar = datos.nombreEmprendimiento || datos.nombreCompleto || datos.nombre || email;
-            localStorage.setItem('nombreEmprendedor', nombreGuardar);
-
-            if (datos.id) {
-                localStorage.setItem('emprendedorId', datos.id);
-            }
-
-            // Limpiamos los campos del estado antes de navegar
-            setEmail("");
-            setClave("");
-
-            // Redirigimos a la lista de productos (incoming)
-            navigate('/productos');
-
+        // 3. Redirigimos
+        navigate('/');
         } catch (err: any) {
-            if (err.message === 'Failed to fetch') {
-                setError('No se pudo conectar con el servidor. Revisá tu conexión o si el backend está corriendo.');
-            } else {
-                setError(err.message || 'Ocurrió un error al conectar con el servidor.');
-            }
-        } finally {
-            setCargando(false);
+        if (err.response && err.response.data && err.response.data.message) {
+            setError(err.response.data.message);
+        } else if (err.code === 'ERR_NETWORK') {
+            setError('No se pudo conectar con el servidor.');
+        } else {
+            setError('Credenciales inválidas o error inesperado.');
         }
+        } finally {
+        setLoading(false);
+        }
+    };
 
-        return (
-            <div style={{ maxWidth: "400px", margin: "50px auto", padding: "20px", border: "1px solid #ccc", borderRadius: "8px", boxShadow: "0 2px 5px rgba(0,0,0,0.1)" }}>
-                <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Iniciar sesión</h1>
+    return (
+        <div className="container py-5">
+        <div className="row justify-content-center align-items-center min-vh-75">
+            <div className="col-12 col-sm-10 col-md-6 col-lg-4">
+            <div className="card shadow border-0 rounded-3 p-4 bg-white">
+                <h2 className="text-center fw-bold mb-4" style={{ color: '#0066FF' }}>
+                Iniciar sesión
+                </h2>
 
-                {/* autoComplete="off" evita sugerencias en el formulario */}
-                <form onSubmit={manejarSubmit} autoComplete="off">
+                {error && (
+                <div className="alert alert-danger py-2 text-center text-sm" role="alert">
+                    {error}
+                </div>
+                )}
 
-                    <div style={{ marginBottom: "15px" }}>
-                        <label style={{ display: "block", marginBottom: "5px" }}>Email</label>
-                        <input
-                            type="email"
-                            name="email_login_field"
-                            autoComplete="new-password"
-                            value={email}
-                            onChange={(event) => setEmail(event.target.value)}
-                            style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
-                            placeholder="ejemplo@correo.com"
-                            required
-                        />
-                    </div>
+                <form onSubmit={handleSubmit} noValidate>
+                <div className="mb-3 text-start">
+                    <label htmlFor="loginEmail" className="form-label fw-semibold text-secondary">
+                    Email
+                    </label>
+                    <input
+                    id="loginEmail"
+                    type="email"
+                    className="form-control"
+                    placeholder="ejemplo@correo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    required
+                    />
+                </div>
 
-                    <div style={{ marginBottom: "15px" }}>
-                        <label style={{ display: "block", marginBottom: "5px" }}>Contraseña</label>
-                        <input
-                            type="password"
-                            name="password_login_field"
-                            autoComplete="new-password"
-                            value={clave}
-                            onChange={(event) => setClave(event.target.value)}
-                            style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
-                            placeholder="••••••••"
-                            required
-                        />
-                    </div>
+                <div className="mb-4 text-start">
+                    <label htmlFor="loginPassword" className="form-label fw-semibold text-secondary">
+                    Contraseña
+                    </label>
+                    <input
+                    id="loginPassword"
+                    type="password"
+                    className="form-control"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                    />
+                </div>
 
-                    {error && <p style={{ color: "red", textAlign: "center", fontSize: "14px" }}>{error}</p>}
+                <button
+                    type="submit"
+                    className="btn w-100 py-2 fw-bold text-white"
+                    style={{ backgroundColor: '#0066FF', borderColor: '#0066FF' }}
+                    disabled={loading}
+                >
+                    {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+                </button>
 
-                    <button 
-                        type="submit" 
-                        disabled={cargando}
-                        style={{
-                            width: "100%",
-                            padding: "10px",
-                            backgroundColor: cargando ? "#ccc" : "#007bff",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: cargando ? "not-allowed" : "pointer",
-                            fontSize: "16px"
-                        }}
+                <div className="mt-4 text-center">
+                    <Link
+                    to="/recuperar-password"
+                    className="text-decoration-none fw-semibold text-sm"
+                    style={{ color: '#0066FF' }}
                     >
-                        {cargando ? "Ingresando..." : "Iniciar sesión"}
-                    </button>
-
-                    <p style={{ textAlign: "center", marginTop: "15px", fontSize: "14px" }}>
-                        ¿No tienes cuenta? <a href="/registro">Regístrate acá</a>
-                    </p>
-
+                    ¿Olvidaste tu contraseña?
+                    </Link>
+                </div>
                 </form>
             </div>
-        );
+            </div>
+        </div>
         </div>
     );
     };
