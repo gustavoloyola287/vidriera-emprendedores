@@ -1,36 +1,48 @@
 @import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
 /* =========================
-   VARIABLES GENERALES
+   VARIABLES GENERALES (Paleta Expo Carreras)
 ========================= */
 
 :root {
-    --azul-principal: #0072b8;
-    --azul-oscuro: #005a91;
-    --azul-claro: #e8f4fb;
+    /* Paleta Institucional */
+    --azul-marino: #0F2D4A;     /* Principal para Headers, Nav y Footer */
+    --azul-turquesa: #00A896;   /* Acentos y estados Hover */
+    --celeste-subrayado: #00A3E0;/* Acento celeste decorativo */
+    --amarillo-lima: #D4E157;   /* Destacados, Badges y acentos */
+
+    /* Compatibilidad con variables previas */
+    --azul-principal: var(--azul-marino);
+    --azul-oscuro: #0A1E32;
+    --azul-claro: #E6F4F8;
 
     --blanco: #ffffff;
-    --gris-fondo: #f5f5f5;
-    --gris-claro: #e5e5e5;
-    --gris-texto: #555555;
-    --gris-oscuro: #333333;
+    --gris-fondo: #f8fafc;
+    --gris-claro: #e2e8f0;
+    --gris-texto: #475569;
+    --gris-oscuro: #1e293b;
 
-    --rojo-error: #c62828;
-    --verde-exito: #2e7d32;
+    --rojo-error: #dc2626;
+    --verde-exito: #16a34a;
 
-    --sombra: 0 3px 12px rgba(0, 0, 0, 0.10);
+    --sombra: 0 4px 14px rgba(15, 45, 74, 0.08);
+    --sombra-hover: 0 10px 22px rgba(15, 45, 74, 0.15);
 
     --radio: 8px;
 }
 
 /* =========================
-   RESET
+   RESET & LAYOUT GENERAL
 ========================= */
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
 }
 
 html {
@@ -41,8 +53,22 @@ body {
     min-width: 320px;
     background-color: var(--gris-fondo);
     color: var(--gris-oscuro);
-
     font-family: 'Poppins', sans-serif;
+}
+
+/* Estructura para Footer pegado al fondo */
+#root {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 0;
 }
 
 /* =========================
@@ -56,7 +82,7 @@ h4,
 h5,
 h6 {
     font-family: 'Jost', sans-serif;
-    color: var(--azul-oscuro);
+    color: var(--azul-marino);
 }
 
 h1 {
@@ -81,21 +107,17 @@ h3 {
 nav {
     width: 100%;
     min-height: 70px;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     padding: 0 7%;
-
     background-color: var(--blanco);
-    border-bottom: 4px solid var(--azul-principal);
-
+    border-bottom: 4px solid var(--celeste-subrayado);
     box-shadow: var(--sombra);
 }
 
 nav h2 {
-    color: var(--azul-principal);
+    color: var(--azul-marino);
     margin: 0;
 }
 
@@ -109,32 +131,16 @@ nav a {
     color: var(--gris-oscuro);
     text-decoration: none;
     font-weight: 500;
-
     transition: color 0.2s ease;
 }
 
 nav a:hover {
-    color: var(--azul-principal);
+    color: var(--azul-turquesa);
 }
 
 nav button {
     width: auto;
     margin: 0;
-}
-
-/* =========================
-   CONTENIDO PRINCIPAL
-========================= */
-
-main {
-    width: 90%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 3rem 0;
-}
-
-section {
-    margin-bottom: 3rem;
 }
 
 /* =========================
@@ -163,27 +169,18 @@ section {
 input[type="text"] {
     width: 100%;
     max-width: 600px;
-
     padding: 13px 16px;
-
     border: 1px solid var(--gris-claro);
     border-radius: var(--radio);
-
     background-color: var(--blanco);
-
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
-
     outline: none;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 input[type="text"]:focus {
-    border-color: var(--azul-principal);
-
+    border-color: var(--azul-turquesa);
     box-shadow: 0 0 0 3px var(--azul-claro);
 }
 
@@ -193,44 +190,33 @@ input[type="text"]:focus {
 
 .cards-container {
     display: grid;
-
-    grid-template-columns:
-        repeat(auto-fit, minmax(280px, 1fr));
-
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.5rem;
-
     margin-top: 2rem;
 }
 
 /* =========================
-   CARD EMPRENDEDOR
+   CARD EMPRENDEDOR / PRODUCTO
 ========================= */
 
 .card-emprendedor {
     background-color: var(--blanco);
-
     border-radius: var(--radio);
-
     overflow: hidden;
-
     box-shadow: var(--sombra);
-
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-top: 3px solid transparent;
 }
 
 .card-emprendedor:hover {
     transform: translateY(-4px);
-
-    box-shadow:
-        0 8px 20px rgba(0, 0, 0, 0.14);
+    box-shadow: var(--sombra-hover);
+    border-top-color: var(--azul-turquesa);
 }
 
 .card-emprendedor img {
     width: 100%;
     height: 200px;
-
     object-fit: cover;
 }
 
@@ -256,25 +242,18 @@ input[type="text"]:focus {
 button {
     border: none;
     border-radius: var(--radio);
-
     padding: 11px 20px;
-
-    background-color: var(--azul-principal);
+    background-color: var(--azul-marino);
     color: var(--blanco);
-
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
     font-weight: 500;
-
     cursor: pointer;
-
-    transition:
-        background-color 0.2s ease,
-        transform 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 button:hover {
-    background-color: var(--azul-oscuro);
+    background-color: var(--azul-turquesa);
 }
 
 button:active {
@@ -293,13 +272,9 @@ button:disabled {
 form {
     width: 100%;
     max-width: 550px;
-
     background-color: var(--blanco);
-
     padding: 2rem;
-
     border-radius: var(--radio);
-
     box-shadow: var(--sombra);
 }
 
@@ -309,11 +284,8 @@ form div {
 
 label {
     display: block;
-
     margin-bottom: 0.4rem;
-
     color: var(--gris-oscuro);
-
     font-size: 0.9rem;
     font-weight: 500;
 }
@@ -322,26 +294,18 @@ input[type="email"],
 input[type="password"],
 input[type="tel"] {
     width: 100%;
-
     padding: 12px 14px;
-
     border: 1px solid var(--gris-claro);
     border-radius: var(--radio);
-
     font-family: 'Poppins', sans-serif;
-
     outline: none;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 input[type="email"]:focus,
 input[type="password"]:focus,
 input[type="tel"]:focus {
-    border-color: var(--azul-principal);
-
+    border-color: var(--azul-turquesa);
     box-shadow: 0 0 0 3px var(--azul-claro);
 }
 
@@ -372,15 +336,10 @@ form p:first-of-type {
 .detalle-emprendedor {
     width: 90%;
     max-width: 900px;
-
     margin: 3rem auto;
-
     background-color: var(--blanco);
-
     padding: 2.5rem;
-
     border-radius: var(--radio);
-
     box-shadow: var(--sombra);
 }
 
@@ -406,38 +365,146 @@ form p:first-of-type {
 .logo {
     width: 55px;
     height: 55px;
-
     object-fit: contain;
 }
 
 .imagen-emprendimiento {
     width: 100%;
     max-height: 400px;
-
     object-fit: cover;
-
     border-radius: var(--radio);
+}
+
+/* =========================
+   FOOTER INSTITUCIONAL
+========================= */
+
+.footer-site {
+    background-color: var(--azul-marino);
+    color: var(--blanco);
+    border-top: 4px solid var(--celeste-subrayado);
+    margin-top: auto;
+    padding: 3rem 7% 1.5rem 7%;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.5fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-brand h2 {
+    color: var(--blanco);
+    font-size: 1.6rem;
+    margin-bottom: 0.2rem;
+}
+
+.footer-brand h2 span {
+    color: var(--celeste-subrayado);
+}
+
+.footer-subtitulo {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.8rem;
+}
+
+.linea-bicolor {
+    display: flex;
+    height: 4px;
+    width: 120px;
+    margin-bottom: 1rem;
+}
+
+.linea-bicolor .celeste {
+    width: 50%;
+    background-color: var(--celeste-subrayado);
+}
+
+.linea-bicolor .amarillo {
+    width: 50%;
+    background-color: var(--amarillo-lima);
+}
+
+.footer-col h3 {
+    color: var(--amarillo-lima);
+    font-size: 1rem;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+}
+
+.footer-col ul {
+    list-style: none;
+}
+
+.footer-col ul li {
+    margin-bottom: 0.6rem;
+}
+
+.footer-col a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+}
+
+.footer-col a:hover {
+    color: var(--celeste-subrayado);
+}
+
+.footer-text {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 1.2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.badge-expo {
+    background-color: var(--amarillo-lima);
+    color: var(--azul-marino);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 600;
 }
 
 /* =========================
    RESPONSIVE
 ========================= */
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+    .footer-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
 
-    nav {
+@media (max-width: 768px) {
+    nav,
+    .navbar {
         flex-direction: column;
         gap: 1rem;
-
         padding: 1rem;
     }
 
-    nav div {
+    nav div,
+    .navbar-links {
         flex-wrap: wrap;
         justify-content: center;
+        gap: 15px;
     }
 
-    h1 {
+    h1, .home-titulo {
         font-size: 2rem;
     }
 
@@ -446,16 +513,34 @@ form p:first-of-type {
     }
 
     .detalle-emprendedor {
+        margin: 30px 20px;
         padding: 1.5rem;
     }
 
-    form {
+    .detalle-titulo {
+        font-size: 30px;
+    }
+
+    form,
+    .login-container,
+    .registro-container {
         padding: 1.5rem;
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 550px) {
+    .footer-grid {
+        grid-template-columns: 1fr;
+    }
 
+    .footer-bottom {
+        flex-direction: column;
+        gap: 0.8rem;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
     nav h2 {
         font-size: 1.3rem;
     }
@@ -471,47 +556,4 @@ form p:first-of-type {
     button {
         width: 100%;
     }
-    @media (max-width: 768px) {
-
-    .navbar {
-        padding: 15px 20px;
-
-        flex-direction: column;
-        gap: 15px;
-    }
-
-
-    .navbar-links {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-
-    .home {
-        padding: 35px 20px;
-    }
-
-
-    .home-titulo {
-        font-size: 34px;
-    }
-
-
-    .detalle-emprendedor {
-        margin: 30px 20px;
-        padding: 25px;
-    }
-
-
-    .detalle-titulo {
-        font-size: 30px;
-    }
-
-
-    .login-container,
-    .registro-container {
-        padding: 30px 20px;
-    }
-
-}
 }

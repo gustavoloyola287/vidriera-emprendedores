@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Navbar from './components/Navbar';
+import { Footer } from './components/Footer'; 
 import Home from "./page/Home";
 import Login from "./page/Login";
 import RegistroEmprendedor from "./page/RegistroEmprendedor";
@@ -12,20 +13,26 @@ function App() {
     return (
         <BrowserRouter>
             <Navbar />
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/registro" element={<RegistroEmprendedor />} />
-                <Route path="/emprendedor/:id" element={<DetalleEmprendedor />} />
-                <Route path="/productos" element={<ProductosPage />} />
 
-                {/* Ruta protegida */}
-                <Route path="/productos" element={<ProtectedRoute><ProductosPage /></ProtectedRoute>} />
+            {/* Encapsulamos las rutas dentro del main para que empuje al footer */}
+            <main>
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/registro" element={<RegistroEmprendedor />} />
+                    <Route path="/emprendedor/:id" element={<DetalleEmprendedor />} />
+                    
+                    {/* Ruta protegida de productos */}
+                    <Route 
+                        path="/productos" 
+                        element={<ProtectedRoute><ProductosPage /> </ProtectedRoute>} />
+                </Routes>
 
-                {/* Ruta por defecto */}
-               
+              
+            </main>
 
-            </Routes>
+            {/* Footer */}
+            <Footer />
         </BrowserRouter>
     );
 }
