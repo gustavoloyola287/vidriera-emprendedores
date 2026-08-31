@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../Services/api'; // Asegurate de que la ruta sea correcta según tu estructura
+import api from '../Services/api'; // Asegurate de que la ruta sea correcta según tu estructura
 
 export const RecuperarPassword: React.FC = () => {
     const navigate = useNavigate();

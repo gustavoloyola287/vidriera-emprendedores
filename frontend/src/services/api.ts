@@ -18,4 +18,6 @@ api.interceptors.request.use(
   }
 );
 
+// Exportamos de ambas formas para soportar "import api" e "import { api }"
+export { api };
 export default api;
