@@ -31,33 +31,29 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Activamos CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // Deshabilitamos CSRF para API REST stateless
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // Endpoints de autenticación (Login y Registro) libres
+                // Endpoints de autenticación y productos totalmente libres para POST/GET
                 .requestMatchers(
                     "/auth/**",
-                    "/api/auth/**"
+                    "/api/auth/**",
+                    "/api/productos/**",
+                    "/productos/**"
                 ).permitAll()
 
-                // LECTURA PÚBLICA: Permite a los visitantes ver emprendedores, productos, categorías y FOTOS (solo GET)
+                // Lectura pública para el resto de recursos (GET)
                 .requestMatchers(HttpMethod.GET,
                     "/emprendedores/**",
                     "/api/emprendedores/**",
-                    "/productos/**",
-                    "/api/productos/**",
                     "/categorias/**",
                     "/api/categorias/**",
                     "/fotos/**",
                     "/api/fotos/**"
                 ).permitAll()
 
-                // Cualquier otra petición (POST, PUT, DELETE en productos/categorías/fotos) requiere token JWT
                 .anyRequest().authenticated()
             )
-            // No guardamos sesión en servidor (STATELESS)
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
@@ -67,7 +63,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 2. Configuración de CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

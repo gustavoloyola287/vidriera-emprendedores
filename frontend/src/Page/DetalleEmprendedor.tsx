@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { type Emprendedor } from "../Types/Emprendedor";
+import { type Emprendedor } from "../types/Emprendedor";
 
 function DetalleEmprendedor() {
     const { id } = useParams();

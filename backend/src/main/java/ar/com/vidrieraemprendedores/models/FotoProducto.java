@@ -16,6 +16,6 @@ public class FotoProducto {
     @Id
     private String id;          // ID generado automáticamente por MongoDB (HexString)
     private Long productoId;    // ID del producto en PostgreSQL (Clave Foránea lógica)
-    private String url;         // URL o Base64/Binario de la imagen
+    private String imagenBase64;         // URL o Base64/Binario de la imagen
     private boolean esPrincipal;
 }

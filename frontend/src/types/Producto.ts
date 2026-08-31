@@ -10,12 +10,20 @@ export interface Emprendedor {
   email?: string;
 }
 
+export interface FotoProducto {
+  id?: string;
+  productoId?: number;
+  imagenBase64?: string;
+}
+
 export interface Producto {
   id?: number;
   nombre: string;
   descripcion: string;
-  precio: number;
+  precio?: number;
   imagenUrl?: string;
+  fotoPrincipal?: FotoProducto;
+  fotos?: FotoProducto[];
   categoria?: Categoria;
   emprendedor?: Emprendedor;
 }

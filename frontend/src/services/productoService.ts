@@ -2,14 +2,22 @@ import axios from 'axios';
 import type { Producto, Categoria } from '../types/Producto';
 
 const API_URL = 'http://localhost:8080/api/productos';
+const API_CATEGORIAS_URL = 'http://localhost:8080/api/categorias';
+
+// Helper para limpiar comillas extras del token si viene de JSON.stringify
+const getCleanToken = (): string | null => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  return token.replace(/^"(.*)"$/, '$1'); // Elimina comillas envolventes si las hay
+};
 
 // Configuración de Headers con el Token JWT de localStorage
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+const getAuthHeaders = (isMultipart = false) => {
+  const token = getCleanToken();
   return {
     headers: {
       Authorization: token ? `Bearer ${token}` : '',
-      'Content-Type': 'application/json',
+      ...(isMultipart ? {} : { 'Content-Type': 'application/json' }),
     },
   };
 };
@@ -21,15 +29,14 @@ export const productoService = {
     return response.data;
   },
 
-  // Obtener categorías 
+  // Obtener categorías desde /api/categorias
   getCategorias: async (): Promise<Categoria[]> => {
-    const response = await axios.get<Categoria[]>(`${API_URL}/categorias`);
+    const response = await axios.get<Categoria[]>(API_CATEGORIAS_URL);
     return response.data;
   },
 
   // Obtener productos de un emprendedor específico
   getByEmprendedor: async (emprendedorId: number): Promise<Producto[]> => {
-    // Si tu endpoint en Spring Boot es /api/productos/emprendedor/{id}
     const response = await axios.get<Producto[]>(
       `${API_URL}/emprendedor/${emprendedorId}`, 
       getAuthHeaders()
@@ -37,9 +44,19 @@ export const productoService = {
     return response.data;
   },
 
-  // Crear un nuevo producto (requiere auth)
+  // Crear un nuevo producto sin foto (JSON plano)
   create: async (producto: Partial<Producto>): Promise<Producto> => {
     const response = await axios.post<Producto>(API_URL, producto, getAuthHeaders());
+    return response.data;
+  },
+
+  // Crear un nuevo producto CON FOTO para MongoDB (Multipart Form-Data)
+  createConFoto: async (formData: FormData): Promise<Producto> => {
+    const response = await axios.post<Producto>(
+      `${API_URL}/con-foto`, 
+      formData, 
+      getAuthHeaders(true)
+    );
     return response.data;
   },
 

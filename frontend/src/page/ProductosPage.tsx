@@ -1,25 +1,26 @@
 import { useEffect, useState } from 'react';
 //import { Navbar } from '../components/Navbar';
 import { productoService } from '../services/productoService';
-import type { Producto } from '../types/Producto';
+import type { Producto, Categoria } from '../types/Producto';
 
 export const ProductosPage = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [mostrarModal, setMostrarModal] = useState(false);
 
   // Formulario de nuevo producto
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [precio, setPrecio] = useState<number | ''>('');
-  const [imagenUrl, setImagenUrl] = useState('');
+  const [idCategoria, setIdCategoria] = useState<number | ''>('');
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
 
   // Recuperación de datos del Emprendedor desde el almacenamiento local
   const [nombreEmprendedor, setNombreEmprendedor] = useState('');
   const [emprendedorId, setEmprendedorId] = useState<number>(1);
 
   useEffect(() => {
-    // Leemos el nombre guardado durante el Login
+    // Leemos el nombre e ID guardados durante el Login
     const nombreGuardado = localStorage.getItem('nombreEmprendedor') || 'Emprendedor Registrado';
     const idGuardado = localStorage.getItem('emprendedorId');
 
@@ -27,6 +28,14 @@ export const ProductosPage = () => {
     if (idGuardado) {
       setEmprendedorId(Number(idGuardado));
     }
+
+    // Cargar categorías disponibles
+    productoService.getCategorias()
+      .then((cats) => {
+        setCategorias(cats);
+        if (cats.length > 0) setIdCategoria(cats[0].id);
+      })
+      .catch((err) => console.error('Error al obtener categorías:', err));
   }, []);
 
   const cargarProductos = () => {
@@ -54,19 +63,29 @@ export const ProductosPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!idCategoria) {
+      alert('Por favor selecciona una categoría');
+      return;
+    }
+
     try {
-      await productoService.create({
-        nombre,
-        descripcion,
-        precio: Number(precio),
-        imagenUrl,
-        emprendedor: { id: emprendedorId } as any,
-      });
+      const formData = new FormData();
+      formData.append('nombre', nombre);
+      formData.append('descripcion', descripcion);
+      formData.append('idCategoria', idCategoria.toString());
+      formData.append('idEmprendedor', emprendedorId.toString());
+
+      if (fotoFile) {
+        formData.append('foto', fotoFile);
+      }
+
+      await productoService.createConFoto(formData);
+
       setMostrarModal(false);
       setNombre('');
       setDescripcion('');
-      setPrecio('');
-      setImagenUrl('');
+      setFotoFile(null);
       cargarProductos();
     } catch (error) {
       console.error('Error al crear producto:', error);
@@ -103,7 +122,6 @@ export const ProductosPage = () => {
                     <th>Imagen</th>
                     <th>Nombre</th>
                     <th>Descripción</th>
-                    <th>Precio</th>
                     <th className="text-end">Acciones</th>
                   </tr>
                 </thead>
@@ -112,7 +130,7 @@ export const ProductosPage = () => {
                     <tr key={prod.id}>
                       <td>
                         <img
-                          src={prod.imagenUrl || 'https://via.placeholder.com/50'}
+                          src={prod.fotoPrincipal?.imagenBase64 || prod.imagenUrl || 'https://via.placeholder.com/50'}
                           alt={prod.nombre}
                           width="50"
                           height="50"
@@ -121,7 +139,6 @@ export const ProductosPage = () => {
                       </td>
                       <td className="fw-bold">{prod.nombre}</td>
                       <td className="text-muted small">{prod.descripcion}</td>
-                      <td>${prod.precio}</td>
                       <td className="text-end">
                         <button
                           className="btn btn-sm btn-outline-danger"
@@ -134,7 +151,7 @@ export const ProductosPage = () => {
                   ))}
                   {productos.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="text-center text-muted py-4">
+                      <td colSpan={4} className="text-center text-muted py-4">
                         No tenés productos cargados aún.
                       </td>
                     </tr>
@@ -178,6 +195,23 @@ export const ProductosPage = () => {
                         onChange={(e) => setNombre(e.target.value)}
                       />
                     </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Categoría</label>
+                      <select
+                        className="form-select"
+                        value={idCategoria}
+                        onChange={(e) => setIdCategoria(Number(e.target.value))}
+                        required
+                      >
+                        {categorias.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     <div className="mb-3">
                       <label className="form-label">Descripción</label>
                       <textarea
@@ -187,24 +221,18 @@ export const ProductosPage = () => {
                         onChange={(e) => setDescripcion(e.target.value)}
                       ></textarea>
                     </div>
+
                     <div className="mb-3">
-                      <label className="form-label">Precio</label>
+                      <label className="form-label">Seleccionar Imagen</label>
                       <input
-                        type="number"
+                        type="file"
                         className="form-control"
-                        required
-                        value={precio}
-                        onChange={(e) => setPrecio(e.target.value === '' ? '' : Number(e.target.value))}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">URL de Imagen</label>
-                      <input
-                        type="url"
-                        className="form-control"
-                        placeholder="https://ejemplo.com/imagen.jpg"
-                        value={imagenUrl}
-                        onChange={(e) => setImagenUrl(e.target.value)}
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setFotoFile(e.target.files[0]);
+                          }
+                        }}
                       />
                     </div>
                   </div>
