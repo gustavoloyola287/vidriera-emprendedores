@@ -1,21 +1,42 @@
 import { useEffect, useState } from 'react';
-import { Navbar } from '../components/Navbar';
+//import { Navbar } from '../components/Navbar';
 import { productoService } from '../services/productoService';
-import type { Producto }  from '../types/Producto';
+import type { Producto, Categoria } from '../types/Producto';
 
 export const ProductosPage = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [mostrarModal, setMostrarModal] = useState(false);
 
   // Formulario de nuevo producto
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [precio, setPrecio] = useState<number | ''>('');
-  const [imagenUrl, setImagenUrl] = useState('');
+  const [idCategoria, setIdCategoria] = useState<number | ''>('');
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
 
-  // ID de prueba o recuperado del contexto de autenticación
-  const emprendedorId = 1;
+  // Recuperación de datos del Emprendedor desde el almacenamiento local
+  const [nombreEmprendedor, setNombreEmprendedor] = useState('');
+  const [emprendedorId, setEmprendedorId] = useState<number>(1);
+
+  useEffect(() => {
+    // Leemos el nombre e ID guardados durante el Login
+    const nombreGuardado = localStorage.getItem('nombreEmprendedor') || 'Emprendedor Registrado';
+    const idGuardado = localStorage.getItem('emprendedorId');
+
+    setNombreEmprendedor(nombreGuardado);
+    if (idGuardado) {
+      setEmprendedorId(Number(idGuardado));
+    }
+
+    // Cargar categorías disponibles
+    productoService.getCategorias()
+      .then((cats) => {
+        setCategorias(cats);
+        if (cats.length > 0) setIdCategoria(cats[0].id);
+      })
+      .catch((err) => console.error('Error al obtener categorías:', err));
+  }, []);
 
   const cargarProductos = () => {
     setLoading(true);
@@ -27,7 +48,7 @@ export const ProductosPage = () => {
 
   useEffect(() => {
     cargarProductos();
-  }, []);
+  }, [emprendedorId]);
 
   const handleEliminar = async (id: number) => {
     if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
@@ -42,19 +63,29 @@ export const ProductosPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!idCategoria) {
+      alert('Por favor selecciona una categoría');
+      return;
+    }
+
     try {
-      await productoService.create({
-        nombre,
-        descripcion,
-        precio: Number(precio),
-        imagenUrl,
-        emprendedor: { id: emprendedorId } as any,
-      });
+      const formData = new FormData();
+      formData.append('nombre', nombre);
+      formData.append('descripcion', descripcion);
+      formData.append('idCategoria', idCategoria.toString());
+      formData.append('idEmprendedor', emprendedorId.toString());
+
+      if (fotoFile) {
+        formData.append('foto', fotoFile);
+      }
+
+      await productoService.createConFoto(formData);
+
       setMostrarModal(false);
       setNombre('');
       setDescripcion('');
-      setPrecio('');
-      setImagenUrl('');
+      setFotoFile(null);
       cargarProductos();
     } catch (error) {
       console.error('Error al crear producto:', error);
@@ -63,10 +94,15 @@ export const ProductosPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      {/* <Navbar /> */}
       <div className="container py-5">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1 className="h3 font-bold text-gray-800 mb-0">Gestión de Mis Productos</h1>
+          <div>
+            <h1 className="h3 font-bold text-gray-800 mb-0">Gestión de Mis Productos</h1>
+            {nombreEmprendedor && (
+              <small className="text-muted">Emprendimiento: {nombreEmprendedor}</small>
+            )}
+          </div>
           <button
             className="btn btn-primary"
             onClick={() => setMostrarModal(true)}
@@ -86,7 +122,6 @@ export const ProductosPage = () => {
                     <th>Imagen</th>
                     <th>Nombre</th>
                     <th>Descripción</th>
-                    <th>Precio</th>
                     <th className="text-end">Acciones</th>
                   </tr>
                 </thead>
@@ -95,7 +130,7 @@ export const ProductosPage = () => {
                     <tr key={prod.id}>
                       <td>
                         <img
-                          src={prod.imagenUrl || 'https://via.placeholder.com/50'}
+                          src={prod.fotoPrincipal?.imagenBase64 || prod.imagenUrl || 'https://via.placeholder.com/50'}
                           alt={prod.nombre}
                           width="50"
                           height="50"
@@ -104,7 +139,6 @@ export const ProductosPage = () => {
                       </td>
                       <td className="fw-bold">{prod.nombre}</td>
                       <td className="text-muted small">{prod.descripcion}</td>
-                      <td>${prod.precio}</td>
                       <td className="text-end">
                         <button
                           className="btn btn-sm btn-outline-danger"
@@ -117,7 +151,7 @@ export const ProductosPage = () => {
                   ))}
                   {productos.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="text-center text-muted py-4">
+                      <td colSpan={4} className="text-center text-muted py-4">
                         No tenés productos cargados aún.
                       </td>
                     </tr>
@@ -128,7 +162,7 @@ export const ProductosPage = () => {
           </div>
         )}
 
-        {/* Modal simple de Bootstrap/Custom para agregar producto */}
+        {/* Modal para agregar producto */}
         {mostrarModal && (
           <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <div className="modal-dialog">
@@ -139,6 +173,18 @@ export const ProductosPage = () => {
                 </div>
                 <form onSubmit={handleSubmit}>
                   <div className="modal-body">
+                    
+                    {/* Campo Emprendedor (Solo lectura) */}
+                    <div className="mb-3">
+                      <label className="form-label font-bold">Emprendedor / Marca</label>
+                      <input
+                        type="text"
+                        className="form-control bg-light"
+                        value={nombreEmprendedor}
+                        disabled
+                      />
+                    </div>
+
                     <div className="mb-3">
                       <label className="form-label">Nombre del Producto</label>
                       <input
@@ -149,6 +195,23 @@ export const ProductosPage = () => {
                         onChange={(e) => setNombre(e.target.value)}
                       />
                     </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Categoría</label>
+                      <select
+                        className="form-select"
+                        value={idCategoria}
+                        onChange={(e) => setIdCategoria(Number(e.target.value))}
+                        required
+                      >
+                        {categorias.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     <div className="mb-3">
                       <label className="form-label">Descripción</label>
                       <textarea
@@ -158,24 +221,18 @@ export const ProductosPage = () => {
                         onChange={(e) => setDescripcion(e.target.value)}
                       ></textarea>
                     </div>
+
                     <div className="mb-3">
-                      <label className="form-label">Precio</label>
+                      <label className="form-label">Seleccionar Imagen</label>
                       <input
-                        type="number"
+                        type="file"
                         className="form-control"
-                        required
-                        value={precio}
-                        onChange={(e) => setPrecio(Number(e.target.value))}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">URL de Imagen</label>
-                      <input
-                        type="url"
-                        className="form-control"
-                        placeholder="https://ejemplo.com/imagen.jpg"
-                        value={imagenUrl}
-                        onChange={(e) => setImagenUrl(e.target.value)}
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setFotoFile(e.target.files[0]);
+                          }
+                        }}
                       />
                     </div>
                   </div>
