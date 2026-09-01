@@ -102,8 +102,8 @@ function Home() {
                                 src={obtenerImagenSrc(prod)!} 
                                // alt={prod.nombre} 
                             />
-                            {/* Recuadro alternativo simple mientras no haya fotos subidas */}
-                            <div style={{
+                           {/*  {/* Recuadro alternativo simple mientras no haya fotos subidas */}
+                           {/*  <div style={{
                                 height: '160px',
                                 backgroundColor: '#f1f5f9',
                                 display: 'flex',
@@ -114,7 +114,8 @@ function Home() {
                                 borderBottom: '1px solid #e2e8f0'
                             }}>
                                 Sin imagen disponible
-                            </div>
+                                
+                            </div> */}
                             
                             <div className="card-contenido">
                                 <h2>{prod.nombre}</h2>

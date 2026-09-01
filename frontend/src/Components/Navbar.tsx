@@ -15,7 +15,7 @@ export const Navbar: React.FC = () => {
     <nav 
       className="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm" 
       data-bs-theme="dark"
-      style={{ backgroundColor: '#181E2E' }}
+      style={{ backgroundColor: '#112940' }}
     >
       <div className="container">
         
