@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../Context/AuthContext';
 
 export const Navbar: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -40,17 +40,28 @@ export const Navbar: React.FC = () => {
           <span className="navbar-toggler-icon"></span>
         </button>
 
-        {/* Contenido del Menú */}
+        {/* Contenido del Menú Desplegable */}
         <div className="collapse navbar-collapse" id="navbarVCP">
-          <ul className="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+          {/* Navegación Principal */}
+          <ul className="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3 gap-lg-2">
             <li className="nav-item">
-              <Link to="/" className="nav-link text-white active">
+              <Link to="/" className="nav-link text-white fw-semibold position-relative nav-link-custom">
                 Inicio
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link to="/emprendedores" className="nav-link text-white fw-semibold position-relative nav-link-custom">
+                Emprendedores
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link to="/categorias" className="nav-link text-white fw-semibold position-relative nav-link-custom">
+                Categorías
               </Link>
             </li>
           </ul>
 
-          {/* Estado de Autenticación Condicional */}
+          {/* Estado de Autenticación Condicional (Integrado al Collapse) */}
           <div className="d-flex align-items-lg-center flex-column flex-lg-row gap-2 mt-2 mt-lg-0">
             {isAuthenticated ? (
               <>
