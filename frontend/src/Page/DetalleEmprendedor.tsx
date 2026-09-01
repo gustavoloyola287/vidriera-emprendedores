@@ -62,9 +62,21 @@ function DetalleEmprendedor() {
             </div>
 
             <div>
+                <h2>Ubicación en la Feria</h2>
+                <p>
+                    <strong>Feria:</strong> Feria del Puente Centenario
+                </p>
+                <p><strong>Horario:</strong> 11:00 AM - 7:00 PM</p>
+                <p>
+                    <strong>Lugar físico:</strong> Costanera Bernardo D’Elía
+                </p>
+            </div>
+
+            <div>
                 <h2>Contacto</h2>
-                <p>Email: {emprendedor.email}</p>
-                <p>Teléfono: {emprendedor.telefono}</p>
+                <p>
+                    <strong>Email:</strong> {emprendedor.email}
+                </p>
             </div>
 
             <button type="button" onClick={() => navigate("/")}>
