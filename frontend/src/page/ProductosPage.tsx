@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-//import { Navbar } from '../components/Navbar';
+import { useNavigate } from 'react-router-dom';
 import { productoService } from '../services/productoService';
 import type { Producto, Categoria } from '../types/Producto';
 
 export const ProductosPage = () => {
+  const navigate = useNavigate();
+
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,54 +17,79 @@ export const ProductosPage = () => {
   const [idCategoria, setIdCategoria] = useState<number | ''>('');
   const [fotoFile, setFotoFile] = useState<File | null>(null);
 
-  // Recuperación de datos del Emprendedor desde el almacenamiento local
+  // Identidad del Emprendedor (Sin fallbacks hardcodeados como 1)
   const [nombreEmprendedor, setNombreEmprendedor] = useState('');
-  const [emprendedorId, setEmprendedorId] = useState<number>(1);
+  const [emprendedorId, setEmprendedorId] = useState<number | null>(null);
 
   useEffect(() => {
-    // Leemos el nombre e ID guardados durante el Login
-    const nombreGuardado = localStorage.getItem('nombreEmprendedor') || 'Emprendedor Registrado';
-    const idGuardado = localStorage.getItem('emprendedorId');
+    // 1. Obtener Token y Datos del Emprendedor
+    const token = localStorage.getItem('token');
+    const nombreGuardado = localStorage.getItem('nombreEmprendedor') || localStorage.getItem('nombreCompleto');
+    
+    // Intentar leer ID de distintos nombres de clave comunes
+    const idGuardado = localStorage.getItem('emprendedorId') 
+      || localStorage.getItem('idEmprendedor') 
+      || localStorage.getItem('userId');
 
-    setNombreEmprendedor(nombreGuardado);
-    if (idGuardado) {
-      setEmprendedorId(Number(idGuardado));
+    if (!token && !idGuardado) {
+      alert('Tu sesión ha expirado o no estás autenticado.');
+      navigate('/login');
+      return;
     }
 
-    // Cargar categorías disponibles
+    if (nombreGuardado) {
+      setNombreEmprendedor(nombreGuardado);
+    }
+
+    if (idGuardado) {
+      setEmprendedorId(Number(idGuardado));
+    } else {
+      console.warn('No se encontró emprendedorId explícito en localStorage.');
+    }
+
+    // 2. Cargar categorías disponibles
     productoService.getCategorias()
       .then((cats) => {
         setCategorias(cats);
         if (cats.length > 0) setIdCategoria(cats[0].id);
       })
       .catch((err) => console.error('Error al obtener categorías:', err));
-  }, []);
+  }, [navigate]);
 
-  const cargarProductos = () => {
+  // Cargar productos del emprendedor únicamente cuando se confirme su ID
+  const cargarProductos = (id: number) => {
     setLoading(true);
-    productoService.getByEmprendedor(emprendedorId)
+    productoService.getByEmprendedor(id)
       .then((data) => setProductos(data))
       .catch((err) => console.error('Error al obtener productos:', err))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    cargarProductos();
+    if (emprendedorId) {
+      cargarProductos(emprendedorId);
+    }
   }, [emprendedorId]);
 
   const handleEliminar = async (id: number) => {
     if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
       try {
         await productoService.delete(id);
-        setProductos(productos.filter((p) => p.id !== id));
+        setProductos((prev) => prev.filter((p) => p.id !== id));
       } catch (error) {
         console.error('Error al eliminar producto:', error);
+        alert('No se pudo eliminar el producto. Verifica tus permisos.');
       }
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!emprendedorId) {
+      alert('Error de autenticación: No se identificó al emprendedor logueado.');
+      return;
+    }
 
     if (!idCategoria) {
       alert('Por favor selecciona una categoría');
@@ -86,15 +113,16 @@ export const ProductosPage = () => {
       setNombre('');
       setDescripcion('');
       setFotoFile(null);
-      cargarProductos();
+      
+      cargarProductos(emprendedorId);
     } catch (error) {
       console.error('Error al crear producto:', error);
+      alert('Ocurrió un error al intentar guardar el producto.');
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* <Navbar /> */}
       <div className="container py-5">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
@@ -106,6 +134,7 @@ export const ProductosPage = () => {
           <button
             className="btn btn-primary"
             onClick={() => setMostrarModal(true)}
+            disabled={!emprendedorId}
           >
             + Nuevo Producto
           </button>
@@ -180,7 +209,7 @@ export const ProductosPage = () => {
                       <input
                         type="text"
                         className="form-control bg-light"
-                        value={nombreEmprendedor}
+                        value={nombreEmprendedor || 'Emprendedor Logueado'}
                         disabled
                       />
                     </div>

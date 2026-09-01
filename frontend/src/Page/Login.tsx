@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../Context/AuthContext';
-import  api  from '../Services/api'; // Usamos la instancia centralizada de Axios
+import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -19,39 +19,47 @@ export const Login: React.FC = () => {
         const emailTrimmed = email.trim().toLowerCase();
 
         if (!emailTrimmed || !password) {
-        setError('Por favor complete todos los campos.');
-        return;
+          setError('Por favor complete todos los campos.');
+          return;
         }
 
         setLoading(true);
 
         try {
-        // Usamos api para apuntar automáticamente a http://localhost:8080/api
-        const response = await api.post('/auth/login', {
-            email: emailTrimmed,
-            password,
-        });
+          const response = await api.post('/auth/login', {
+              email: emailTrimmed,
+              password,
+          });
 
-        const { token } = response.data;
+          // Ajustá estos nombres de propiedades según las propiedades exactas que retorna tu backend
+          const { token, id, emprendedorId, nombre, nombreEmprendimiento, emprendimiento } = response.data;
 
-        // 1. Guardamos el token en localStorage para el interceptor de api.ts
-        localStorage.setItem('token', token);
+          // 1. Guardar Token y Datos de sesión
+          localStorage.setItem('token', token);
 
-        // 2. Actualizamos el estado global de autenticación
-        login(token);
+          const idFinal = emprendedorId || id;
+          const nombreFinal = nombreEmprendimiento || emprendimiento || nombre;
 
-        // 3. Redirigimos
-        navigate('/');
+          if (idFinal) {
+            localStorage.setItem('emprendedorId', idFinal.toString());
+          }
+          if (nombreFinal) {
+            localStorage.setItem('nombreEmprendedor', nombreFinal);
+          }
+
+          // 2. Actualizar estado global y redirigir
+          login(token);
+          navigate('/');
         } catch (err: any) {
-        if (err.response && err.response.data && err.response.data.message) {
-            setError(err.response.data.message);
-        } else if (err.code === 'ERR_NETWORK') {
-            setError('No se pudo conectar con el servidor.');
-        } else {
-            setError('Credenciales inválidas o error inesperado.');
-        }
+          if (err.response && err.response.data && err.response.data.message) {
+              setError(err.response.data.message);
+          } else if (err.code === 'ERR_NETWORK') {
+              setError('No se pudo conectar con el servidor.');
+          } else {
+              setError('Credenciales inválidas o error inesperado.');
+          }
         } finally {
-        setLoading(false);
+          setLoading(false);
         }
     };
 
@@ -127,6 +135,6 @@ export const Login: React.FC = () => {
         </div>
         </div>
     );
-    };
+};
 
 export default Login;

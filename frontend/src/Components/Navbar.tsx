@@ -65,7 +65,7 @@ export const Navbar: React.FC = () => {
           <div className="d-flex align-items-lg-center flex-column flex-lg-row gap-2 mt-2 mt-lg-0">
             {isAuthenticated ? (
               <>
-                <Link to="/mis-productos" className="btn btn-outline-light btn-sm w-100 w-lg-auto">
+                <Link to="/productos" className="btn btn-outline-light btn-sm w-100 w-lg-auto">
                   Mis Productos
                 </Link>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+//import { Link } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
   return (
@@ -18,6 +18,12 @@ export const Footer: React.FC = () => {
             Plataforma de la Vidriera de Emprendedores. Conectando talento local con oportunidades de desarrollo y empleo.
           </p>
         </div>
+
+        {/* Navegación */}
+        
+
+        {/* Accesos */}
+        
 {/* Síguenos en redes */}
 <div className="footer-col">
   <h3>Síguenos en redes</h3>
