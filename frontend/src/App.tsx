@@ -11,7 +11,8 @@ import { ProtectedRoute } from "./Components/ProtectedRoute";
 import { AuthProvider } from "./Context/AuthContext";
 import { RecuperarPassword } from "./Page/RecuperarPassword";
 import { RestablecerPassword } from "./Page/RestablecerPassword";
-
+import { CategoriasPage } from "./Page/CategoriasPage";
+import {EmprendedoresPage} from "./Page/EmprendedoresPage";
 function App() {
     return (
         <BrowserRouter>
@@ -27,7 +28,10 @@ function App() {
                         <Route path="/emprendedor/:id" element={<DetalleEmprendedor />} />
                         <Route path="/recuperar-password" element={<RecuperarPassword />} />
                         <Route path="/restablecer-password" element={<RestablecerPassword />} />
-
+                        <Route path= "/emprendedores" element={<EmprendedoresPage />} />
+                        <Route path = "/categorias" element={<CategoriasPage />} />
+                        <Route path ="/recuperar-password" element={<RecuperarPassword />} />
+                        <Route path ="/restablecer-password" element={<RestablecerPassword />} />
                         {/* Ruta protegida de productos */}
                         <Route 
                             path="/productos" 
@@ -35,7 +39,8 @@ function App() {
                                 <ProtectedRoute>
                                     <ProductosPage />
                                 </ProtectedRoute>
-                            } 
+                            }
+                            
                         />
                     </Routes>
                 </main>

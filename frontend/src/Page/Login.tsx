@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import { useAuth } from '../Context/AuthContext';
+import api from '../Services/api';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -18,48 +18,48 @@ export const Login: React.FC = () => {
 
         const emailTrimmed = email.trim().toLowerCase();
 
-        if (!emailTrimmed || !password) {
-          setError('Por favor complete todos los campos.');
-          return;
-        }
+            if (!emailTrimmed || !password) {
+            setError('Por favor complete todos los campos.');
+            return;
+            }
 
-        setLoading(true);
+            setLoading(true);
 
-        try {
-          const response = await api.post('/auth/login', {
-              email: emailTrimmed,
-              password,
-          });
+            try {
+            const response = await api.post('/auth/login', {
+                email: emailTrimmed,
+                password,
+            });
 
-          // Ajustá estos nombres de propiedades según las propiedades exactas que retorna tu backend
-          const { token, id, emprendedorId, nombre, nombreEmprendimiento, emprendimiento } = response.data;
+            // Ajustá estos nombres de propiedades según las propiedades exactas que retorna tu backend
+            const { token, id, emprendedorId, nombre, nombreEmprendimiento, emprendimiento } = response.data;
 
-          // 1. Guardar Token y Datos de sesión
-          localStorage.setItem('token', token);
+            // 1. Guardar Token y Datos de sesión
+            localStorage.setItem('token', token);
 
-          const idFinal = emprendedorId || id;
-          const nombreFinal = nombreEmprendimiento || emprendimiento || nombre;
+            const idFinal = emprendedorId || id;
+            const nombreFinal = nombreEmprendimiento || emprendimiento || nombre;
 
-          if (idFinal) {
-            localStorage.setItem('emprendedorId', idFinal.toString());
-          }
-          if (nombreFinal) {
-            localStorage.setItem('nombreEmprendedor', nombreFinal);
-          }
+            if (idFinal) {
+                localStorage.setItem('emprendedorId', idFinal.toString());
+            }
+            if (nombreFinal) {
+                localStorage.setItem('nombreEmprendedor', nombreFinal);
+            }
 
-          // 2. Actualizar estado global y redirigir
-          login(token);
-          navigate('/');
-        } catch (err: any) {
-          if (err.response && err.response.data && err.response.data.message) {
-              setError(err.response.data.message);
-          } else if (err.code === 'ERR_NETWORK') {
-              setError('No se pudo conectar con el servidor.');
-          } else {
-              setError('Credenciales inválidas o error inesperado.');
-          }
-        } finally {
-          setLoading(false);
+            // 2. Actualizar estado global y redirigir
+            login(token);
+            navigate('/');
+            } catch (err: any) {
+            if (err.response && err.response.data && err.response.data.message) {
+                setError(err.response.data.message);
+            } else if (err.code === 'ERR_NETWORK') {
+                setError('No se pudo conectar con el servidor.');
+            } else {
+                setError('Credenciales inválidas o error inesperado.');
+            }
+            } finally {
+            setLoading(false);
         }
     };
 

@@ -18,11 +18,6 @@ export const Footer: React.FC = () => {
             Plataforma de la Vidriera de Emprendedores. Conectando talento local con oportunidades de desarrollo y empleo.
           </p>
         </div>
-
-        {/* Navegación */}
-        
-
-        {/* Accesos */}
         
 {/* Síguenos en redes */}
 <div className="footer-col">
