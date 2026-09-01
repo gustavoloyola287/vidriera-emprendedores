@@ -15,34 +15,50 @@ export interface ProductoDTO {
     urlImagen?: string;
 }
 
+export interface Categoria {
+    id: number;
+    nombre: string;
+}
+
 function Home() {
     const [productos, setProductos] = useState<ProductoDTO[]>([]);
+    const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [busqueda, setBusqueda] = useState<string>("");
+    const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("todas");
     const [cargando, setCargando] = useState<boolean>(true);
     const [error, setError] = useState<string>("");
 
     const navigate = useNavigate();
 
     useEffect(() => {
-        const cargarProductos = async () => {
+        const cargarDatosIniciales = async () => {
             try {
-                const respuesta = await fetch("http://localhost:8080/api/productos");
+                // Cargamos productos y categorías en paralelo
+                const [respProductos, respCategorias] = await Promise.all([
+                    fetch("http://localhost:8080/api/productos"),
+                    fetch("http://localhost:8080/api/categorias")
+                ]);
 
-                if (!respuesta.ok) {
+                if (!respProductos.ok) {
                     throw new Error("Error al obtener los productos del catálogo");
                 }
 
-                const datos: ProductoDTO[] = await respuesta.json();
-                setProductos(datos);
+                const datosProductos: ProductoDTO[] = await respProductos.json();
+                setProductos(datosProductos);
+
+                if (respCategorias.ok) {
+                    const datosCategorias: Categoria[] = await respCategorias.json();
+                    setCategorias(datosCategorias);
+                }
             } catch (err) {
                 console.error(err);
-                setError("No se pudieron cargar los productos de la vidriera.");
+                setError("No se pudieron cargar los datos de la vidriera.");
             } finally {
                 setCargando(false);
             }
         };
 
-        cargarProductos();
+        cargarDatosIniciales();
     }, []);
 
     const verPerfil = (idEmprendedor?: number) => {
@@ -51,14 +67,21 @@ function Home() {
         }
     };
 
+    // Filtro combinado: por texto y por dropdown de categoría
     const productosFiltrados = productos.filter((prod) => {
         const termino = busqueda.toLowerCase();
-        const coincideNombre = prod.nombre.toLowerCase().includes(termino);
-        const coincideDesc = prod.descripcion?.toLowerCase().includes(termino);
-        const coincideEmprendedor = prod.nombreEmprendedor?.toLowerCase().includes(termino);
-        const coincideCategoria = prod.nombreCategoria?.toLowerCase().includes(termino);
-        
-        return coincideNombre || coincideDesc || coincideEmprendedor || coincideCategoria;
+        const coincideTexto =
+            prod.nombre.toLowerCase().includes(termino) ||
+            prod.descripcion?.toLowerCase().includes(termino) ||
+            prod.nombreEmprendedor?.toLowerCase().includes(termino) ||
+            prod.nombreCategoria?.toLowerCase().includes(termino);
+
+        const coincideCat =
+            categoriaSeleccionada === "todas" ||
+            prod.idCategoria?.toString() === categoriaSeleccionada ||
+            prod.nombreCategoria === categoriaSeleccionada;
+
+        return coincideTexto && coincideCat;
     });
 
     const obtenerImagenSrc = (prod: ProductoDTO) => {
@@ -70,7 +93,6 @@ function Home() {
                 : `data:image/jpeg;base64,${imagen}`;
         }
         
-        // Muestra una imagen por defecto mientras no haya fotos cargadas en Mongo
         return null;
     };
 
@@ -81,12 +103,29 @@ function Home() {
                 <p>Explorá los productos y emprendimientos locales de Villa Carlos Paz.</p>
             </div>
 
-            <input
-                type="text"
-                placeholder="Buscar por producto, categoría o emprendedor..."
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-            />
+            {/* Filtros de Búsqueda y Categoría */}
+            <div className="filtros-container" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+                <input
+                    type="text"
+                    placeholder="Buscar por producto, categoría o emprendedor..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                    style={{ flex: 1, minWidth: '250px' }}
+                />
+
+                <select
+                    value={categoriaSeleccionada}
+                    onChange={(e) => setCategoriaSeleccionada(e.target.value)}
+                    style={{ padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid #ccc' }}
+                >
+                    <option value="todas">Todas las categorías</option>
+                    {categorias.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                            {cat.nombre}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
             {error && <p className="error">{error}</p>}
 
@@ -96,59 +135,50 @@ function Home() {
                 <p style={{ marginTop: '2rem' }}>No se encontraron productos que coincidan con la búsqueda.</p>
             ) : (
                 <div className="cards-container">
-                    {productosFiltrados.map((prod) => (
-                        <div className="card-emprendedor" key={prod.id}>
-                            <img 
-                                src={obtenerImagenSrc(prod)!} 
-                               // alt={prod.nombre} 
-                            />
-                           {/*  {/* Recuadro alternativo simple mientras no haya fotos subidas */}
-                           {/*  <div style={{
-                                height: '160px',
-                                backgroundColor: '#f1f5f9',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#94a3b8',
-                                fontSize: '0.9rem',
-                                borderBottom: '1px solid #e2e8f0'
-                            }}>
-                                Sin imagen disponible
+                    {productosFiltrados.map((prod) => {
+                        const srcImg = obtenerImagenSrc(prod);
+                        return (
+                            <div className="card-emprendedor" key={prod.id}>
+                                {srcImg && (
+                                    <img 
+                                        src={srcImg} 
+                                        alt={prod.nombre} 
+                                    />
+                                )}
                                 
-                            </div> */}
-                            
-                            <div className="card-contenido">
-                                <h2>{prod.nombre}</h2>
+                                <div className="card-contenido">
+                                    <h2>{prod.nombre}</h2>
 
-                                {prod.nombreCategoria && (
-                                    <span style={{
-                                        display: 'inline-block',
-                                        backgroundColor: 'var(--azul-claro)',
-                                        color: 'var(--azul-marino)',
-                                        padding: '2px 8px',
-                                        borderRadius: '4px',
-                                        fontSize: '0.8rem',
-                                        fontWeight: 600,
-                                        marginBottom: '0.5rem'
-                                    }}>
-                                        {prod.nombreCategoria}
-                                    </span>
-                                )}
+                                    {prod.nombreCategoria && (
+                                        <span style={{
+                                            display: 'inline-block',
+                                            backgroundColor: 'var(--azul-claro)',
+                                            color: 'var(--azul-marino)',
+                                            padding: '2px 8px',
+                                            borderRadius: '4px',
+                                            fontSize: '0.8rem',
+                                            fontWeight: 600,
+                                            marginBottom: '0.5rem'
+                                        }}>
+                                            {prod.nombreCategoria}
+                                        </span>
+                                    )}
 
-                                <p>{prod.descripcion}</p>
+                                    <p>{prod.descripcion}</p>
 
-                                {prod.nombreEmprendedor && (
-                                    <p style={{ fontSize: '0.85rem', color: 'var(--gris-texto)', marginBottom: '1rem' }}>
-                                        Emprendimiento: <strong>{prod.nombreEmprendedor}</strong>
-                                    </p>
-                                )}
+                                    {prod.nombreEmprendedor && (
+                                        <p style={{ fontSize: '0.85rem', color: 'var(--gris-texto)', marginBottom: '1rem' }}>
+                                            Emprendimiento: <strong>{prod.nombreEmprendedor}</strong>
+                                        </p>
+                                    )}
 
-                                <button onClick={() => verPerfil(prod.idEmprendedor)}>
-                                    Ver Perfil
-                                </button>
+                                    <button onClick={() => verPerfil(prod.idEmprendedor)}>
+                                        Ver Perfil
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>

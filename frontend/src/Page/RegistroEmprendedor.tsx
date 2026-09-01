@@ -88,7 +88,6 @@ function RegistroEmprendedor() {
         setCargando(true);
         setMensaje("");
         setError("");
-        setError("");
 
         try {
             const respuesta = await fetch('http://localhost:8080/auth/register', {
@@ -97,19 +96,7 @@ function RegistroEmprendedor() {
                 body: JSON.stringify({
                     nombreCompleto,
                     nombreEmprendimiento,
-                    email,
-                    telefono,
-                    password: clave
-                })
-            });
-        try {
-            const respuesta = await fetch('http://localhost:8080/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    nombreCompleto,
-                    nombreEmprendimiento,
-                    descripcionEmprendimiento, // 👈 Nuevo campo enviado al backend
+                    descripcionEmprendimiento,
                     email,
                     telefono,
                     password: clave
@@ -120,23 +107,10 @@ function RegistroEmprendedor() {
                 const mensajeError = await respuesta.text(); 
                 throw new Error(mensajeError || "El email ya está registrado o los datos son inválidos.");
             }
-            if (!respuesta.ok) {
-                const mensajeError = await respuesta.text(); 
-                throw new Error(mensajeError || "El email ya está registrado o los datos son inválidos.");
-            }
 
             setMensaje("¡Registro exitoso! Ya podés iniciar sesión.");
             
-            // Limpiar formulario al registrar con éxito
-            setNombreCompleto("");
-            setNombreEmprendimiento("");
-            setEmail("");
-            setTelefono("");
-            setClave("");
-            setConfirmarClave("");
-            setMensaje("¡Registro exitoso! Ya podés iniciar sesión.");
-            
-            // Limpieza opcional del formulario tras registro exitoso
+            // Limpieza del formulario tras registro exitoso
             setNombreCompleto("");
             setNombreEmprendimiento("");
             setDescripcionEmprendimiento("");
@@ -145,15 +119,6 @@ function RegistroEmprendedor() {
             setClave("");
             setConfirmarClave("");
 
-        } catch (err: any) {
-            if (err.message === "Failed to fetch") {
-                setError("No se pudo conectar con el servidor. Revisá tu conexión o si el backend está corriendo.");
-            } else {
-                setError(err.message);
-            }
-        } finally {
-            setCargando(false);
-        }
         } catch (err: any) {
             if (err.message === "Failed to fetch") {
                 setError("No se pudo conectar con el servidor. Revisá tu conexión o si el backend está corriendo.");
@@ -247,11 +212,7 @@ function RegistroEmprendedor() {
                     />
                 </div>
 
-                {/* Mensaje de Error (Rojo) */}
-                {error && <p style={{ color: "red" }}>{error}</p>}
-
-                {/* Mensaje de Éxito (Verde) */}
-                {mensaje && <p style={{ color: "green" }}>{mensaje}</p>}
+                {/* Mensajes de Estado */}
                 {error && <p style={{ color: "red" }}>{error}</p>}
                 {mensaje && <p style={{ color: "green" }}>{mensaje}</p>}
 
