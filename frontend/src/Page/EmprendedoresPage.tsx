@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { emprendedorService } from '../Services/emprendedorService';
+import { emprendedorService } from '../services/emprendedorService';
 import type { Emprendedor } from '../types/Emprendedor';
-import CardEmprendedor from '../Components/CardEmprendedor';
+import CardEmprendedor from '../components/CardEmprendedor';
 
 export const EmprendedoresPage = () => {
     const [emprendedores, setEmprendedores] = useState<Emprendedor[]>([]);
