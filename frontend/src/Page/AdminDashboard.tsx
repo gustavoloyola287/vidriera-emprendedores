@@ -1,324 +1,253 @@
 import React, { useState } from 'react';
+import { 
+        Users, 
+    ShieldCheck, 
+    Package, 
+    LogOut, 
+    Home, 
+    Settings, 
+    Bell, 
+    Check, 
+    X
+    } from 'lucide-react';
+    import { UsuariosView } from './UsuariosView';
 
-export const AdminDashboard: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'inicio' | 'usuarios' | 'moderacion'>('inicio');
-
+    export const AdminDashboard: React.FC = () => {
+    const [activeTab, setActiveTab] = useState<'inicio' | 'usuarios' | 'productos' | 'moderacion' | 'ajustes'>('inicio');
+    const [filtroEstado, setFiltroEstado] = useState('Todos');
     return (
-        <div className="d-flex min-vh-100 bg-light">
-        {/* 1. SIDEBAR LATERAL */}
-        <aside className="bg-white border-end d-flex flex-column" style={{ width: '260px' }}>
-            <div className="p-4 border-bottom">
-            <h1 className="h5 fw-bold mb-0 text-primary d-flex align-items-center gap-2">
-                <i className="bi bi-shop"></i> Vidriera Virtual VCP
-            </h1>
-            <span className="badge bg-primary-subtle text-primary mt-1">Panel Administrador</span>
+        <div className="d-flex flex-column vh-100 bg-light">
+        {/* Top Header */}
+        <header className="navbar navbar-expand navbar-dark  px-3 shadow-sm" style={{backgroundColor:'#0f2b48'}}>
+            <div className="d-flex align-items-center gap-2">
+            <button className="btn btn-dark d-md-none p-1">
+                <span className="navbar-toggler-icon"></span>
+            </button>
+            <span className="navbar-brand mb-0 h1 fw-bold fs-5">Vidriera Virtual VCP</span>
             </div>
+            <div className="ms-auto d-flex align-items-center gap-3 text-white">
+            <button className="btn btn-link text-white p-0 position-relative">
+                <Bell size={20} />
+                <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+            </button>
+            <div className="d-flex align-items-center gap-2">
+                <div className="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
+                <span className="fw-bold fs-7">M</span>
+                </div>
+                <span className="small fw-semibold d-none d-sm-inline">Marcos Admin</span>
+            </div>
+            </div>
+        </header>
 
-            <nav className="p-3 flex-grow-1">
-            <ul className="nav nav-pills flex-column gap-2">
+        <div className="d-flex flex-grow-1 overflow-hidden">
+            {/* Sidebar */}
+            <aside className="bg-white border-end d-flex flex-column justify-content-between p-3" style={{ width: '240px' }}>
+            <ul className="nav nav-pills flex-column gap-1">
                 <li className="nav-item">
-                <button
+                <button 
+                    className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'inicio' ? 'active bg-primary' : 'text-dark'}`}
                     onClick={() => setActiveTab('inicio')}
-                    className={`nav-link w-100 text-start d-flex align-items-center gap-2 ${activeTab === 'inicio' ? 'active bg-primary' : 'text-dark'}`}
                 >
-                    <i className="bi bi-house-door"></i> Inicio
+                    <Home size={18} /> Inicio
                 </button>
                 </li>
                 <li className="nav-item">
-                <button
+                <button 
+                    className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'usuarios' ? 'active bg-primary' : 'text-dark'}`}
                     onClick={() => setActiveTab('usuarios')}
-                    className={`nav-link w-100 text-start d-flex align-items-center gap-2 ${activeTab === 'usuarios' ? 'active bg-primary' : 'text-dark'}`}
                 >
-                    <i className="bi bi-people"></i> Usuarios
+                    <Users size={18} /> Usuarios
                 </button>
                 </li>
                 <li className="nav-item">
-                <button
+                <button 
+                    className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'productos' ? 'active bg-primary' : 'text-dark'}`}
+                    onClick={() => setActiveTab('productos')}
+                >
+                    <Package size={18} /> Productos
+                </button>
+                </li>
+                <li className="nav-item">
+                <button 
+                    className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'moderacion' ? 'active bg-primary' : 'text-dark'}`}
                     onClick={() => setActiveTab('moderacion')}
-                    className={`nav-link w-100 text-start d-flex align-items-center gap-2 ${activeTab === 'moderacion' ? 'active bg-primary' : 'text-dark'}`}
                 >
-                    <i className="bi bi-shield-exclamation"></i> Moderación
-                    <span className="badge bg-danger rounded-pill ms-auto">5</span>
+                    <ShieldCheck size={18} /> Moderación
                 </button>
                 </li>
                 <li className="nav-item">
-                <button className="nav-link w-100 text-start d-flex align-items-center gap-2 text-dark">
-                    <i className="bi bi-box-seam"></i> Productos
-                </button>
-                </li>
-                <li className="nav-item">
-                <button className="nav-link w-100 text-start d-flex align-items-center gap-2 text-dark">
-                    <i className="bi bi-tags"></i> Categorías
+                <button 
+                    className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'ajustes' ? 'active bg-primary' : 'text-dark'}`}
+                    onClick={() => setActiveTab('ajustes')}
+                >
+                    <Settings size={18} /> Ajustes
                 </button>
                 </li>
             </ul>
-            </nav>
 
-            <div className="p-3 border-top">
-            <button className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
-                <i className="bi bi-box-arrow-right"></i> Cerrar sesión
+            <button className="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 w-100 border-0">
+                <LogOut size={18} /> Cerrar sesión
             </button>
-            </div>
-        </aside>
+            </aside>
 
-        {/* 2. CONTENIDO PRINCIPAL */}
-        <main className="flex-grow-1 p-4 overflow-auto">
-            {/* ENCABEZADO SUPERIOR */}
-            <header className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 className="h4 fw-bold text-dark mb-1">Bienvenido, Marcos</h2>
-                <p className="text-muted small mb-0">Gestión global de usuarios, productos y solicitudes del sistema municipal.</p>
-            </div>
-            <div className="d-flex align-items-center gap-3">
-                <span className="text-muted small">Última sesión: 12/05/2026</span>
-                <div className="position-relative">
-                <i className="bi bi-bell fs-5 text-secondary"></i>
-                <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
-                </div>
-            </div>
-            </header>
-
-            {/* TARJETAS MÉTRICAS DE USUARIOS (150 TOTALES) */}
-            <section className="row g-3 mb-4">
-            <div className="col-12 col-sm-6 col-xl-3">
-                <div className="card border-0 shadow-sm rounded-4 p-3 border-start border-4 border-success">
-                <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                    <span className="text-muted small fw-semibold">Activos</span>
-                    <h3 className="fw-bold mb-0 text-success">25</h3>
-                    </div>
-                    <div className="bg-success-subtle text-success p-3 rounded-circle">
-                    <i className="bi bi-person-check fs-4"></i>
-                    </div>
-                </div>
-                </div>
-            </div>
-
-            <div className="col-12 col-sm-6 col-xl-3">
-                <div className="card border-0 shadow-sm rounded-4 p-3 border-start border-4 border-warning">
-                <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                    <span className="text-muted small fw-semibold">Suspendidos</span>
-                    <h3 className="fw-bold mb-0 text-warning">5</h3>
-                    </div>
-                    <div className="bg-warning-subtle text-warning p-3 rounded-circle">
-                    <i className="bi bi-person-clock fs-4"></i>
-                    </div>
-                </div>
-                </div>
-            </div>
-
-            <div className="col-12 col-sm-6 col-xl-3">
-                <div className="card border-0 shadow-sm rounded-4 p-3 border-start border-4 border-primary">
-                <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                    <span className="text-muted small fw-semibold">Administradores</span>
-                    <h3 className="fw-bold mb-0 text-primary">2</h3>
-                    </div>
-                    <div className="bg-primary-subtle text-primary p-3 rounded-circle">
-                    <i className="bi bi-key fs-4"></i>
-                    </div>
-                </div>
-                </div>
-            </div>
-
-            <div className="col-12 col-sm-6 col-xl-3">
-                <div className="card border-0 shadow-sm rounded-4 p-3 border-start border-4 border-danger">
-                <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                    <span className="text-muted small fw-semibold">Rechazados</span>
-                    <h3 className="fw-bold mb-0 text-danger">3</h3>
-                    </div>
-                    <div className="bg-danger-subtle text-danger p-3 rounded-circle">
-                    <i className="bi bi-person-x fs-4"></i>
-                    </div>
-                </div>
-                </div>
-            </div>
-            </section>
-
-            {/* VISTA SEGÚN LA SECCIÓN SELECCIONADA */}
+            {/* Dynamic Content */}
+            <main className="flex-grow-1 p-4 overflow-auto">
             {activeTab === 'inicio' && (
-            <div className="row g-4">
-                {/* ACCESOS DIRECTOS */}
-                <div className="col-12 col-lg-5">
-                <div className="card border-0 shadow-sm rounded-4 p-4 h-100">
-                    <h5 className="fw-bold mb-3">Accesos Directos</h5>
-                    <div className="row g-3">
-                    <div className="col-4">
-                        <button 
-                        onClick={() => setActiveTab('usuarios')}
-                        className="btn btn-outline-primary w-100 p-3 rounded-4 d-flex flex-column align-items-center gap-2"
-                        >
-                        <i className="bi bi-people fs-3"></i>
-                        <span className="small fw-semibold">Usuarios</span>
-                        </button>
-                    </div>
-                    <div className="col-4">
-                        <button 
-                        onClick={() => setActiveTab('moderacion')}
-                        className="btn btn-outline-primary w-100 p-3 rounded-4 d-flex flex-column align-items-center gap-2"
-                        >
-                        <i className="bi bi-shield-exclamation fs-3"></i>
-                        <span className="small fw-semibold">Moderación</span>
-                        </button>
-                    </div>
-                    <div className="col-4">
-                        <button className="btn btn-outline-primary w-100 p-3 rounded-4 d-flex flex-column align-items-center gap-2">
-                        <i className="bi bi-box-seam fs-3"></i>
-                        <span className="small fw-semibold">Productos</span>
-                        </button>
-                    </div>
-                    </div>
-                </div>
+                <div className="container-fluid p-0">
+                {/* Banner */}
+                <div className="alert alert-success border-0 shadow-sm mb-4" role="alert">
+                    <h5 className="alert-heading fw-bold mb-1 fs-6">Bienvenido admin: Marcos</h5>
+                    <p className="mb-0 small">Aquí podrás Administrar Usuarios, Moderar Contenidos y Gestionar Productos.</p>
                 </div>
 
-                {/* MODERACIÓN RÁPIDA */}
-                <div className="col-12 col-lg-7">
-                <div className="card border-0 shadow-sm rounded-4 p-4">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="fw-bold mb-0">Moderación de Contenidos</h5>
-                    <select className="form-select form-select-sm w-auto">
-                        <option>Todo</option>
-                        <option>Spam</option>
-                        <option>Pendiente</option>
-                    </select>
+                {/* Accesos Directos */}
+                <div className="row g-3 mb-4">
+                    <div className="col-md-4">
+                    <div className="card border-0 shadow-sm h-100">
+                        <div className="card-body d-flex align-items-center justify-content-between p-3">
+                        <div>
+                            <Users className="text-primary mb-2" size={32} />
+                            <h6 className="card-subtitle text-muted mb-1">Usuarios</h6>
+                            <button className="btn btn-sm btn-primary mt-2 px-3" onClick={() => setActiveTab('usuarios')}>Abrir</button>
+                        </div>
+                        <span className="display-6 fw-bold">10</span>
+                        </div>
                     </div>
+                    </div>
+
+                    <div className="col-md-4">
+                    <div className="card border-0 shadow-sm h-100">
+                        <div className="card-body d-flex align-items-center justify-content-between p-3">
+                        <div>
+                            <ShieldCheck className="text-primary mb-2" size={32} />
+                            <h6 className="card-subtitle text-muted mb-1">Moderar</h6>
+                            <button className="btn btn-sm btn-primary mt-2 px-3" onClick={() => setActiveTab('moderacion')}>Abrir</button>
+                        </div>
+                        <span className="display-6 fw-bold">5</span>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div className="col-md-4">
+                    <div className="card border-0 shadow-sm h-100">
+                        <div className="card-body d-flex align-items-center justify-content-between p-3">
+                        <div>
+                            <Package className="text-primary mb-2" size={32} />
+                            <h6 className="card-subtitle text-muted mb-1">Productos</h6>
+                            <button className="btn btn-sm btn-primary mt-2 px-3" onClick={() => setActiveTab('productos')}>Abrir</button>
+                        </div>
+                        <span className="display-6 fw-bold">30</span>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                {/* Métricas de Usuarios */}
+                <h6 className="fw-bold mb-3">Usuarios totales: 150</h6>
+                <div className="row g-3 mb-4">
+                    <div className="col-6 col-md-3">
+                    <div className="card border-0 shadow-sm">
+                        <div className="card-body p-3">
+                        <span className="text-muted text-uppercase fw-semibold style-micro">ACTIVOS</span>
+                        <h3 className="fw-bold my-1">25</h3>
+                        </div>
+                    </div>
+                    </div>
+                    <div className="col-6 col-md-3">
+                    <div className="card border-0 shadow-sm">
+                        <div className="card-body p-3">
+                        <span className="text-muted text-uppercase fw-semibold style-micro">SUSPENDIDOS</span>
+                        <h3 className="fw-bold my-1">5</h3>
+                        </div>
+                    </div>
+                    </div>
+                    <div className="col-6 col-md-3">
+                    <div className="card border-0 shadow-sm">
+                        <div className="card-body p-3">
+                        <span className="text-muted text-uppercase fw-semibold style-micro">ADMINS</span>
+                        <h3 className="fw-bold my-1">2</h3>
+                        </div>
+                    </div>
+                    </div>
+                    <div className="col-6 col-md-3">
+                    <div className="card border-0 shadow-sm">
+                        <div className="card-body p-3">
+                        <span className="text-muted text-uppercase fw-semibold style-micro">RECHAZADOS</span>
+                        <h3 className="fw-bold my-1">3</h3>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                {/* Moderación Reciente */}
+                <div className="card border-0 shadow-sm">
+                    <div className="card-body p-3">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <h6 className="fw-bold mb-0">Moderación Reciente</h6>
+                        <select className="form-select form-select-sm w-auto">
+                        <option value="contenido">Contenido</option>
+                        <option value="usuarios">Usuarios</option>
+                        </select>
+                    </div>
+
                     <div className="table-responsive">
-                    <table className="table table-hover align-middle mb-0">
+                        <table className="table align-middle mb-0">
                         <thead className="table-light">
-                        <tr>
+                            <tr>
                             <th>Usuario</th>
                             <th>Contenido</th>
                             <th>Estado</th>
                             <th className="text-end">Acción</th>
-                        </tr>
+                            </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td className="fw-semibold">María G.</td>
-                            <td><span className="badge bg-warning text-dark">Spam detectado</span></td>
-                            <td><span className="badge bg-info-subtle text-info border">Revisado</span></td>
+                            <tr>
+                            <td>Santiago Rossi</td>
+                            <td>Publicación de vidrio templado 10mm</td>
+                            <td><span className="badge bg-warning text-dark">Pendiente</span></td>
                             <td className="text-end">
-                            <button className="btn btn-sm btn-outline-primary me-1"><i className="bi bi-eye"></i></button>
-                            <button className="btn btn-sm btn-outline-danger"><i className="bi bi-x-circle"></i></button>
+                                <button className="btn btn-sm btn-success me-1"><Check size={14} /> Aprobar</button>
+                                <button className="btn btn-sm btn-danger"><X size={14} /> Rechazar</button>
                             </td>
-                        </tr>
-                        <tr>
-                            <td className="fw-semibold">Juan P.</td>
-                            <td><span className="badge bg-secondary">Foto inapropiada</span></td>
-                            <td><span className="badge bg-warning-subtle text-warning border">Pendiente</span></td>
+                            </tr>
+                            <tr>
+                            <td>Laura Benítez</td>
+                            <td>Comentario ofensivo reportado</td>
+                            <td><span className="badge bg-success">Revisado</span></td>
                             <td className="text-end">
-                            <button className="btn btn-sm btn-outline-primary me-1"><i className="bi bi-eye"></i></button>
-                            <button className="btn btn-sm btn-outline-success"><i className="bi bi-check-circle"></i></button>
+                                <button className="btn btn-sm btn-success me-1"><Check size={14} /> Aprobar</button>
+                                <button className="btn btn-sm btn-danger"><X size={14} /> Rechazar</button>
                             </td>
-                        </tr>
+                            </tr>
+                            <tr>
+                            <td>Carlos G.</td>
+                            <td>Espejo biselado Premium x5</td>
+                            <td><span className="badge bg-warning text-dark">Pendiente</span></td>
+                            <td className="text-end">
+                                <button className="btn btn-sm btn-success me-1"><Check size={14} /> Aprobar</button>
+                                <button className="btn btn-sm btn-danger"><X size={14} /> Rechazar</button>
+                            </td>
+                            </tr>
+                            <tr>
+                            <td>Sofía Martínez</td>
+                            <td>Imagen de perfil no autorizada</td>
+                            <td><span className="badge bg-success">Revisado</span></td>
+                            <td className="text-end">
+                                <button className="btn btn-sm btn-success me-1"><Check size={14} /> Aprobar</button>
+                                <button className="btn btn-sm btn-danger"><X size={14} /> Rechazar</button>
+                            </td>
+                            </tr>
                         </tbody>
-                    </table>
+                        </table>
+                    </div>
                     </div>
                 </div>
                 </div>
-            </div>
             )}
 
-            {/* TABLA DE USUARIOS (PANEL USUARIOS) */}
-            {activeTab === 'usuarios' && (
-            <div className="card border-0 shadow-sm rounded-4 p-4">
-                <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-                <h5 className="fw-bold mb-0">Panel de Usuarios</h5>
-                
-                {/* FILTROS Y BÚSQUEDA */}
-                <div className="d-flex flex-wrap gap-2">
-                    <select className="form-select form-select-sm w-auto">
-                    <option value="">Filtrar Rol</option>
-                    <option value="ADMIN">Administrador</option>
-                    <option value="EMPRENDEDOR">Emprendedor</option>
-                    </select>
-
-                    <div className="input-group input-group-sm" style={{ width: '220px' }}>
-                    <input type="text" className="form-control" placeholder="Buscar usuario..." />
-                    <button className="btn btn-primary"><i className="bi bi-search"></i></button>
-                    </div>
-
-                    <select className="form-select form-select-sm w-auto">
-                    <option value="">Estado</option>
-                    <option value="ACTIVO">Activo</option>
-                    <option value="SUSPENDIDO">Suspendido</option>
-                    </select>
-
-                    <button className="btn btn-sm btn-primary d-flex align-items-center gap-1">
-                    <i className="bi bi-person-plus"></i> Agregar
-                    </button>
-                </div>
-                </div>
-
-                {/* TABLA PRINCIPAL DE USUARIOS CON DATOS SENSIBLES SOLAMENTE PARA EL ADMIN */}
-                <div className="table-responsive">
-                <table className="table table-hover align-middle">
-                    <thead className="table-light">
-                    <tr>
-                        <th>Usuario</th>
-                        <th>Nombre Completo</th>
-                        <th>Rol</th>
-                        <th>Estado</th>
-                        <th className="text-end">Acciones</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td className="fw-bold text-primary">Marcosze.10</td>
-                        <td>Marcos Argañaraz</td>
-                        <td><span className="badge bg-primary-subtle text-primary border border-primary-subtle">Administrador</span></td>
-                        <td><span className="badge bg-success-subtle text-success border border-success-subtle">Activo</span></td>
-                        <td className="text-end">
-                        <button className="btn btn-sm btn-light text-primary me-1" title="Ver detalle sensible (DNI, Tel, Email)">
-                            <i className="bi bi-eye"></i>
-                        </button>
-                        <button className="btn btn-sm btn-light text-warning me-1" title="Editar">
-                            <i className="bi bi-pencil"></i>
-                        </button>
-                        <button className="btn btn-sm btn-light text-danger" title="Dar de baja / Sancionar">
-                            <i className="bi bi-trash"></i>
-                        </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td className="fw-bold text-primary">Daniela.cakes</td>
-                        <td>Daniela González</td>
-                        <td><span className="badge bg-secondary-subtle text-dark border">Emprendedora</span></td>
-                        <td><span className="badge bg-success-subtle text-success border border-success-subtle">Activo</span></td>
-                        <td className="text-end">
-                        <button className="btn btn-sm btn-light text-primary me-1" title="Ver detalle sensible">
-                            <i className="bi bi-eye"></i>
-                        </button>
-                        <button className="btn btn-sm btn-light text-warning me-1" title="Editar">
-                            <i className="bi bi-pencil"></i>
-                        </button>
-                        <button className="btn btn-sm btn-light text-danger" title="Dar de baja / Sancionar">
-                            <i className="bi bi-trash"></i>
-                        </button>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-                </div>
-
-                {/* PAGINACIÓN */}
-                <nav className="d-flex justify-content-between align-items-center mt-3">
-                <span className="small text-muted">Mostrando 1 a 2 de 150 usuarios</span>
-                <ul className="pagination pagination-sm mb-0">
-                    <li className="page-item disabled"><a className="page-link" href="#">Anterior</a></li>
-                    <li className="page-item active"><a className="page-link" href="#">1</a></li>
-                    <li className="page-item"><a className="page-link" href="#">2</a></li>
-                    <li className="page-item"><a className="page-link" href="#">3</a></li>
-                    <li className="page-item"><a className="page-link" href="#">Siguiente</a></li>
-                </ul>
-                </nav>
-            </div>
-            )}
-        </main>
+            {activeTab === 'usuarios' && <UsuariosView />}
+            </main>
+        </div>
         </div>
     );
 };
-
-export default AdminDashboard;
