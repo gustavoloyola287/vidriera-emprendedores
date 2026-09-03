@@ -32,7 +32,9 @@ function App() {
                         <Route path= "/emprendedores" element={<EmprendedoresPage />} />
                         <Route path = "/categorias" element={<CategoriasPage />} />
                         <Route path ="/recuperar-password" element={<RecuperarPassword />} />
-                        <Route path ="/restablecer-password" element={<RestablecerPassword />} />
+                        <Route path="/restablecer-password" element={<RestablecerPassword />} />
+                        <Route path="/emprendedores" element={<EmprendedoresPage />} />
+                        <Route path ="/categorias" element={<CategoriasPage />} />
                         <Route path ="/adminDashboard" element={<AdminDashboard />} />
                         {/* Ruta protegida de productos */}
                         <Route 
