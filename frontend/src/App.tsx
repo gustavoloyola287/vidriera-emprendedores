@@ -13,6 +13,7 @@ import { RecuperarPassword } from "./page/RecuperarPassword";
 import { RestablecerPassword } from "./page/RestablecerPassword";
 import { CategoriasPage } from "./page/CategoriasPage";
 import {EmprendedoresPage} from "./page/EmprendedoresPage";
+import { AdminDashboard } from "./page/AdminDashboard";
 function App() {
     return (
         <BrowserRouter>
@@ -30,7 +31,11 @@ function App() {
                         <Route path="/restablecer-password" element={<RestablecerPassword />} />
                         <Route path= "/emprendedores" element={<EmprendedoresPage />} />
                         <Route path = "/categorias" element={<CategoriasPage />} />
-                        
+                        <Route path ="/recuperar-password" element={<RecuperarPassword />} />
+                        <Route path="/restablecer-password" element={<RestablecerPassword />} />
+                        <Route path="/emprendedores" element={<EmprendedoresPage />} />
+                        <Route path ="/categorias" element={<CategoriasPage />} />
+                        <Route path ="/adminDashboard" element={<AdminDashboard />} />
                         {/* Ruta protegida de productos */}
                         <Route 
                             path="/productos" element={ <ProtectedRoute> <ProductosPage /> </ProtectedRoute> }/>
