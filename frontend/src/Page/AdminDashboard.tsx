@@ -10,7 +10,7 @@ import {
     Check, 
     X
     } from 'lucide-react';
-    import { UsuariosView } from './UsuariosView';
+    import { UsuariosView } from '../Page/usuariosview';
 
     export const AdminDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'inicio' | 'usuarios' | 'productos' | 'moderacion' | 'ajustes'>('inicio');
