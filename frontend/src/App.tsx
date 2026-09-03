@@ -30,8 +30,7 @@ function App() {
                         <Route path="/restablecer-password" element={<RestablecerPassword />} />
                         <Route path= "/emprendedores" element={<EmprendedoresPage />} />
                         <Route path = "/categorias" element={<CategoriasPage />} />
-                        <Route path ="/recuperar-password" element={<RecuperarPassword />} />
-                        <Route path ="/restablecer-password" element={<RestablecerPassword />} />
+                        
                         {/* Ruta protegida de productos */}
                         <Route 
                             path="/productos" element={ <ProtectedRoute> <ProductosPage /> </ProtectedRoute> }/>
