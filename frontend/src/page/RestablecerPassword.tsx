@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { api } from '../Services/api'; // Instancia centralizada de Axios
+import { api } from '../services/api'; // Instancia centralizada de Axios
 
 export const RestablecerPassword: React.FC = () => {
     const navigate = useNavigate();
