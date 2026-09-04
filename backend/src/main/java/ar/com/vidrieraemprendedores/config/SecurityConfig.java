@@ -34,24 +34,28 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // Endpoints de autenticación y productos totalmente libres para POST/GET
-                .requestMatchers(
-                    "/auth/**",
-                    "/api/auth/**",
-                    "/api/productos/**",
-                    "/productos/**"
-                ).permitAll()
-
-                // Lectura pública para el resto de recursos (GET)
+                // 1. VISITANTE / PÚBLICO: Endpoints libres de autenticación
+                .requestMatchers("/auth/**", "/api/auth/**").permitAll()
+                
+                // Lectura pública de productos, emprendedores, categorías y fotos
                 .requestMatchers(HttpMethod.GET,
-                    "/emprendedores/**",
-                    "/api/emprendedores/**",
-                    "/categorias/**",
-                    "/api/categorias/**",
-                    "/fotos/**",
-                    "/api/fotos/**"
+                    "/productos/**", "/api/productos/**",
+                    "/emprendedores/**", "/api/emprendedores/**",
+                    "/categorias/**", "/api/categorias/**",
+                    "/fotos/**", "/api/fotos/**"
                 ).permitAll()
 
+                // 2. ADMINISTRADOR: Gestión total de usuarios/emprendedores y moderación
+                .requestMatchers("/api/admin/**", "/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/emprendedores/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/productos/*/aprobar", "/api/productos/*/rechazar").hasRole("ADMIN")
+
+                // 3. EMPRENDEDOR: Crear, editar y eliminar sus propios productos
+                .requestMatchers(HttpMethod.POST, "/api/productos/**").hasAnyRole("EMPRENDEDOR", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/productos/**").hasAnyRole("EMPRENDEDOR", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/productos/**").hasAnyRole("EMPRENDEDOR", "ADMIN")
+
+                // Cualquier otra solicitud requiere estar autenticado
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
