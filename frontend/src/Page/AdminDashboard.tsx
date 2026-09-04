@@ -8,12 +8,13 @@ import {
     Settings, 
     Bell, 
     Check, 
-    X
+    X,
+    Tags
     } from 'lucide-react';
-    import { UsuariosView } from '../Page/usuariosview';
+    import { UsuariosView } from './emprendedoresview';
 
     export const AdminDashboard: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'inicio' | 'usuarios' | 'productos' | 'moderacion' | 'ajustes'>('inicio');
+    const [activeTab, setActiveTab] = useState<'inicio' | 'emprendedores' | 'productos' | 'moderacion' | 'categorias' | 'ajustes' | 'usuarios'>('inicio');
     const [filtroEstado, setFiltroEstado] = useState('Todos');
     return (
         <div className="d-flex flex-column vh-100 bg-light">
@@ -23,7 +24,7 @@ import {
             <button className="btn btn-dark d-md-none p-1">
                 <span className="navbar-toggler-icon"></span>
             </button>
-            <span className="navbar-brand mb-0 h1 fw-bold fs-5">Vidriera Virtual VCP</span>
+            <span className="navbar-brand mb-0 h1 fw-bold fs-5">Administración</span>
             </div>
             <div className="ms-auto d-flex align-items-center gap-3 text-white">
             <button className="btn btn-link text-white p-0 position-relative">
@@ -53,10 +54,10 @@ import {
                 </li>
                 <li className="nav-item">
                 <button 
-                    className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'usuarios' ? 'active bg-primary' : 'text-dark'}`}
-                    onClick={() => setActiveTab('usuarios')}
+                    className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'emprendedores' ? 'active bg-primary' : 'text-dark'}`}
+                    onClick={() => setActiveTab('emprendedores')}
                 >
-                    <Users size={18} /> Usuarios
+                    <Users size={18} /> Emprendedores
                 </button>
                 </li>
                 <li className="nav-item">
@@ -73,6 +74,14 @@ import {
                     onClick={() => setActiveTab('moderacion')}
                 >
                     <ShieldCheck size={18} /> Moderación
+                </button>
+                </li>
+                <li className="nav-item">
+                <button 
+                    className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'categorias' ? 'active bg-primary' : 'text-dark'}`}
+                    onClick={() => setActiveTab('categorias')}
+                >
+                    <Tags size={18} /> Categorías
                 </button>
                 </li>
                 <li className="nav-item">
@@ -97,7 +106,7 @@ import {
                 {/* Banner */}
                 <div className="alert alert-success border-0 shadow-sm mb-4" role="alert">
                     <h5 className="alert-heading fw-bold mb-1 fs-6">Bienvenido admin: Marcos</h5>
-                    <p className="mb-0 small">Aquí podrás Administrar Usuarios, Moderar Contenidos y Gestionar Productos.</p>
+                    <p className="mb-0 small">Aquí podrás Administrar Emprendedores, Moderar Contenidos y Gestionar Productos.</p>
                 </div>
 
                 {/* Accesos Directos */}
@@ -107,8 +116,8 @@ import {
                         <div className="card-body d-flex align-items-center justify-content-between p-3">
                         <div>
                             <Users className="text-primary mb-2" size={32} />
-                            <h6 className="card-subtitle text-muted mb-1">Usuarios</h6>
-                            <button className="btn btn-sm btn-primary mt-2 px-3" onClick={() => setActiveTab('usuarios')}>Abrir</button>
+                            <h6 className="card-subtitle text-muted mb-1">Emprendedores</h6>
+                            <button className="btn btn-sm btn-primary mt-2 px-3" onClick={() => setActiveTab('emprendedores')}>Abrir</button>
                         </div>
                         <span className="display-6 fw-bold">10</span>
                         </div>
@@ -142,8 +151,8 @@ import {
                     </div>
                 </div>
 
-                {/* Métricas de Usuarios */}
-                <h6 className="fw-bold mb-3">Usuarios totales: 150</h6>
+                {/* Métricas de Emprendedores */}
+                <h6 className="fw-bold mb-3">Emprendedores totales: 150</h6>
                 <div className="row g-3 mb-4">
                     <div className="col-6 col-md-3">
                     <div className="card border-0 shadow-sm">
@@ -245,7 +254,7 @@ import {
                 </div>
             )}
 
-            {activeTab === 'usuarios' && <UsuariosView />}
+            {activeTab === 'emprendedores' && <UsuariosView />}
             </main>
         </div>
         </div>

@@ -67,7 +67,7 @@ import { Search, Edit, Ban, Trash2 } from 'lucide-react';
 
     return (
         <div className="container-fluid p-0">
-        <h5 className="fw-bold mb-3">Panel Usuarios - Accesos Directos</h5>
+        <h5 className="fw-bold mb-3">Panel Emprendedor - Accesos Directos</h5>
 
         {/* CARDS SUPERIORES INTERACTIVAS */}
         <div className="row g-3 mb-4">
@@ -222,3 +222,4 @@ import { Search, Edit, Ban, Trash2 } from 'lucide-react';
         </div>
     );
 };
+export default UsuariosView;

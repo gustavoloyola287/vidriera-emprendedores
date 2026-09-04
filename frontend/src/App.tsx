@@ -14,6 +14,8 @@ import { RestablecerPassword } from "./Page/RestablecerPassword";
 import { CategoriasPage } from "./Page/CategoriasPage";
 import { EmprendedoresPage } from "./Page/EmprendedoresPage";
 import { AdminDashboard } from "./Page/AdminDashboard";
+import { EmprendedorDashboard } from "./Page/emprendedordashboard";
+
 function App() {
     return (
         <BrowserRouter>
@@ -32,6 +34,7 @@ function App() {
                         <Route path="/emprendedores" element={<EmprendedoresPage />} />
                         <Route path="/categorias" element={<CategoriasPage />} />
                         <Route path="/admindashboard" element={<AdminDashboard />} />
+                        <Route path="/emprendedordashboard" element={<EmprendedorDashboard />} />
                         {/* Ruta protegida de productos */}
                         <Route 
                             path="/productos" element={ <ProtectedRoute> <ProductosPage /> </ProtectedRoute> }/>
