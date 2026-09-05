@@ -9,7 +9,8 @@ import {
     LogOut, 
     Edit, 
     Trash2,
-    Bell
+    Bell,
+    Home
     } from 'lucide-react';
 
     export const EmprendedorDashboard: React.FC = () => {
@@ -30,7 +31,7 @@ import {
                 className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'inicio' ? 'active bg-primary' : 'text-dark'}`}
                 onClick={() => setActiveTab('inicio')}
                 >
-                <Package size={18} /> Inicio
+                < Home size={18} /> Inicio
                 </button>
             </li>
             <li className="nav-item">
@@ -38,7 +39,7 @@ import {
                 className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'productos' ? 'active bg-primary' : 'text-dark'}`}
                 onClick={() => setActiveTab('productos')}
                 >
-                <PlusCircle size={18} /> Mis Productos
+                <Package size={18} /> Mis Productos
                 </button>
             </li>
             <li className="nav-item">
