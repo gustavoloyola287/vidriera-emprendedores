@@ -8,8 +8,18 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+
+    // Validar que el token existe y no es una cadena 'null' o 'undefined'
+    if (token && token !== 'null' && token !== 'undefined' && token.trim() !== '') {
+      if (config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      
+    } else{
+      // Si no hay token, asegurarnos de borrar el header Authorization
+      if (config.headers) {
+        delete config.headers.Authorization;
+      } 
     }
     return config;
   },
