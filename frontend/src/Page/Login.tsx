@@ -30,8 +30,20 @@ export const Login: React.FC = () => {
             const mockToken = 'fake-jwt-admin-token';
             localStorage.setItem('token', mockToken);
             localStorage.setItem('nombreEmprendedor', 'Marcos Admin');
+            localStorage.setItem('role', 'ROLE_ADMIN');
             login(mockToken);
-            navigate('/admindashboard'); // Redirige directamente al Dashboard Admin
+            navigate('/admindashboard');
+            setLoading(false);
+            return;
+        }
+
+        if (emailTrimmed === 'emprendedor@correo.com') {
+            const mockToken = 'fake-jwt-emprendedor-token';
+            localStorage.setItem('token', mockToken);
+            localStorage.setItem('nombreEmprendedor', 'Mi Emprendimiento');
+            localStorage.setItem('role', 'ROLE_EMPRENDEDOR');
+            login(mockToken);
+            navigate('/emprendedordashboard');
             setLoading(false);
             return;
         }
@@ -43,7 +55,6 @@ export const Login: React.FC = () => {
                 password,
             });
 
-            // Ajustá estos nombres de propiedades según las propiedades exactas que retorna tu backend
             const { token, id, emprendedorId, nombre, nombreEmprendimiento, emprendimiento, role } = response.data;
 
             // 1. Guardar Token y Datos de sesión
@@ -58,28 +69,39 @@ export const Login: React.FC = () => {
             if (nombreFinal) {
                 localStorage.setItem('nombreEmprendedor', nombreFinal);
             }
+            if (role) {
+                localStorage.setItem('role', role);
+            }
 
             // 2. Actualizar estado global
             login(token);
 
-            // 3. Redirección según Rol o Email
-            if (role === 'ROLE_ADMIN' || emailTrimmed.includes('admin')) {
-                navigate('/admin');
+            // 3. Redirección según Rol recibido del Backend
+            const userRole = role?.toUpperCase();
+
+            if (userRole === 'ROLE_ADMIN' || userRole === 'ADMIN' || emailTrimmed.includes('admin')) {
+                navigate('/admindashboard');
+            } else if (userRole === 'ROLE_EMPRENDEDOR' || userRole === 'EMPRENDEDOR') {
+                navigate('/emprendedordashboard');
             } else {
-                navigate('/');
+                // Ruta por defecto si el rol no coincide con los anteriores
+                navigate('/emprendedordashboard');
             }
 
         } catch (err: any) {
             if (err.response && err.response.data && err.response.data.message) {
                 setError(err.response.data.message);
             } else if (err.code === 'ERR_NETWORK') {
-                // Si el backend no responde pero estás probando admin, te redirige igual para desarrollo
-                if (emailTrimmed === 'admin@correo.com' || emailTrimmed.includes('admin')) {
+                // Simulación en caso de caída de red durante desarrollo
+                if (emailTrimmed.includes('admin')) {
                     login('fake-jwt-admin-token');
-                    navigate('/admin');
+                    navigate('/admindashboard');
+                    return;
+                } else {
+                    login('fake-jwt-emprendedor-token');
+                    navigate('/emprendedordashboard');
                     return;
                 }
-                setError('No se pudo conectar con el servidor.');
             } else {
                 setError('Credenciales inválidas o error inesperado.');
             }
