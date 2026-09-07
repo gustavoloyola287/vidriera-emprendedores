@@ -1,16 +1,7 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 export const Navbar: React.FC = () => {
-  const { isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   return (
     <nav 
       className="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm" 
@@ -61,39 +52,22 @@ export const Navbar: React.FC = () => {
             </li>
           </ul>
 
-          {/* Estado de Autenticación Condicional (Integrado al Collapse) */}
+          {/* Botones Estáticos de Acceso */}
           <div className="d-flex align-items-lg-center flex-column flex-lg-row gap-2 mt-2 mt-lg-0">
-            {isAuthenticated ? (
-              <>
-                <Link to="/productos" className="btn btn-outline-light btn-sm w-100 w-lg-auto">
-                  Mis Productos
-                </Link>
-
-                <button
-                  onClick={handleLogout}
-                  className="btn btn-danger btn-sm w-100 w-lg-auto"
-                >
-                  Cerrar Sesión
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="btn btn-sm text-white px-3 w-100 w-lg-auto"
-                  style={{ backgroundColor: '#252D42', border: '1px solid #3B4764' }}
-                >
-                  Ingresar
-                </Link>
-                <Link
-                  to="/registro"
-                  className="btn btn-sm text-white px-3 w-100 w-lg-auto"
-                  style={{ backgroundColor: '#00A3B5' }}
-                >
-                  Registrarse
-                </Link>
-              </>
-            )}
+            <Link
+              to="/login"
+              className="btn btn-sm text-white px-3 w-100 w-lg-auto"
+              style={{ backgroundColor: '#252D42', border: '1px solid #3B4764' }}
+            >
+              Ingresar
+            </Link>
+            <Link
+              to="/registro"
+              className="btn btn-sm text-white px-3 w-100 w-lg-auto"
+              style={{ backgroundColor: '#00A3B5' }}
+            >
+              Registrarse
+            </Link>
           </div>
         </div>
 

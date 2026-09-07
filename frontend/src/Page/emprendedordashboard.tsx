@@ -1,267 +1,236 @@
 import React, { useState } from 'react';
-import ChatConsultas from '../Components/ChatConsultas';
 import { 
+    Home, 
     Package, 
-    PlusCircle, 
-    Eye, 
     MessageSquare, 
     User, 
-    LogOut, 
+    Bell, 
+    Plus, 
+    Eye, 
     Edit, 
-    Trash2,
-    Bell,
-    Home
-    } from 'lucide-react';
+    Trash2, 
+    LogOut,
+    Mail
+} from 'lucide-react';
+import MailConsultas from '../Components/mailconsultas';
 
-    export const EmprendedorDashboard: React.FC = () => {
+interface Producto {
+    id: number;
+    nombre: string;
+    categoria: string;
+    precio: string;
+    estado: string;
+}
+
+export const EmprendedorDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'inicio' | 'productos' | 'consultas' | 'perfil'>('inicio');
-    const [notificacionesNoLeidas, setNotificacionesNoLeidas] = useState<number>(3);
 
-    const nombreEmprendimiento = localStorage.getItem('nombreEmprendedor') || 'Marcos Admin';
+    const [productos] = useState<Producto[]>([
+        { id: 1, nombre: 'Maceta Artesanal de Cerámica', categoria: 'Hogar y Decoración', precio: '$ 4.500', estado: 'Publicado' },
+        { id: 2, nombre: 'Set de Mates Grabados', categoria: 'Regalería', precio: '$ 8.200', estado: 'Publicado' }
+    ]);
 
     return (
         <div className="d-flex vh-100 bg-light">
-        {/* SIDEBAR EMBRENDEDOR */}
-        <aside className="bg-white border-end d-flex flex-column p-3" style={{ width: '250px' }}>
-            <h5 className="fw-bold text-primary mb-4 px-2">Mi Panel</h5>
-            
-            <ul className="nav nav-pills flex-column gap-1 mb-auto">
-            <li className="nav-item">
-                <button
-                className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'inicio' ? 'active bg-primary' : 'text-dark'}`}
-                onClick={() => setActiveTab('inicio')}
-                >
-                < Home size={18} /> Inicio
-                </button>
-            </li>
-            <li className="nav-item">
-                <button
-                className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'productos' ? 'active bg-primary' : 'text-dark'}`}
-                onClick={() => setActiveTab('productos')}
-                >
-                <Package size={18} /> Mis Productos
-                </button>
-            </li>
-            <li className="nav-item">
-                <button
-                className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'consultas' ? 'active bg-primary' : 'text-dark'}`}
-                onClick={() => setActiveTab('consultas')}
-                >
-                <MessageSquare size={18} /> Consultas
-                {notificacionesNoLeidas > 0 && (
-                    <span className="badge bg-danger ms-auto">{notificacionesNoLeidas}</span>
-                )}
-                </button>
-            </li>
-            <li className="nav-item">
-                <button
-                className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'perfil' ? 'active bg-primary' : 'text-dark'}`}
-                onClick={() => setActiveTab('perfil')}
-                >
-                <User size={18} /> Mi Perfil
-                </button>
-            </li>
-            </ul>
-
-            <div className="border-top pt-3">
-            <button className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
-                <LogOut size={18} /> Cerrar sesión
-            </button>
-            </div>
-        </aside>
-
-        {/* CONTENIDO PRINCIPAL */}
-        <main className="flex-grow-1 d-flex flex-column overflow-hidden">
-            {/* NAVBAR SUPERIOR CON NOTIFICACIONES */}
-            <header className="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
-            <h4 className="fw-bold mb-0 text-dark">Mi Emprendimiento</h4>
-            
-            <div className="d-flex align-items-center gap-3">
-                {/* ÍCONO DE NOTIFICACIONES */}
-                <button 
-                className="btn btn-light position-relative p-2 rounded-circle"
-                onClick={() => setActiveTab('consultas')}
-                title="Ver notificaciones y consultas"
-                >
-                <Bell size={20} className="text-secondary" />
-                {notificacionesNoLeidas > 0 && (
-                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" style={{ fontSize: '10px' }}>
-                    {notificacionesNoLeidas}
-                    </span>
-                )}
-                </button>
-
-                {/* USUARIO */}
-                <div className="d-flex align-items-center gap-2">
-                <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style={{ width: '38px', height: '38px' }}>
-                    E
-                </div>
-                <span className="fw-semibold text-secondary">{nombreEmprendimiento}</span>
-                </div>
-            </div>
-            </header>
-
-            {/* CONTENIDO SEGÚN PESTAÑA */}
-            <div className="p-4 overflow-auto flex-grow-1">
-            {activeTab === 'inicio' && (
-                <div>
-                {/* Banner de bienvenida */}
-                <div className="alert alert-success border-0 shadow-sm mb-4">
-                    <h5 className="fw-bold alert-heading mb-1">¡Hola, {nombreEmprendimiento}!</h5>
-                    <p className="mb-0 text-secondary">
-                    Gestioná tus productos, mantené tu catálogo actualizado y revisá tus estadísticas.
-                    </p>
-                </div>
-
-                {/* TARJETAS DE MÉTRICAS */}
-                <div className="row g-3 mb-4">
-                    <div className="col-12 col-md-4">
-                    <div 
-                        className="card border-0 shadow-sm p-3 h-100" 
-                        style={{ cursor: 'pointer' }}
+            {/* SIDEBAR LATERAL */}
+            <aside className="bg-white border-end d-flex flex-column p-3" style={{ width: '240px', flexShrink: 0 }}>
+                <h4 className="fw-bold text-primary mb-4 ps-2">Mi Panel</h4>
+                
+                <nav className="nav nav-pills flex-column gap-2 flex-grow-1">
+                    <button
+                        className={`nav-link text-start d-flex align-items-center gap-2 py-2 px-3 rounded-3 fw-medium ${activeTab === 'inicio' ? 'active bg-primary text-white' : 'text-dark'}`}
+                        onClick={() => setActiveTab('inicio')}
+                    >
+                        <Home size={18} /> Inicio
+                    </button>
+                    <button
+                        className={`nav-link text-start d-flex align-items-center gap-2 py-2 px-3 rounded-3 fw-medium ${activeTab === 'productos' ? 'active bg-primary text-white' : 'text-dark'}`}
                         onClick={() => setActiveTab('productos')}
                     >
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="text-muted fw-semibold">Mis Productos</span>
-                        <Package className="text-primary" size={24} />
-                        </div>
-                        <h2 className="fw-bold mb-0">12</h2>
-                    </div>
-                    </div>
-                
-
-                    <div className="col-12 col-md-4">
-                    <div className="card border-0 shadow-sm p-3 h-100">
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="text-muted fw-semibold">Visitas a la Vidriera</span>
-                        <Eye className="text-info" size={24} />
-                        </div>
-                        <h2 className="fw-bold mb-0">340</h2>
-                    </div>
-                    </div>
-
-
-                    {/* CARD CLICKEABLE CON BOTÓN / ACCIÓN */}
-                    <div className="col-12 col-md-4">
-                    <div 
-                        className="card border-0 shadow-sm p-3 h-100 border-start border-warning border-4" 
-                        style={{ cursor: 'pointer' }}
+                        <Package size={18} /> Mis Productos
+                    </button>
+                    <button
+                        className={`nav-link text-start d-flex align-items-center justify-content-between py-2 px-3 rounded-3 fw-medium ${activeTab === 'consultas' ? 'active bg-primary text-white' : 'text-dark'}`}
                         onClick={() => setActiveTab('consultas')}
                     >
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="text-muted fw-semibold">Consultas Recibidas</span>
-                        <MessageSquare className="text-warning" size={24} />
-                        </div>
-                        <div className="d-flex justify-content-between align-items-end">
-                        <h2 className="fw-bold mb-0">8</h2>
-                        {notificacionesNoLeidas > 0 && (
-                            <span className="badge bg-warning text-dark">
-                            {notificacionesNoLeidas} sin leer
-                            </span>
-                        )}
-                        </div>
-                    </div>
-                    </div>
-                </div>
-
-                {/* TABLA DE PRODUCTOS */}
-                <div className="card border-0 shadow-sm p-3">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="fw-bold mb-0">Productos Publicados</h5>
-                    <button className="btn btn-primary btn-sm d-flex align-items-center gap-1" onClick={() => setActiveTab('productos')}>
-                        <PlusCircle size={16} /> Nuevo Producto
+                        <span className="d-flex align-items-center gap-2">
+                            <MessageSquare size={18} /> Consultas
+                        </span>
+                        <span className="badge bg-danger rounded-pill">3</span>
                     </button>
-                    </div>
+                    <button
+                        className={`nav-link text-start d-flex align-items-center gap-2 py-2 px-3 rounded-3 fw-medium ${activeTab === 'perfil' ? 'active bg-primary text-white' : 'text-dark'}`}
+                        onClick={() => setActiveTab('perfil')}
+                    >
+                        <User size={18} /> Mi Perfil
+                    </button>
+                </nav>
 
-                    <div className="table-responsive">
-                    <table className="table table-hover align-middle mb-0">
-                        <thead className="table-light">
-                        <tr>
-                            <th>Producto</th>
-                            <th>Categoría</th>
-                            <th>Precio</th>
-                            <th>Estado</th>
-                            <th className="text-end">Acciones</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td className="fw-semibold">Maceta Artesanal de Cerámica</td>
-                            <td>Hogar y Decoración</td>
-                            <td>$ 4.500</td>
-                            <td><span className="badge bg-success">Publicado</span></td>
-                            <td className="text-end">
-                            <button className="btn btn-sm btn-outline-primary me-2"><Edit size={14} /></button>
-                            <button className="btn btn-sm btn-outline-danger"><Trash2 size={14} /></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className="fw-semibold">Set de Mates Grabados</td>
-                            <td>Regalería</td>
-                            <td>$ 8.200</td>
-                            <td><span className="badge bg-success">Publicado</span></td>
-                            <td className="text-end">
-                            <button className="btn btn-sm btn-outline-primary me-2"><Edit size={14} /></button>
-                            <button className="btn btn-sm btn-outline-danger"><Trash2 size={14} /></button>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    </div>
+                {/* CERRAR SESIÓN */}
+                <div className="pt-3 border-top mt-auto">
+                    <button className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 rounded-3">
+                        <LogOut size={18} /> Cerrar Sesión
+                    </button>
                 </div>
-                </div>
-            )}
+            </aside>
 
-            {/* VISTA DE CONSULTAS / NOTIFICACIONES */}
-            {activeTab === 'consultas' && (
-                <div className="row g-4">
-                    <div className="col-12 col-lg-8">
-                        <div className="card border-0 shadow-sm p-4 h-100">
-                            <h5 className="fw-bold mb-3">Consultas y Notificaciones</h5>
-                            <p className="text-muted">Mensajes enviados por los clientes desde la vidriera pública.</p>
+            {/* CONTENIDO PRINCIPAL */}
+            <main className="flex-grow-1 d-flex flex-column h-100 overflow-auto">
+                {/* HEADER */}
+                <header className="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+                    <h4 className="fw-bold mb-0 text-dark">Mi Emprendimiento</h4>
+                    <div className="d-flex align-items-center gap-3">
+                        <div className="position-relative">
+                            <button className="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center">
+                                <Bell size={18} className="text-secondary" />
+                            </button>
+                            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.65rem' }}>
+                                3
+                            </span>
+                        </div>
+                        <div className="d-flex align-items-center gap-2">
+                            <div className="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px' }}>
+                                E
+                            </div>
+                            <span className="fw-semibold text-dark">Marcos Admin</span>
+                        </div>
+                    </div>
+                </header>
 
-                            <div className="list-group">
-                                <div className="list-group-item list-group-item-action d-flex justify-content-between align-items-start p-3 bg-light">
-                                    <div>
-                                        <div className="fw-bold">Juan Pérez</div>
-                                        <small className="text-muted">Producto: Maceta Artesanal de Cerámica</small>
-                                        <p className="mb-0 mt-1">¿Tienen stock disponible en color verde oliva?</p>
+                {/* CONTENIDO DE LAS PESTAÑAS */}
+                <div className="p-4 flex-grow-1">
+                    {activeTab === 'inicio' && (
+                        <div className="d-flex flex-column gap-4">
+                            {/* BANNER DE BIENVENIDA */}
+                            <div className="rounded-3 p-3" style={{ backgroundColor: '#d1e7dd', color: '#0f5132' }}>
+                                <h5 className="fw-bold mb-1">¡Hola, Marcos Admin!</h5>
+                                <p className="mb-0 text-secondary" style={{ color: '#0f5132' }}>
+                                    Gestioná tus productos, mantené tu catálogo actualizado y revisá tus estadísticas.
+                                </p>
+                            </div>
+
+                            {/* ESTADÍSTICAS */}
+                            <div className="row g-3">
+                                <div className="col-12 col-md-4">
+                                    <div className="card border-0 shadow-sm p-3 h-100 rounded-3">
+                                        <div className="d-flex justify-content-between align-items-start mb-2">
+                                            <span className="fw-semibold text-secondary">Mis Productos</span>
+                                            <Package size={22} className="text-primary" />
+                                        </div>
+                                        <h2 className="fw-bold mb-0">12</h2>
                                     </div>
-                                    <span className="badge bg-primary rounded-pill">Nuevo</span>
                                 </div>
-                                <div className="list-group-item list-group-item-action d-flex justify-content-between align-items-start p-3">
-                                    <div>
-                                        <div className="fw-bold">María Gómez</div>
-                                        <small className="text-muted">Producto: Set de Mates Grabados</small>
-                                        <p className="mb-0 mt-1">¿Hacen envíos a domicilio en la zona céntrica?</p>
+
+                                <div className="col-12 col-md-4">
+                                    <div className="card border-0 shadow-sm p-3 h-100 rounded-3">
+                                        <div className="d-flex justify-content-between align-items-start mb-2">
+                                            <span className="fw-semibold text-secondary">Visitas a la Vidriera</span>
+                                            <Eye size={22} className="text-info" />
+                                        </div>
+                                        <h2 className="fw-bold mb-0">340</h2>
                                     </div>
-                                    <small className="text-muted">Hace 2 horas</small>
+                                </div>
+
+                                <div className="col-12 col-md-4">
+                                    <div className="card border-0 shadow-sm p-3 h-100 rounded-3" style={{ borderLeft: '4px solid #ffc107' }}>
+                                        <div className="d-flex justify-content-between align-items-start mb-2">
+                                            <span className="fw-semibold text-secondary">Consultas Recibidas</span>
+                                            <MessageSquare size={22} className="text-warning" />
+                                        </div>
+                                        <div className="d-flex justify-content-between align-items-center">
+                                            <h2 className="fw-bold mb-0">8</h2>
+                                            <span className="badge bg-warning text-dark px-2 py-1" style={{ fontSize: '0.75rem' }}>3 sin leer</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* TABLA DE PRODUCTOS */}
+                            <div className="card border-0 shadow-sm p-3 rounded-3">
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 className="fw-bold mb-0">Productos Publicados</h5>
+                                    <button className="btn btn-primary d-flex align-items-center gap-1 rounded-2 btn-sm px-3 py-2">
+                                        <Plus size={16} /> Nuevo Producto
+                                    </button>
+                                </div>
+
+                                <div className="table-responsive">
+                                    <table className="table table-hover align-middle mb-0">
+                                        <thead className="table-light">
+                                            <tr>
+                                                <th scope="col" className="fw-bold">Producto</th>
+                                                <th scope="col" className="fw-bold">Categoría</th>
+                                                <th scope="col" className="fw-bold">Precio</th>
+                                                <th scope="col" className="fw-bold">Estado</th>
+                                                <th scope="col" className="fw-bold">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {productos.map((prod) => (
+                                                <tr key={prod.id}>
+                                                    <td className="fw-semibold">{prod.nombre}</td>
+                                                    <td className="text-secondary">{prod.categoria}</td>
+                                                    <td className="fw-semibold">{prod.precio}</td>
+                                                    <td>
+                                                        <span className="badge bg-success px-2 py-1" style={{ fontSize: '0.75rem' }}>
+                                                            {prod.estado}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div className="d-flex gap-2">
+                                                            <button className="btn btn-outline-primary btn-sm p-1 rounded">
+                                                                <Edit size={16} />
+                                                            </button>
+                                                            <button className="btn btn-outline-danger btn-sm p-1 rounded">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="col-12 col-lg-4">
-                        <ChatConsultas />
-                    </div>
-                </div>
-            )}
+                    {activeTab === 'productos' && (
+                        <div className="card border-0 shadow-sm p-4 rounded-3">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h5 className="fw-bold mb-0">Gestión de Productos</h5>
+                                <button className="btn btn-primary d-flex align-items-center gap-1">
+                                    <Plus size={16} /> Nuevo Producto
+                                </button>
+                            </div>
+                            <p className="text-muted">Administra tu inventario de productos desde este módulo.</p>
+                        </div>
+                    )}
 
-            {activeTab === 'productos' && (
-                <div className="card border-0 shadow-sm p-4">
-                <h5 className="fw-bold mb-3">Gestión de Productos</h5>
-                <p className="text-muted">Acá podés agregar o modificar tus publicaciones.</p>
-                </div>
-            )}
+                    {activeTab === 'consultas' && (
+                        <div className="d-flex flex-column gap-3">
+                            {/* ENCABEZADO DE CONSULTAS SIN EL BOTÓN DE CHAT */}
+                            <div className="card border-0 shadow-sm p-4 text-center rounded-3">
+                                <Mail size={40} className="text-primary mx-auto mb-2" />
+                                <h5 className="fw-bold mb-1">Gestión de Consultas</h5>
+                                <p className="text-muted small mb-0">Responde las consultas recibidas en tu bandeja de entrada.</p>
+                            </div>
 
-            {activeTab === 'perfil' && (
-                <div className="card border-0 shadow-sm p-4">
-                <h5 className="fw-bold mb-3">Datos de Mi Emprendimiento</h5>
-                <p className="text-muted">Actualizá tu información de contacto y descripción pública.</p>
+                            {/* BANDEJA DE ENTRADA / CONSULTAS */}
+                            <div className="card border-0 shadow-sm p-4 rounded-3">
+                                <MailConsultas />
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'perfil' && (
+                        <div className="card border-0 shadow-sm p-4 rounded-3">
+                            <h5 className="fw-bold mb-3">Mi Perfil</h5>
+                            <p className="text-muted">Ajustes generales de tu cuenta y datos de contacto.</p>
+                        </div>
+                    )}
                 </div>
-            )}
-            </div>
-        </main>
+            </main>
         </div>
     );
-    };
+};

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Edit, Ban, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Search, Edit, Ban, Trash2, CheckCircle2, X } from 'lucide-react';
 
 // Interfaces para TypeScript
-    interface Usuario {
+export interface Usuario {
     id: number;
     nombre: string;
     email: string;
-    rol: string;
+    rol: 'ADMIN' | 'EMPRENDEDOR' | 'MODERADOR';
     estado: 'ACTIVO' | 'SUSPENDIDO' | 'RECHAZADO' | 'PENDIENTE';
     }
 
@@ -18,51 +18,131 @@ import { Search, Edit, Ban, Trash2 } from 'lucide-react';
     total: number;
     }
 
-    export const UsuariosView: React.FC = () => {
-    // 1. Estados para los datos del Backend
-    const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-    const [metricas, setMetricas] = useState<Metricas>({ activos: 0, suspendidos: 0, admins: 0, rechazados: 0, total: 0 });
-    const [loading, setLoading] = useState<boolean>(true);
+    // Datos de prueba simulando respuesta de Backend (GET /api/admin/usuarios)
+    const MOCK_USUARIOS: Usuario[] = [
+    { id: 1, nombre: 'Lucía Pérez', email: 'lucia.perez@example.com', rol: 'EMPRENDEDOR', estado: 'ACTIVO' },
+    { id: 2, nombre: 'Santiago Rossi', email: 'santiago.rossi@example.com', rol: 'EMPRENDEDOR', estado: 'ACTIVO' },
+    { id: 3, nombre: 'Carlos Gómez', email: 'carlos.gomez@example.com', rol: 'ADMIN', estado: 'ACTIVO' },
+    { id: 4, nombre: 'Laura Benítez', email: 'laura.benitez@example.com', rol: 'EMPRENDEDOR', estado: 'SUSPENDIDO' },
+    { id: 5, nombre: 'Sofía Martínez', email: 'sofia.martinez@example.com', rol: 'MODERADOR', estado: 'ACTIVO' },
+    { id: 6, nombre: 'Marcos Admin', email: 'marcos.admin@example.com', rol: 'ADMIN', estado: 'ACTIVO' },
+    { id: 7, nombre: 'Pedro Mármol', email: 'pedro.marmol@example.com', rol: 'EMPRENDEDOR', estado: 'RECHAZADO' },
+    { id: 8, nombre: 'Ana Clara', email: 'ana.clara@example.com', rol: 'EMPRENDEDOR', estado: 'SUSPENDIDO' },
+    ];
 
-    // 2. Estados para los Filtros y Paginación
-    const [filtroEstado, setFiltroEstado] = useState<string>('TODOS'); // 'TODOS' | 'ACTIVO' | 'SUSPENDIDO' | 'ADMIN' | 'RECHAZADO'
-    const [filtroRol, setFiltroRol] = useState<string>('TODOS');
-    const [busqueda, setBusqueda] = useState<string>('');
+    export const UsuariosView: React.FC = () => {
+    // 1. Estados de Datos
+    const [usuarios, setUsuarios] = useState<Usuario[]>(MOCK_USUARIOS);
+    const [metricas, setMetricas] = useState<Metricas>({ activos: 0, suspendidos: 0, admins: 0, rechazados: 0, total: 0 });
+
+    // 2. Filtros, Búsqueda y Paginación
+    const [filtroEstadoCard, setFiltroEstadoCard] = useState<string>('TODOS');
+    const [filtroRolSelect, setFiltroRolSelect] = useState<string>('TODOS');
+    const [busquedaInput, setBusquedaInput] = useState<string>('');
+    const [busquedaAplicada, setBusquedaAplicada] = useState<string>('');
+    
     const [paginaActual, setPaginaActual] = useState<number>(1);
     const elementosPorPagina = 5;
 
-    // 3. Cargar las métricas de las Cards al montar el componente
+    // 3. Estado para Modal de Edición
+    const [usuarioAEditar, setUsuarioAEditar] = useState<Usuario | null>(null);
+
+    // Cálculo de Métricas en tiempo real
     useEffect(() => {
-        // Ejemplo de llamada real: fetch('/api/admin/usuarios/stats').then(...)
+        const activos = usuarios.filter(u => u.estado === 'ACTIVO').length;
+        const suspendidos = usuarios.filter(u => u.estado === 'SUSPENDIDO').length;
+        const admins = usuarios.filter(u => u.rol === 'ADMIN').length;
+        const rechazados = usuarios.filter(u => u.estado === 'RECHAZADO').length;
+
         setMetricas({
-        activos: 115,
-        suspendidos: 25,
-        admins: 4,
-        rechazados: 6,
-        total: 150
+        activos,
+        suspendidos,
+        admins,
+        rechazados,
+        total: usuarios.length
         });
-    }, []);
+    }, [usuarios]);
 
-    // 4. Cargar la lista de usuarios cada vez que cambia un filtro o la página
-    useEffect(() => {
-        setLoading(true);
-        // Acá realizás la petición al backend enviando los filtros activos:
-        // fetch(`/api/admin/usuarios?estado=${filtroEstado}&rol=${filtroRol}&search=${busqueda}&page=${paginaActual}`)
-        
-        // Simulación de carga:
-        setTimeout(() => {
-        setLoading(false);
-        }, 300);
-    }, [filtroEstado, filtroRol, paginaActual]);
+    // Lógica de Filtrado Local
+    const usuariosFiltrados = useMemo(() => {
+        return usuarios.filter(u => {
+        const coincideBusqueda = 
+            u.nombre.toLowerCase().includes(busquedaAplicada.toLowerCase()) ||
+            u.email.toLowerCase().includes(busquedaAplicada.toLowerCase());
 
-    // Manejador del clic en las Cards superiores (Filtro rápido)
-    const handleCardClick = (estadoOrol: string) => {
-        if (filtroEstado === estadoOrol) {
-        setFiltroEstado('TODOS'); // Si vuelve a hacer clic en la misma card, quita el filtro
-        } else {
-        setFiltroEstado(estadoOrol);
+        const coincideRol = filtroRolSelect === 'TODOS' || u.rol === filtroRolSelect;
+
+        let coincideCard = true;
+        if (filtroEstadoCard === 'ADMIN') {
+            coincideCard = u.rol === 'ADMIN';
+        } else if (filtroEstadoCard !== 'TODOS') {
+            coincideCard = u.estado === filtroEstadoCard;
         }
-        setPaginaActual(1); // Reiniciar a la primera página tras filtrar
+
+        return coincideBusqueda && coincideRol && coincideCard;
+        });
+    }, [usuarios, busquedaAplicada, filtroRolSelect, filtroEstadoCard]);
+
+    // Lógica de Paginación Local
+    const totalPaginas = Math.ceil(usuariosFiltrados.length / elementosPorPagina) || 1;
+    const usuariosPaginados = useMemo(() => {
+        const inicio = (paginaActual - 1) * elementosPorPagina;
+        return usuariosFiltrados.slice(inicio, inicio + elementosPorPagina);
+    }, [usuariosFiltrados, paginaActual]);
+
+    // Manejadores de acciones
+    const handleCardClick = (filtro: string) => {
+        setFiltroEstadoCard(prev => prev === filtro ? 'TODOS' : filtro);
+        setPaginaActual(1);
+    };
+
+    const handleBuscar = () => {
+        setBusquedaAplicada(busquedaInput);
+        setPaginaActual(1);
+    };
+
+    const handleToggleSuspender = (id: number) => {
+        setUsuarios(prev => prev.map(u => {
+        if (u.id === id) {
+            const nuevoEstado = u.estado === 'SUSPENDIDO' ? 'ACTIVO' : 'SUSPENDIDO';
+            return { ...u, estado: nuevoEstado };
+        }
+        return u;
+        }));
+    };
+
+    const handleEliminar = (id: number) => {
+        if (confirm('¿Estás seguro de eliminar este usuario?')) {
+        setUsuarios(prev => prev.filter(u => u.id !== id));
+        }
+    };
+
+    // Abrir modal cargando datos del usuario seleccionado
+    const handleAbrirEdicion = (usuario: Usuario) => {
+        setUsuarioAEditar({ ...usuario });
+    };
+
+    // Guardar cambios del formulario de edición
+    const handleGuardarEdicion = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!usuarioAEditar) return;
+
+        // TODO Backend: await api.put(`/api/admin/usuarios/${usuarioAEditar.id}`, usuarioAEditar)
+        setUsuarios(prev => prev.map(u => u.id === usuarioAEditar.id ? usuarioAEditar : u));
+        setUsuarioAEditar(null);
+    };
+
+    const renderBadgeEstado = (estado: Usuario['estado']) => {
+        switch (estado) {
+        case 'ACTIVO':
+            return <span className="badge bg-success-subtle text-success border border-success px-2 py-1">Activo</span>;
+        case 'SUSPENDIDO':
+            return <span className="badge bg-secondary-subtle text-secondary border border-secondary px-2 py-1">Suspendido</span>;
+        case 'RECHAZADO':
+            return <span className="badge bg-danger-subtle text-danger border border-danger px-2 py-1">Rechazado</span>;
+        default:
+            return <span className="badge bg-warning-subtle text-warning border border-warning px-2 py-1">Pendiente</span>;
+        }
     };
 
     return (
@@ -71,62 +151,58 @@ import { Search, Edit, Ban, Trash2 } from 'lucide-react';
 
         {/* CARDS SUPERIORES INTERACTIVAS */}
         <div className="row g-3 mb-4">
-            {/* Card Activos */}
             <div className="col-md-3">
             <div 
-                className={`card border-0 shadow-sm border-start border-success border-4 style-pointer ${filtroEstado === 'ACTIVO' ? 'bg-success-subtle' : ''}`}
+                className={`card border-0 shadow-sm border-start border-success border-4 ${filtroEstadoCard === 'ACTIVO' ? 'bg-success-subtle' : ''}`}
                 style={{ cursor: 'pointer', transition: 'all 0.2s' }}
                 onClick={() => handleCardClick('ACTIVO')}
             >
                 <div className="card-body p-3">
                 <span className="text-muted small fw-semibold">Activos</span>
                 <h2 className="fw-bold my-1 text-success">{metricas.activos}</h2>
-                {filtroEstado === 'ACTIVO' && <span className="badge bg-success style-micro">Filtro activo</span>}
+                {filtroEstadoCard === 'ACTIVO' && <span className="badge bg-success style-micro">Filtro activo</span>}
                 </div>
             </div>
             </div>
 
-            {/* Card Suspendidos */}
             <div className="col-md-3">
             <div 
-                className={`card border-0 shadow-sm border-start border-secondary border-4 ${filtroEstado === 'SUSPENDIDO' ? 'bg-secondary-subtle' : ''}`}
+                className={`card border-0 shadow-sm border-start border-secondary border-4 ${filtroEstadoCard === 'SUSPENDIDO' ? 'bg-secondary-subtle' : ''}`}
                 style={{ cursor: 'pointer', transition: 'all 0.2s' }}
                 onClick={() => handleCardClick('SUSPENDIDO')}
             >
                 <div className="card-body p-3">
                 <span className="text-muted small fw-semibold">Suspendidos</span>
                 <h2 className="fw-bold my-1 text-secondary">{metricas.suspendidos}</h2>
-                {filtroEstado === 'SUSPENDIDO' && <span className="badge bg-secondary style-micro">Filtro activo</span>}
+                {filtroEstadoCard === 'SUSPENDIDO' && <span className="badge bg-secondary style-micro">Filtro activo</span>}
                 </div>
             </div>
             </div>
 
-            {/* Card Admins */}
             <div className="col-md-3">
             <div 
-                className={`card border-0 shadow-sm border-start border-warning border-4 ${filtroEstado === 'ADMIN' ? 'bg-warning-subtle' : ''}`}
+                className={`card border-0 shadow-sm border-start border-warning border-4 ${filtroEstadoCard === 'ADMIN' ? 'bg-warning-subtle' : ''}`}
                 style={{ cursor: 'pointer', transition: 'all 0.2s' }}
                 onClick={() => handleCardClick('ADMIN')}
             >
                 <div className="card-body p-3">
                 <span className="text-muted small fw-semibold">Admins</span>
                 <h2 className="fw-bold my-1 text-warning">{metricas.admins}</h2>
-                {filtroEstado === 'ADMIN' && <span className="badge bg-warning text-dark style-micro">Filtro activo</span>}
+                {filtroEstadoCard === 'ADMIN' && <span className="badge bg-warning text-dark style-micro">Filtro activo</span>}
                 </div>
             </div>
             </div>
 
-            {/* Card Rechazados */}
             <div className="col-md-3">
             <div 
-                className={`card border-0 shadow-sm border-start border-danger border-4 ${filtroEstado === 'RECHAZADO' ? 'bg-danger-subtle' : ''}`}
+                className={`card border-0 shadow-sm border-start border-danger border-4 ${filtroEstadoCard === 'RECHAZADO' ? 'bg-danger-subtle' : ''}`}
                 style={{ cursor: 'pointer', transition: 'all 0.2s' }}
                 onClick={() => handleCardClick('RECHAZADO')}
             >
                 <div className="card-body p-3">
                 <span className="text-muted small fw-semibold">Rechazados</span>
                 <h2 className="fw-bold my-1 text-danger">{metricas.rechazados}</h2>
-                {filtroEstado === 'RECHAZADO' && <span className="badge bg-danger style-micro">Filtro activo</span>}
+                {filtroEstadoCard === 'RECHAZADO' && <span className="badge bg-danger style-micro">Filtro activo</span>}
                 </div>
             </div>
             </div>
@@ -142,15 +218,19 @@ import { Search, Edit, Ban, Trash2 } from 'lucide-react';
                     type="text" 
                     className="form-control ps-5" 
                     placeholder="Buscar usuario por nombre o email..." 
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
+                    value={busquedaInput}
+                    onChange={(e) => setBusquedaInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
                 />
                 </div>
                 <div className="col-md-3">
                 <select 
                     className="form-select"
-                    value={filtroRol}
-                    onChange={(e) => setFiltroRol(e.target.value)}
+                    value={filtroRolSelect}
+                    onChange={(e) => {
+                    setFiltroRolSelect(e.target.value);
+                    setPaginaActual(1);
+                    }}
                 >
                     <option value="TODOS">Todos los roles</option>
                     <option value="ADMIN">Admin</option>
@@ -159,7 +239,7 @@ import { Search, Edit, Ban, Trash2 } from 'lucide-react';
                 </select>
                 </div>
                 <div className="col-md-2">
-                <button className="btn btn-primary w-100" onClick={() => setPaginaActual(1)}>
+                <button className="btn btn-primary w-100" onClick={handleBuscar}>
                     Buscar
                 </button>
                 </div>
@@ -182,20 +262,51 @@ import { Search, Edit, Ban, Trash2 } from 'lucide-react';
                     </tr>
                 </thead>
                 <tbody>
-                    {/* Filas renderizadas dinámicamente */}
+                    {usuariosPaginados.length > 0 ? (
+                    usuariosPaginados.map((usuario) => (
+                        <tr key={usuario.id}>
+                        <td className="fw-semibold">{usuario.nombre}</td>
+                        <td>{usuario.email}</td>
+                        <td className="text-capitalize">{usuario.rol.toLowerCase()}</td>
+                        <td>{renderBadgeEstado(usuario.estado)}</td>
+                        <td className="text-end">
+                            <div className="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
+                            {/* BOTÓN EDITAR (MANTIENE TAMAÑO PEQUEÑO ORIGINAL) */}
+                            <button 
+                                className="btn btn-sm btn-outline-primary px-2"
+                                onClick={() => handleAbrirEdicion(usuario)}
+                            >
+                                <Edit size={14} /> Editar
+                            </button>
+                            
+                            <button 
+                                className={`btn btn-sm ${usuario.estado === 'SUSPENDIDO' ? 'btn-outline-success' : 'btn-outline-warning'} px-2`}
+                                onClick={() => handleToggleSuspender(usuario.id)}
+                            >
+                                {usuario.estado === 'SUSPENDIDO' ? (
+                                <><CheckCircle2 size={14} /> Activar</>
+                                ) : (
+                                <><Ban size={14} /> Suspender</>
+                                )}
+                            </button>
+
+                            <button 
+                                className="btn btn-sm btn-outline-danger px-2"
+                                onClick={() => handleEliminar(usuario.id)}
+                            >
+                                <Trash2 size={14} /> Eliminar
+                            </button>
+                            </div>
+                        </td>
+                        </tr>
+                    ))
+                    ) : (
                     <tr>
-                    <td className="fw-semibold">Lucía Pérez</td>
-                    <td>lucia.perez@example.com</td>
-                    <td>Usuario</td>
-                    <td><span className="badge bg-success-subtle text-success border border-success">Activo</span></td>
-                    <td className="text-end">
-                        <div className="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
-                        <button className="btn btn-sm btn-outline-primary px-2"><Edit size={14} /> Editar</button>
-                        <button className="btn btn-sm btn-outline-warning px-2"><Ban size={14} /> Suspender</button>
-                        <button className="btn btn-sm btn-outline-danger px-2"><Trash2 size={14} /> Eliminar</button>
-                        </div>
-                    </td>
+                        <td colSpan={5} className="text-center py-4 text-muted">
+                        No se encontraron usuarios con los filtros aplicados.
+                        </td>
                     </tr>
+                    )}
                 </tbody>
                 </table>
             </div>
@@ -204,22 +315,110 @@ import { Search, Edit, Ban, Trash2 } from 'lucide-react';
             {/* PIE CON TOTALES Y PAGINADOR DINÁMICO */}
             <div className="card-footer bg-white d-flex justify-content-between align-items-center py-3">
             <span className="small text-muted">
-                Mostrando {((paginaActual - 1) * elementosPorPagina) + 1} - {Math.min(paginaActual * elementosPorPagina, metricas.total)} de {metricas.total} usuarios
+                {usuariosFiltrados.length > 0 ? (
+                <>Mostrando {((paginaActual - 1) * elementosPorPagina) + 1} - {Math.min(paginaActual * elementosPorPagina, usuariosFiltrados.length)} de {usuariosFiltrados.length} usuarios</>
+                ) : (
+                'Sin resultados'
+                )}
             </span>
             <ul className="pagination pagination-sm mb-0">
                 <li className={`page-item ${paginaActual === 1 ? 'disabled' : ''}`}>
-                <button className="page-link" onClick={() => setPaginaActual(prev => prev - 1)}>Anterior</button>
+                <button className="page-link" onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}>
+                    Anterior
+                </button>
                 </li>
-                <li className="page-item active">
-                <button className="page-link">{paginaActual}</button>
+                
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((num) => (
+                <li key={num} className={`page-item ${paginaActual === num ? 'active' : ''}`}>
+                    <button className="page-link" onClick={() => setPaginaActual(num)}>
+                    {num}
+                    </button>
                 </li>
-                <li className={`page-item ${paginaActual * elementosPorPagina >= metricas.total ? 'disabled' : ''}`}>
-                <button className="page-link" onClick={() => setPaginaActual(prev => prev + 1)}>Siguiente</button>
+                ))}
+
+                <li className={`page-item ${paginaActual >= totalPaginas ? 'disabled' : ''}`}>
+                <button className="page-link" onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}>
+                    Siguiente
+                </button>
                 </li>
             </ul>
             </div>
         </div>
+
+        {/* MODAL DE EDICIÓN */}
+        {usuarioAEditar && (
+            <div className="modal fade show d-block tab-index-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content border-0 shadow">
+                <div className="modal-header">
+                    <h6 className="modal-title fw-bold">Editar Usuario #{usuarioAEditar.id}</h6>
+                    <button type="button" className="btn-close" onClick={() => setUsuarioAEditar(null)}></button>
+                </div>
+                <form onSubmit={handleGuardarEdicion}>
+                    <div className="modal-body">
+                    <div className="mb-3">
+                        <label className="form-label small fw-semibold">Nombre</label>
+                        <input 
+                        type="text" 
+                        className="form-control form-control-sm"
+                        value={usuarioAEditar.nombre}
+                        onChange={(e) => setUsuarioAEditar({ ...usuarioAEditar, nombre: e.target.value })}
+                        required
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <label className="form-label small fw-semibold">Email</label>
+                        <input 
+                        type="email" 
+                        className="form-control form-control-sm"
+                        value={usuarioAEditar.email}
+                        onChange={(e) => setUsuarioAEditar({ ...usuarioAEditar, email: e.target.value })}
+                        required
+                        />
+                    </div>
+                    <div className="row g-2">
+                        <div className="col-md-6 mb-3">
+                        <label className="form-label small fw-semibold">Rol</label>
+                        <select 
+                            className="form-select form-select-sm"
+                            value={usuarioAEditar.rol}
+                            onChange={(e) => setUsuarioAEditar({ ...usuarioAEditar, rol: e.target.value as Usuario['rol'] })}
+                        >
+                            <option value="ADMIN">Admin</option>
+                            <option value="EMPRENDEDOR">Emprendedor</option>
+                            <option value="MODERADOR">Moderador</option>
+                        </select>
+                        </div>
+                        <div className="col-md-6 mb-3">
+                        <label className="form-label small fw-semibold">Estado</label>
+                        <select 
+                            className="form-select form-select-sm"
+                            value={usuarioAEditar.estado}
+                            onChange={(e) => setUsuarioAEditar({ ...usuarioAEditar, estado: e.target.value as Usuario['estado'] })}
+                        >
+                            <option value="ACTIVO">Activo</option>
+                            <option value="SUSPENDIDO">Suspendido</option>
+                            <option value="RECHAZADO">Rechazado</option>
+                            <option value="PENDIENTE">Pendiente</option>
+                        </select>
+                        </div>
+                    </div>
+                    </div>
+                    <div className="modal-footer py-2">
+                    <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setUsuarioAEditar(null)}>
+                        Cancelar
+                    </button>
+                    <button type="submit" className="btn btn-sm btn-primary">
+                        Guardar Cambios
+                    </button>
+                    </div>
+                </form>
+                </div>
+            </div>
+            </div>
+        )}
         </div>
     );
 };
+
 export default UsuariosView;
