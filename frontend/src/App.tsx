@@ -1,20 +1,20 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Navbar from './Components/Navbar';
-import Home from "./Page/Home";
-import { Login } from "./Page/Login";
-import RegistroEmprendedor from "./Page/RegistroEmprendedor";
-import DetalleEmprendedor from "./Page/DetalleEmprendedor";
-import { ProductosPage } from "./Page/ProductosPage";
-import Footer from "./Components/Footer";
-import { ProtectedRoute } from "./Components/ProtectedRoute";
+import Navbar from './components/Navbar';
+import Home from "./page/Home";
+import { Login } from "./page/Login";
+import RegistroEmprendedor from "./page/RegistroEmprendedor";
+import DetalleEmprendedor from "./page/DetalleEmprendedor";
+import { ProductosPage } from "./page/ProductosPage";
+import Footer from "./components/Footer";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
-import { RecuperarPassword } from "./Page/RecuperarPassword";
-import { RestablecerPassword } from "./Page/RestablecerPassword";
-import { CategoriasPage } from "./Page/CategoriasPage";
-import { EmprendedoresPage } from "./Page/EmprendedoresPage";
-import { AdminDashboard } from "./Page/AdminDashboard";
-import { EmprendedorDashboard } from "./Page/emprendedordashboard";
+import { RecuperarPassword } from "./page/RecuperarPassword";
+import { RestablecerPassword } from "./page/RestablecerPassword";
+import { CategoriasPage } from "./page/CategoriasPage";
+import { EmprendedoresPage } from "./page/EmprendedoresPage";
+import { AdminDashboard } from "./page/AdminDashboard";
+import { EmprendedorDashboard } from "./page/emprendedordashboard";
 
 function App() {
     return (
