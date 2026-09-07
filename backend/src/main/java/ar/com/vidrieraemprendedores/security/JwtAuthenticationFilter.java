@@ -1,6 +1,5 @@
 package ar.com.vidrieraemprendedores.security;
 
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String userEmail;
 
-        // 1. Verificar si la cabecera trae el prefijo "Bearer "
+        // 1. Verificar si la cabecera no trae el prefijo "Bearer "
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -46,24 +45,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 2. Extraer el token sin la palabra "Bearer "
         jwt = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(jwt);
 
-        // 3. Validar el usuario y establecerlo en el contexto de seguridad si aún no está autenticado
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                
-                // Guardamos el usuario autenticado en el contexto de la aplicación
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+        // Prevenir errores si en localStorage se guardó "null" o "undefined" como String
+        if ("null".equalsIgnoreCase(jwt) || "undefined".equalsIgnoreCase(jwt) || jwt.isBlank()) {
+            filterChain.doFilter(request, response);
+            return;
         }
+
+        try {
+            userEmail = jwtService.extractUsername(jwt);
+
+            // 3. Validar el usuario y establecerlo en el contexto de seguridad si aún no está autenticado
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    // Guardamos el usuario autenticado en el contexto de la aplicación
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+        } catch (Exception e) {
+            // Si el token falló o expiró, simplemente logueamos la advertencia.
+            // NO interrumpimos la petición para permitir que la vista pública (GET /api/productos) siga funcionando.
+            logger.warn("No se pudo procesar el Token JWT: " + e.getMessage());
+        }
+
         filterChain.doFilter(request, response);
     }
 }
