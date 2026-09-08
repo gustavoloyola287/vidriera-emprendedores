@@ -18,6 +18,7 @@ import {
 import { UsuariosView } from './emprendedoresview';
 import { ProductosView } from './productosview';
 import { ModeracionView as ModeracionView } from './moderacionview';
+
 // Estrutura DTO para Notificaciones
 export interface NotificacionItem {
     id: number;
@@ -36,6 +37,102 @@ export interface ModeracionItem {
     tipo: 'contenido' | 'usuarios';
 }
 
+interface ModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSuccess: () => void;
+}
+
+// Componente Modal Nuevo Emprendedor
+export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, onSuccess }) => {
+    const [formData, setFormData] = useState({
+        nombre: '',
+        email: '',
+        rubro: '',
+        telefono: '',
+    });
+
+    if (!isOpen) return null;
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            // Lógica de registro o llamada a la API
+            // await api.post('/emprendedores', formData);
+            
+            onSuccess();
+            onClose();
+        } catch (error) {
+            console.error('Error al registrar emprendedor:', error);
+        }
+    };
+
+    return (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex={-1}>
+            <div className="modal-dialog modal-lg modal-dialog-centered">
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h5 className="modal-title">Registrar Nuevo Emprendedor</h5>
+                        <button type="button" className="btn-close" onClick={onClose}></button>
+                    </div>
+                    <form onSubmit={handleSubmit}>
+                        <div className="modal-body">
+                            <div className="row g-3">
+                                <div className="col-md-6">
+                                    <label className="form-label">Nombre Completo</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={formData.nombre}
+                                        onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="form-label">Email</label>
+                                    <input
+                                        type="email"
+                                        className="form-control"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="form-label">Rubro</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={formData.rubro}
+                                        onChange={(e) => setFormData({ ...formData, rubro: e.target.value })}
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="form-label">Teléfono</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={formData.telefono}
+                                        onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-secondary" onClick={onClose}>
+                                Cancelar
+                            </button>
+                            <button type="submit" className="btn btn-primary">
+                                Guardar Emprendedor
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
     const { logout } = useAuth();
@@ -43,18 +140,16 @@ export const AdminDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'inicio' | 'emprendedores' | 'productos' | 'moderacion' | 'categorias' | 'ajustes' | 'usuarios'>('inicio');
     const [filtroEstado, setFiltroEstado] = useState<'Todos' | 'contenido' | 'usuarios'>('Todos');
     const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // Estado para las Notificaciones
     const [notificaciones, setNotificaciones] = useState<NotificacionItem[]>([
         { id: 1, titulo: 'Nuevo emprendedor', descripcion: 'Panadería San Carlos solicitó registro.', tiempo: 'Hace 5 min', leida: false, tipo: 'registro' },
         { id: 2, titulo: 'Producto a moderar', descripcion: 'Vidrio templado 10mm requiere aprobación.', tiempo: 'Hace 20 min', leida: false, tipo: 'producto' },
         { id: 3, titulo: 'Reporte recibido', descripcion: 'Comentario reportado en publicación de Laura.', tiempo: 'Hace 1 hora', leida: false, tipo: 'reporte' },
     ]);
 
-    // Contador de notificaciones no leídas
     const noLeidasCount = notificaciones.filter(n => !n.leida).length;
 
-    // Marcar todas como leídas
     const handleMarcarTodasLeidas = () => {
         setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })));
     };
@@ -62,6 +157,10 @@ export const AdminDashboard: React.FC = () => {
     const handleLogout = () => {
         logout();
         navigate('/login');
+    };
+
+    const handleEmprendedorCreado = () => {
+        // Lógica opcional tras guardar exitosamente el emprendedor (ej. refetch de datos)
     };
 
     const [itemsModeracion, setItemsModeracion] = useState<ModeracionItem[]>([
@@ -99,7 +198,6 @@ export const AdminDashboard: React.FC = () => {
                 </div>
 
                 <div className="ms-auto d-flex align-items-center gap-3 text-white">
-                    {/* Botón de Notificaciones con Badge Numérico y Dropdown */}
                     <div className="position-relative">
                         <button 
                             className="btn btn-link text-white p-0 position-relative"
@@ -108,20 +206,19 @@ export const AdminDashboard: React.FC = () => {
                         >
                             <Bell size={20} />
                             {noLeidasCount > 0 && (
-                                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger fs-7" style={{ fontSize: '0.65rem' }}>
+                                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.65rem' }}>
                                     {noLeidasCount}
                                 </span>
                             )}
                         </button>
 
-                        {/* Menú Desplegable de Notificaciones */}
                         {mostrarNotificaciones && (
                             <div className="position-absolute end-0 mt-2 card shadow-lg text-dark border-0" style={{ width: '320px', zIndex: 1050 }}>
                                 <div className="card-header bg-white d-flex justify-content-between align-items-center py-2">
                                     <h6 className="fw-bold mb-0">Notificaciones</h6>
                                     {noLeidasCount > 0 && (
                                         <button 
-                                            className="btn btn-sm btn-link p-0 text-decoration-none style-micro"
+                                            className="btn btn-sm btn-link p-0 text-decoration-none"
                                             onClick={handleMarcarTodasLeidas}
                                         >
                                             Marcar leídas
@@ -145,7 +242,7 @@ export const AdminDashboard: React.FC = () => {
                                                 <div className="flex-grow-1">
                                                     <div className="d-flex justify-content-between align-items-center">
                                                         <strong className="small">{n.titulo}</strong>
-                                                        <span className="text-muted style-micro">{n.tiempo}</span>
+                                                        <span className="text-muted small">{n.tiempo}</span>
                                                     </div>
                                                     <p className="mb-0 text-muted" style={{ fontSize: '0.78rem' }}>{n.descripcion}</p>
                                                 </div>
@@ -232,7 +329,7 @@ export const AdminDashboard: React.FC = () => {
                 <main className="flex-grow-1 p-4 overflow-auto">
                     {activeTab === 'inicio' && (
                         <div className="container-fluid p-0">
-                            {/* Banner */}
+                            {/* Banner de Bienvenida */}
                             <div className="alert alert-success border-0 shadow-sm mb-4" role="alert">
                                 <h5 className="alert-heading fw-bold mb-1 fs-6">Bienvenido admin: Marcos</h5>
                                 <p className="mb-0 small">Aquí podrás Administrar Emprendedores, Moderar Contenidos y Gestionar Productos.</p>
@@ -286,7 +383,7 @@ export const AdminDashboard: React.FC = () => {
                                 <div className="col-6 col-md-3">
                                     <div className="card border-0 shadow-sm">
                                         <div className="card-body p-3">
-                                            <span className="text-muted text-uppercase fw-semibold style-micro">ACTIVOS</span>
+                                            <span className="text-muted text-uppercase fw-semibold small">ACTIVOS</span>
                                             <h3 className="fw-bold my-1">25</h3>
                                         </div>
                                     </div>
@@ -294,7 +391,7 @@ export const AdminDashboard: React.FC = () => {
                                 <div className="col-6 col-md-3">
                                     <div className="card border-0 shadow-sm">
                                         <div className="card-body p-3">
-                                            <span className="text-muted text-uppercase fw-semibold style-micro">SUSPENDIDOS</span>
+                                            <span className="text-muted text-uppercase fw-semibold small">SUSPENDIDOS</span>
                                             <h3 className="fw-bold my-1">5</h3>
                                         </div>
                                     </div>
@@ -302,7 +399,7 @@ export const AdminDashboard: React.FC = () => {
                                 <div className="col-6 col-md-3">
                                     <div className="card border-0 shadow-sm">
                                         <div className="card-body p-3">
-                                            <span className="text-muted text-uppercase fw-semibold style-micro">ADMINS</span>
+                                            <span className="text-muted text-uppercase fw-semibold small">ADMINS</span>
                                             <h3 className="fw-bold my-1">2</h3>
                                         </div>
                                     </div>
@@ -310,7 +407,7 @@ export const AdminDashboard: React.FC = () => {
                                 <div className="col-6 col-md-3">
                                     <div className="card border-0 shadow-sm">
                                         <div className="card-body p-3">
-                                            <span className="text-muted text-uppercase fw-semibold style-micro">RECHAZADOS</span>
+                                            <span className="text-muted text-uppercase fw-semibold small">RECHAZADOS</span>
                                             <h3 className="fw-bold my-1">3</h3>
                                         </div>
                                     </div>
@@ -387,6 +484,13 @@ export const AdminDashboard: React.FC = () => {
                     {activeTab === 'moderacion' && <ModeracionView />}
                 </main>
             </div>
+
+            {/* Modal de Registro */}
+            <ModalNuevoEmprendedor 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+                onSuccess={handleEmprendedorCreado} 
+            />
         </div>
     );
 };
