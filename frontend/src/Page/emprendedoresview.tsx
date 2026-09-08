@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Edit, Ban, Trash2, CheckCircle2, X } from 'lucide-react';
+import { Search, Edit, Ban, Trash2, CheckCircle2, Plus } from 'lucide-react';
 
-// Interfaces para TypeScript
+// Interfaces
 export interface Usuario {
     id: number;
     nombre: string;
@@ -18,7 +18,6 @@ export interface Usuario {
     total: number;
     }
 
-    // Datos de prueba simulando respuesta de Backend (GET /api/admin/usuarios)
     const MOCK_USUARIOS: Usuario[] = [
     { id: 1, nombre: 'Lucía Pérez', email: 'lucia.perez@example.com', rol: 'EMPRENDEDOR', estado: 'ACTIVO' },
     { id: 2, nombre: 'Santiago Rossi', email: 'santiago.rossi@example.com', rol: 'EMPRENDEDOR', estado: 'ACTIVO' },
@@ -31,11 +30,9 @@ export interface Usuario {
     ];
 
     export const UsuariosView: React.FC = () => {
-    // 1. Estados de Datos
     const [usuarios, setUsuarios] = useState<Usuario[]>(MOCK_USUARIOS);
     const [metricas, setMetricas] = useState<Metricas>({ activos: 0, suspendidos: 0, admins: 0, rechazados: 0, total: 0 });
 
-    // 2. Filtros, Búsqueda y Paginación
     const [filtroEstadoCard, setFiltroEstadoCard] = useState<string>('TODOS');
     const [filtroRolSelect, setFiltroRolSelect] = useState<string>('TODOS');
     const [busquedaInput, setBusquedaInput] = useState<string>('');
@@ -44,10 +41,17 @@ export interface Usuario {
     const [paginaActual, setPaginaActual] = useState<number>(1);
     const elementosPorPagina = 5;
 
-    // 3. Estado para Modal de Edición
     const [usuarioAEditar, setUsuarioAEditar] = useState<Usuario | null>(null);
 
-    // Cálculo de Métricas en tiempo real
+    // Nuevo estado para el modal de creación
+    const [isCrearModalOpen, setIsCrearModalOpen] = useState<boolean>(false);
+    const [nuevoUsuario, setNuevoUsuario] = useState<Omit<Usuario, 'id'>>({
+        nombre: '',
+        email: '',
+        rol: 'EMPRENDEDOR',
+        estado: 'ACTIVO'
+    });
+
     useEffect(() => {
         const activos = usuarios.filter(u => u.estado === 'ACTIVO').length;
         const suspendidos = usuarios.filter(u => u.estado === 'SUSPENDIDO').length;
@@ -63,7 +67,6 @@ export interface Usuario {
         });
     }, [usuarios]);
 
-    // Lógica de Filtrado Local
     const usuariosFiltrados = useMemo(() => {
         return usuarios.filter(u => {
         const coincideBusqueda = 
@@ -83,14 +86,12 @@ export interface Usuario {
         });
     }, [usuarios, busquedaAplicada, filtroRolSelect, filtroEstadoCard]);
 
-    // Lógica de Paginación Local
     const totalPaginas = Math.ceil(usuariosFiltrados.length / elementosPorPagina) || 1;
     const usuariosPaginados = useMemo(() => {
         const inicio = (paginaActual - 1) * elementosPorPagina;
         return usuariosFiltrados.slice(inicio, inicio + elementosPorPagina);
     }, [usuariosFiltrados, paginaActual]);
 
-    // Manejadores de acciones
     const handleCardClick = (filtro: string) => {
         setFiltroEstadoCard(prev => prev === filtro ? 'TODOS' : filtro);
         setPaginaActual(1);
@@ -117,19 +118,24 @@ export interface Usuario {
         }
     };
 
-    // Abrir modal cargando datos del usuario seleccionado
     const handleAbrirEdicion = (usuario: Usuario) => {
         setUsuarioAEditar({ ...usuario });
     };
 
-    // Guardar cambios del formulario de edición
     const handleGuardarEdicion = (e: React.FormEvent) => {
         e.preventDefault();
         if (!usuarioAEditar) return;
-
-        // TODO Backend: await api.put(`/api/admin/usuarios/${usuarioAEditar.id}`, usuarioAEditar)
         setUsuarios(prev => prev.map(u => u.id === usuarioAEditar.id ? usuarioAEditar : u));
         setUsuarioAEditar(null);
+    };
+
+    // Manejador para crear un usuario nuevo
+    const handleCrearUsuario = (e: React.FormEvent) => {
+        e.preventDefault();
+        const idNuevo = usuarios.length > 0 ? Math.max(...usuarios.map(u => u.id)) + 1 : 1;
+        setUsuarios(prev => [...prev, { id: idNuevo, ...nuevoUsuario }]);
+        setIsCrearModalOpen(false);
+        setNuevoUsuario({ nombre: '', email: '', rol: 'EMPRENDEDOR', estado: 'ACTIVO' });
     };
 
     const renderBadgeEstado = (estado: Usuario['estado']) => {
@@ -147,7 +153,12 @@ export interface Usuario {
 
     return (
         <div className="container-fluid p-0">
-        <h5 className="fw-bold mb-3">Panel Emprendedor - Accesos Directos</h5>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="fw-bold m-0">Panel Emprendedor - Accesos Directos</h5>
+            <button className="btn btn-success d-flex align-items-center gap-1" onClick={() => setIsCrearModalOpen(true)}>
+            <Plus size={16} /> Nuevo Emprendedor
+            </button>
+        </div>
 
         {/* CARDS SUPERIORES INTERACTIVAS */}
         <div className="row g-3 mb-4">
@@ -215,12 +226,12 @@ export interface Usuario {
                 <div className="col-md-7 position-relative">
                 <Search className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" size={16} />
                 <input 
-                    type="text" 
-                    className="form-control ps-5" 
-                    placeholder="Buscar usuario por nombre o email..." 
-                    value={busquedaInput}
-                    onChange={(e) => setBusquedaInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
+                type="text" 
+                className="form-control ps-5" 
+                placeholder="Buscar usuario por nombre o email..." 
+                value={busquedaInput}
+                onChange={(e) => setBusquedaInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
                 />
                 </div>
                 <div className="col-md-3">
@@ -271,7 +282,6 @@ export interface Usuario {
                         <td>{renderBadgeEstado(usuario.estado)}</td>
                         <td className="text-end">
                             <div className="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
-                            {/* BOTÓN EDITAR (MANTIENE TAMAÑO PEQUEÑO ORIGINAL) */}
                             <button 
                                 className="btn btn-sm btn-outline-primary px-2"
                                 onClick={() => handleAbrirEdicion(usuario)}
@@ -410,6 +420,79 @@ export interface Usuario {
                     </button>
                     <button type="submit" className="btn btn-sm btn-primary">
                         Guardar Cambios
+                    </button>
+                    </div>
+                </form>
+                </div>
+            </div>
+            </div>
+        )}
+
+        {/* MODAL DE CREACIÓN */}
+        {isCrearModalOpen && (
+            <div className="modal fade show d-block tab-index-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content border-0 shadow">
+                <div className="modal-header">
+                    <h6 className="modal-title fw-bold">Nuevo Emprendedor</h6>
+                    <button type="button" className="btn-close" onClick={() => setIsCrearModalOpen(false)}></button>
+                </div>
+                <form onSubmit={handleCrearUsuario}>
+                    <div className="modal-body">
+                    <div className="mb-3">
+                        <label className="form-label small fw-semibold">Nombre Completo</label>
+                        <input 
+                        type="text" 
+                        className="form-control form-control-sm"
+                        placeholder="Ej. María González"
+                        value={nuevoUsuario.nombre}
+                        onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })}
+                        required
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <label className="form-label small fw-semibold">Email</label>
+                        <input 
+                        type="email" 
+                        className="form-control form-control-sm"
+                        placeholder="ejemplo@correo.com"
+                        value={nuevoUsuario.email}
+                        onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })}
+                        required
+                        />
+                    </div>
+                    <div className="row g-2">
+                        <div className="col-md-6 mb-3">
+                        <label className="form-label small fw-semibold">Rol</label>
+                        <select 
+                            className="form-select form-select-sm"
+                            value={nuevoUsuario.rol}
+                            onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value as Usuario['rol'] })}
+                        >
+                            <option value="EMPRENDEDOR">Emprendedor</option>
+                            <option value="ADMIN">Admin</option>
+                            <option value="MODERADOR">Moderador</option>
+                        </select>
+                        </div>
+                        <div className="col-md-6 mb-3">
+                        <label className="form-label small fw-semibold">Estado Inicial</label>
+                        <select 
+                            className="form-select form-select-sm"
+                            value={nuevoUsuario.estado}
+                            onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, estado: e.target.value as Usuario['estado'] })}
+                        >
+                            <option value="ACTIVO">Activo</option>
+                            <option value="PENDIENTE">Pendiente</option>
+                        </select>
+                        </div>
+                    </div>
+                    </div>
+                    <div className="modal-footer py-2">
+                    <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setIsCrearModalOpen(false)}>
+                        Cancelar
+                    </button>
+                    <button type="submit" className="btn btn-sm btn-success">
+                        Crear Usuario
                     </button>
                     </div>
                 </form>
