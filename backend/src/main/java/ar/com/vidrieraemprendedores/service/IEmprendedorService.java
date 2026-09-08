@@ -15,4 +15,9 @@ public interface IEmprendedorService {
 
     // Eliminar un emprendedor por su ID
     void eliminarEmprendedor(Long id);
+
+    // Métodos para el Dashboard Administrador
+    // Contar la cantidad de emprendedores  
+    long contarEmprendedores();
+    void cambiarEstado(Long id, String nuevoEstado);
 }

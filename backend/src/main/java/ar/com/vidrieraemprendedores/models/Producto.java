@@ -1,5 +1,6 @@
 package ar.com.vidrieraemprendedores.models;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,6 +27,9 @@ public class Producto {
     private String descripcion;
     private String urlImagen; // Para mostrar la foto en la vidriera
 
+    @Column(name = "estado", nullable = false, columnDefinition = "VARCHAR(50) DEFAULT 'DISPONIBLE'")
+    private String estado; // Para indicar si el producto está disponible o no
+
     // Relación: Muchos productos pertenecen a un mismo Emprendedor
     @ManyToOne
     @JoinColumn(name = "emprendedor_id", nullable = false)
@@ -36,4 +40,5 @@ public class Producto {
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
     
+
 }

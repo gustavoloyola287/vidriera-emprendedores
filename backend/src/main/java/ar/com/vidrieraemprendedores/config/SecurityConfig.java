@@ -39,7 +39,7 @@ public class SecurityConfig {
                     "/auth/**",
                     "/api/auth/**",
                     "/api/productos/**",
-                    "/productos/**"
+                    "/productos/**"   
                 ).permitAll()
 
                 // Lectura pública para el resto de recursos (GET)
@@ -51,6 +51,13 @@ public class SecurityConfig {
                     "/fotos/**",
                     "/api/fotos/**"
                 ).permitAll()
+
+                // Endpoints exclusivos para el ADMINISTRADOR
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                // Endpoints exclusivos para el EMPRENDEDOR (gestión de sus productos y panel)
+                .requestMatchers("/api/emprendedor/**").hasRole("EMPRENDEDOR")
+
 
                 .anyRequest().authenticated()
             )

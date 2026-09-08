@@ -30,4 +30,17 @@ public interface IProductoService {
 
     // Eliminar un producto del catálogo
     void eliminarProducto(Long id);
+
+    // Métodos para el Dashboard de Admin (Métricas y Moderación)
+    long contarProductos();
+    long contarPendientes();
+    void cambiarEstadoProducto(Long productoId, String nuevoEstado);
+
+    // Métodos para el Dashboard de Emprendedor (Límite de 5 productos y Pertenencia)
+    long contarProductosPorEmprendedor(Long emprendedorId);
+    boolean perteneceAEmprendedor(Long productoId, Long emprendedorId);
+    List<ProductoDTO> obtenerPorEmprendedor(Long emprendedorId);
+    ProductoDTO actualizarProducto(Long id, ProductoDTO productoDTO);
+    ProductoDTO crearProductoParaEmprendedor(ProductoDTO productoDTO, Long emprendedorId);
+    
 }

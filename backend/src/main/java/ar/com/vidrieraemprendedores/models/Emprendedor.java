@@ -48,6 +48,9 @@ private String password;
 @Enumerated(EnumType.STRING)
 private Rol rol;
 
+@Column (name = "estado", nullable = false, columnDefinition = "VARCHAR(50) DEFAULT 'PENDIENTE'")
+private String estado; // Pendiente, Activo, Suspendido
+
 // Recuperacion de contraseña
 @Column(name = "reset_password_token")
 private String resetPasswordToken;

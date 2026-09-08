@@ -37,36 +37,7 @@ public class ProductoService implements IProductoService {
     @Transactional(readOnly = true)
     public List<ProductoDTO> obtenerCatalogoPublico() {
         List<Producto> productos = productoRepository.findAll();
-
-        return productos.stream().map(producto -> {
-            ProductoDTO dto = new ProductoDTO();
-            dto.setId(producto.getId());
-            dto.setNombre(producto.getNombre());
-            dto.setDescripcion(producto.getDescripcion());
-            
-            // Mapeo de Emprendedor desde Postgres
-            if (producto.getEmprendedor() != null) {
-                dto.setIdEmprendedor(producto.getEmprendedor().getId());
-                dto.setNombreEmprendedor(producto.getEmprendedor().getNombreEmprendimiento());
-            }
-
-            // Mapeo de Categoría desde Postgres
-            if (producto.getCategoria() != null) {
-                dto.setIdCategoria(producto.getCategoria().getId());
-                dto.setNombreCategoria(producto.getCategoria().getNombre());
-            }
-
-            // Integración con MongoDB: buscar las fotos asociadas al ID del producto
-            List<FotoProducto> fotosMongo = fotoProductoRepository.findByProductoId(producto.getId());
-            dto.setFotos(fotosMongo);
-
-            // Asignación de la foto principal si existen fotos en Mongo
-            if (!fotosMongo.isEmpty()) {
-                dto.setFotoPrincipal(fotosMongo.get(0));
-            }
-
-            return dto;
-        }).collect(Collectors.toList());
+        return productos.stream().map(this::convertirADTO).collect(Collectors.toList());
     }
 
     @Override
@@ -132,9 +103,112 @@ public class ProductoService implements IProductoService {
             throw new RuntimeException("No se puede eliminar. Producto no encontrado con el ID: " + id);
         }
         
-        // Limpieza: al borrar de PostgreSQL, eliminamos sus fotos en MongoDB
         fotoProductoRepository.deleteByProductoId(id);
-        
         productoRepository.deleteById(id);
+    }
+
+    // --- NUEVAS IMPLEMENTACIONES PARA DASHBOARDS ---
+
+    @Override
+    public long contarProductos() {
+        return productoRepository.count();
+    }
+
+    @Override
+    public long contarPendientes() {
+        // Asegúrate de definir el método countByEstado("PENDIENTE") en ProductoRepository si manejas el estado allí
+        return productoRepository.countByEstado("PENDIENTE");
+    }
+
+    @Override
+    @Transactional
+    public void cambiarEstadoProducto(Long productoId, String nuevoEstado) {
+        Producto producto = buscarPorId(productoId);
+        producto.setEstado(nuevoEstado);
+        productoRepository.save(producto);
+    }
+
+    @Override
+    public long contarProductosPorEmprendedor(Long emprendedorId) {
+        return productoRepository.countByEmprendedorId(emprendedorId);
+    }
+
+    @Override
+    public boolean perteneceAEmprendedor(Long productoId, Long emprendedorId) {
+        Producto producto = buscarPorId(productoId);
+        return producto.getEmprendedor() != null && producto.getEmprendedor().getId().equals(emprendedorId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductoDTO> obtenerPorEmprendedor(Long emprendedorId) {
+        List<Producto> productos = productoRepository.findByEmprendedorId(emprendedorId);
+        return productos.stream().map(this::convertirADTO).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public ProductoDTO crearProductoParaEmprendedor(ProductoDTO productoDTO, Long emprendedorId) {
+        Producto producto = new Producto();
+        producto.setNombre(productoDTO.getNombre());
+        producto.setDescripcion(productoDTO.getDescripcion());
+        producto.setEstado("PENDIENTE"); // Estado por defecto para revisión
+
+        if (productoDTO.getIdCategoria() != null) {
+            Categoria cat = categoriaRepository.findById(productoDTO.getIdCategoria())
+                    .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+            producto.setCategoria(cat);
+        }
+
+        Emprendedor emp = emprendedorRepository.findById(emprendedorId)
+                .orElseThrow(() -> new RuntimeException("Emprendedor no encontrado"));
+        producto.setEmprendedor(emp);
+
+        Producto guardado = productoRepository.save(producto);
+        return convertirADTO(guardado);
+    }
+
+    @Override
+    @Transactional
+    public ProductoDTO actualizarProducto(Long id, ProductoDTO productoDTO) {
+        Producto producto = buscarPorId(id);
+        producto.setNombre(productoDTO.getNombre());
+        producto.setDescripcion(productoDTO.getDescripcion());
+
+        if (productoDTO.getIdCategoria() != null) {
+            Categoria cat = categoriaRepository.findById(productoDTO.getIdCategoria())
+                    .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+            producto.setCategoria(cat);
+        }
+
+        Producto actualizado = productoRepository.save(producto);
+        return convertirADTO(actualizado);
+    }
+
+    // Helper privado para mapear entidad a DTO incluyendo MongoDB
+    private ProductoDTO convertirADTO(Producto producto) {
+        ProductoDTO dto = new ProductoDTO();
+        dto.setId(producto.getId());
+        dto.setNombre(producto.getNombre());
+        dto.setDescripcion(producto.getDescripcion());
+
+        if (producto.getEmprendedor() != null) {
+            dto.setIdEmprendedor(producto.getEmprendedor().getId());
+            dto.setNombreEmprendedor(producto.getEmprendedor().getNombreEmprendimiento());
+        }
+
+        if (producto.getCategoria() != null) {
+            dto.setIdCategoria(producto.getCategoria().getId());
+            dto.setNombreCategoria(producto.getCategoria().getNombre());
+        }
+
+        List<FotoProducto> fotosMongo = fotoProductoRepository.findByProductoId(producto.getId());
+        dto.setFotos(fotosMongo);
+
+        if (!fotosMongo.isEmpty()) {
+            dto.setFotoPrincipal(fotosMongo.get(0));
+        }
+
+        return dto;
     }
 }
