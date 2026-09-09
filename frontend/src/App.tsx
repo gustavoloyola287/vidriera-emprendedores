@@ -13,7 +13,7 @@ import { RecuperarPassword } from "./page/RecuperarPassword";
 import { RestablecerPassword } from "./page/RestablecerPassword";
 import { CategoriasPage } from "./page/CategoriasPage";
 import { EmprendedoresPage } from "./page/EmprendedoresPage";
-import {AdminDashboard} from "./Page/AdminDashboard";
+import {AdminDashboard} from "./page/AdminDashboard";
 import { EmprendedorDashboard } from "./page/emprendedordashboard";
 
 function App() {
