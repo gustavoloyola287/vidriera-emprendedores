@@ -18,6 +18,7 @@ import {
 import { UsuariosView } from './emprendedoresview';
 import { ProductosView } from './productosview';
 import { ModeracionView as ModeracionView } from './moderacionview';
+import { CategoriasView } from './categoriasview';
 
 // Estrutura DTO para Notificaciones
 export interface NotificacionItem {
@@ -482,6 +483,7 @@ export const AdminDashboard: React.FC = () => {
                     {activeTab === 'emprendedores' && <UsuariosView />}
                     {activeTab === 'productos' && <ProductosView />}
                     {activeTab === 'moderacion' && <ModeracionView />}
+                    {activeTab === 'categorias' && <CategoriasView />}
                 </main>
             </div>
 
