@@ -185,7 +185,7 @@ public class ProductoService implements IProductoService {
         return convertirADTO(actualizado);
     }
 
-    // Helper privado para mapear entidad a DTO incluyendo MongoDB
+    // Helper privado para mapear entidad a DTO incluyendo MongoDB de forma segura
     private ProductoDTO convertirADTO(Producto producto) {
         ProductoDTO dto = new ProductoDTO();
         dto.setId(producto.getId());
@@ -202,13 +202,25 @@ public class ProductoService implements IProductoService {
             dto.setNombreCategoria(producto.getCategoria().getNombre());
         }
 
-        List<FotoProducto> fotosMongo = fotoProductoRepository.findByProductoId(producto.getId());
-        dto.setFotos(fotosMongo);
+        // Bloque defensivo frente a fallos de MongoDB
+        try {
+            List<FotoProducto> fotosMongo = fotoProductoRepository.findByProductoId(producto.getId());
+            dto.setFotos(fotosMongo);
 
-        if (!fotosMongo.isEmpty()) {
-            dto.setFotoPrincipal(fotosMongo.get(0));
+            if (!fotosMongo.isEmpty()) {
+                dto.setFotoPrincipal(fotosMongo.get(0));
+            }
+        } catch (Exception e) {
+            System.err.println("Advertencia: No se pudieron cargar las fotos desde MongoDB para el producto " 
+                    + producto.getId() + ". Causa: " + e.getMessage());
+            
+            // Asigna lista vacía para no romper la respuesta JSON
+            dto.setFotos(List.of());
+            dto.setFotoPrincipal(null);
         }
 
         return dto;
+
+       
     }
 }
