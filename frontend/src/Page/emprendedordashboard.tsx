@@ -124,7 +124,7 @@ export const EmprendedorDashboard: React.FC = () => {
                             <div className="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px' }}>
                                 E
                             </div>
-                            <span className="fw-semibold text-dark">Marcos Admin</span>
+                            <span className="fw-semibold text-dark">Marcos Emprendedor</span>
                         </div>
                     </div>
                 </header>
@@ -135,7 +135,7 @@ export const EmprendedorDashboard: React.FC = () => {
                         <div className="d-flex flex-column gap-4">
                             {/* BANNER DE BIENVENIDA */}
                             <div className="rounded-3 p-3" style={{ backgroundColor: '#d1e7dd', color: '#0f5132' }}>
-                                <h5 className="fw-bold mb-1">¡Hola, Marcos Admin!</h5>
+                                <h5 className="fw-bold mb-1">¡Hola, Marcos Emprendedor!</h5>
                                 <p className="mb-0 text-secondary" style={{ color: '#0f5132' }}>
                                     Gestioná tus productos, mantené tu catálogo actualizado y revisá tus estadísticas.
                                 </p>
