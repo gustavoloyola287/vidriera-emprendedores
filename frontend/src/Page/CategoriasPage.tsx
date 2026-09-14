@@ -1,22 +1,16 @@
 import { useEffect, useState } from 'react';
 import { productoService } from '../services/productoService';
+import type { Producto, Categoria } from '../types/Producto'; // Importamos Producto y Categoria globales
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
-interface Producto {
-    id: number;
-    nombre: string;
-    precio?: number;
-    descripcion?: string;
-}
-
 export const CategoriasPage = () => {
-    const [categorias, setCategorias] = useState<any[]>([]);
+    const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [loading, setLoading] = useState(true);
     
     // Estado para controlar qué categoría está expandida
     const [categoriaAbierta, setCategoriaAbierta] = useState<number | string | null>(null);
     
-    // Estado para almacenar los productos de la categoría abierta y su indicador de carga
+    // Productos de la categoría activa e indicador de carga
     const [productosCategoria, setProductosCategoria] = useState<Producto[]>([]);
     const [loadingProductos, setLoadingProductos] = useState(false);
 
@@ -31,8 +25,8 @@ export const CategoriasPage = () => {
             .finally(() => setLoading(false));
     }, []);
 
-    const toggleCategoria = async (cat: any, catId: number | string) => {
-        // Si la categoría presionada ya está abierta, la cerramos
+    const toggleCategoria = async (cat: Categoria | any, catId: number | string) => {
+        // Cierra si se vuelve a presionar la misma categoría
         if (categoriaAbierta === catId) {
             setCategoriaAbierta(null);
             setProductosCategoria([]);
@@ -41,20 +35,17 @@ export const CategoriasPage = () => {
 
         setCategoriaAbierta(catId);
 
-        // Si la categoría ya trae un listado de productos desde el backend, lo usamos directamente
+        // Si el objeto categoría ya incluye la propiedad "productos"
         if (typeof cat === 'object' && Array.isArray(cat.productos)) {
             setProductosCategoria(cat.productos);
             return;
         }
 
-        // Si no trae productos incluidos, se realiza la petición al backend
+        // Petición al backend usando el método del service
         setLoadingProductos(true);
         try {
-            const productos = await productoService.getAll();
-            setProductosCategoria(productos.filter((producto: any) => {
-                const categoriaProducto = producto.categoriaId ?? producto.categoria?.id ?? producto.categoria;
-                return String(categoriaProducto) === String(catId);
-            }));
+            const productos = await productoService.getProductosPorCategoria(catId);
+            setProductosCategoria(productos);
         } catch (err) {
             console.error('Error al obtener productos de la categoría:', err);
             setProductosCategoria([]);
@@ -82,7 +73,7 @@ export const CategoriasPage = () => {
                                     key={catId} 
                                     className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden transition-all"
                                 >
-                                    {/* Cabecera interactiva del Acordeón */}
+                                    {/* Cabecera del Acordeón */}
                                     <button
                                         onClick={() => toggleCategoria(cat, catId)}
                                         className="w-full p-5 flex justify-between items-center text-left font-bold text-lg text-gray-700 hover:bg-gray-50 transition-colors"
@@ -104,9 +95,9 @@ export const CategoriasPage = () => {
                                                 </div>
                                             ) : productosCategoria.length > 0 ? (
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                                    {productosCategoria.map((prod) => (
+                                                    {productosCategoria.map((prod, index) => (
                                                         <div 
-                                                            key={prod.id} 
+                                                            key={prod.id ?? index} 
                                                             className="bg-white p-4 rounded-md border border-gray-200 shadow-sm"
                                                         >
                                                             <h3 className="font-semibold text-gray-800">{prod.nombre}</h3>
