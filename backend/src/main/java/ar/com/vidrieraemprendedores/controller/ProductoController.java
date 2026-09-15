@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/productos") // URL base para los productos del catálogo
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // Evita problemas de CORS con la app de React
+@CrossOrigin(origins = "http://localhost:5173") // Evita problemas de CORS con la app de React
 public class ProductoController {
 
     private final IProductoService productoService;

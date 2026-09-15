@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { productoService } from '../services/productoService';
-import type { Producto, Categoria } from '../types/Producto'; // Importamos Producto y Categoria globales
+import type { Producto, Categoria } from '../Types/Producto'; // Importamos Producto y Categoria globales
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export const CategoriasPage = () => {

@@ -12,7 +12,7 @@ export interface ProductoDTO {
     fotoPrincipal?: {
         imagenBase64?: string;
     };
-    urlImagen?: string;
+    
 }
 
 export interface Categoria {
@@ -85,7 +85,7 @@ function Home() {
     });
 
     const obtenerImagenSrc = (prod: ProductoDTO) => {
-        const imagen = prod.fotoPrincipal?.imagenBase64 || prod.urlImagen;
+        const imagen = prod.fotoPrincipal?.imagenBase64;
 
         if (imagen && imagen.trim() !== '') {
             return imagen.startsWith('data:') || imagen.startsWith('http')
