@@ -21,21 +21,31 @@ export const CategoriasView: React.FC = () => {
     const [editandoId, setEditandoId] = useState<number | null>(null);
     const [formData, setFormData] = useState<{ nombre: string; descripcion: string }>({ nombre: '', descripcion: '' });
 
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('token');
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json'
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    };
+
     const fetchCategorias = async () => {
         try {
-            const token = localStorage.getItem('token');
             const res = await fetch(API_URL, {
-                headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+                headers: getAuthHeaders()
             });
 
             if (res.ok) {
                 const data = await res.json();
                 setCategorias(data);
             } else {
-                throw new Error('Respuesta no OK del servidor');
+                throw new Error(`Respuesta HTTP ${res.status}`);
             }
         } catch (error) {
-            console.warn('Backend no disponible. Usando datos locales de prueba.');
+            console.warn('Backend no disponible o requiere autenticación. Usando datos locales de prueba.');
             setCategorias((prev) => (prev.length > 0 ? prev : MOCK_CATEGORIAS_INICIALES));
         } finally {
             setLoading(false);
@@ -55,20 +65,16 @@ export const CategoriasView: React.FC = () => {
         const method = isEditing ? 'PUT' : 'POST';
 
         try {
-            const token = localStorage.getItem('token');
             const res = await fetch(url, {
                 method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : ''
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(formData)
             });
 
             if (res.ok) {
                 await fetchCategorias();
             } else {
-                throw new Error('Error al guardar en el backend');
+                throw new Error(`Error al guardar en backend (${res.status})`);
             }
         } catch (error) {
             console.warn('Operación realizada localmente en el frontend.');
@@ -105,16 +111,15 @@ export const CategoriasView: React.FC = () => {
         if (!window.confirm('¿Seguro que deseas eliminar esta categoría?')) return;
 
         try {
-            const token = localStorage.getItem('token');
             const res = await fetch(`${API_URL}/${id}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+                headers: getAuthHeaders()
             });
 
             if (res.ok) {
                 await fetchCategorias();
             } else {
-                throw new Error('Error al eliminar del backend');
+                throw new Error(`Error al eliminar del backend (${res.status})`);
             }
         } catch (error) {
             console.warn('Eliminación realizada localmente.');
@@ -132,7 +137,6 @@ export const CategoriasView: React.FC = () => {
             <h4 className="fw-bold mb-4" style={{ color: '#002040' }}>Gestión de Categorías</h4>
 
             <div className="row g-4 align-items-start">
-                {/* Formulario con mayor espacio proporcional */}
                 <div className="col-12 col-md-5 col-lg-5 col-xl-4">
                     <div className="bg-white rounded-3 shadow-sm p-4">
                         <h6 className="fw-bold mb-3" style={{ color: '#002040' }}>
@@ -178,7 +182,6 @@ export const CategoriasView: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Tabla de Listado */}
                 <div className="col-12 col-md-7 col-lg-7 col-xl-8">
                     <div className="bg-white rounded-3 shadow-sm p-4">
                         <h6 className="fw-bold mb-3" style={{ color: '#002040' }}>Categorías Existentes</h6>

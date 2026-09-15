@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Producto, Categoria } from '../types/Producto';
+import type { Producto, Categoria } from '../Types/Producto';
 
 const API_URL = 'http://localhost:8080/api/productos';
 const API_CATEGORIAS_URL = 'http://localhost:8080/api/categorias';
@@ -32,6 +32,12 @@ export const productoService = {
   // Obtener categorías desde /api/categorias
   getCategorias: async (): Promise<Categoria[]> => {
     const response = await axios.get<Categoria[]>(API_CATEGORIAS_URL);
+    return response.data;
+  },
+
+  // NUEVO MÉTODO: Obtener productos filtrados por ID de categoría
+  getProductosPorCategoria: async (categoriaId: number | string): Promise<Producto[]> => {
+    const response = await axios.get<Producto[]>(`${API_URL}/categoria/${categoriaId}`);
     return response.data;
   },
 
