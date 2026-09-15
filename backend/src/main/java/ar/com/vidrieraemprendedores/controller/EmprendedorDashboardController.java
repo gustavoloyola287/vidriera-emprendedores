@@ -26,7 +26,7 @@ public class EmprendedorDashboardController {
 
         EmprendedorDashboardStatsDTO stats = EmprendedorDashboardStatsDTO.builder()
                 .totalProductos(cantidadActual)
-                .maxProductosPermitidos(5)
+                .maxProductosPermitidos(15)
                 .visitasTotales(0) 
                 .consultasRecibidas(0)
                 .consultasSinLeer(0)
@@ -50,10 +50,10 @@ public class EmprendedorDashboardController {
 
         long cantidadActual = productoService.contarProductosPorEmprendedor(emprendedor.getId());
 
-        if (cantidadActual >= 5) {
+        if (cantidadActual >= 15) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body("Límite alcanzado: Un emprendedor no puede publicar más de 5 productos.");
+                    .body("Límite alcanzado: Un emprendedor no puede publicar más de 15 productos.");
         }
 
         ProductoDTO nuevoProducto = productoService.crearProductoParaEmprendedor(productoDTO, emprendedor.getId());
