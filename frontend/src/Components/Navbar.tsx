@@ -93,7 +93,7 @@ export const Navbar: React.FC = () => {
           <div className="col-4" style={{ backgroundColor: '#f7e167' }}></div>
         </div>
 
-                {/* Horizonte con el Sol asomando */}
+                {/* Horizonte con el Sol asomando y posicion central*/}
         <div className="position-relative w-100" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
 
           <div 
