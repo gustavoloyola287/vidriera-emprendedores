@@ -94,13 +94,14 @@ export const Navbar: React.FC = () => {
         </div>
 
                 {/* Horizonte con el Sol asomando */}
-        <div className="position-relative w-100" style={{ height: '0px', zIndex: 20 }}>
+        <div className="position-relative w-100" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+
           <div 
             className="position-absolute"
             style={{
-              left: '50%',
-              transform: 'translateX(-50%)',
-              top: '-12px', /* Posiciona el medio círculo sobre el borde inferior */
+              
+              transform: 'rotate(180deg)',
+              top: '-20px', /* Posiciona el medio círculo sobre el borde inferior */
               width: '44px',
               height: '22px',
               overflow: 'hidden',
