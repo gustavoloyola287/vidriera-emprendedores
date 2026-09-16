@@ -112,7 +112,7 @@ nav {
     justify-content: space-between;
     padding: 0 7%;
     background-color: var(--blanco);
-    border-bottom: 4px solid var(--celeste-subrayado);
+    
     box-shadow: var(--sombra);
 }
 
@@ -557,3 +557,4 @@ form p:first-of-type {
         width: 100%;
     }
 }
+
