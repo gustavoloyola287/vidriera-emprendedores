@@ -21,14 +21,23 @@ export const CategoriasView: React.FC = () => {
     const [editandoId, setEditandoId] = useState<number | null>(null);
     const [formData, setFormData] = useState<{ nombre: string; descripcion: string }>({ nombre: '', descripcion: '' });
 
+    // 1. VALIDACIÓN RIGUROSA DEL TOKEN JWT
     const getAuthHeaders = () => {
         const token = localStorage.getItem('token');
         const headers: Record<string, string> = {
             'Content-Type': 'application/json'
         };
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
+
+        // Valida que el token exista y tenga la estructura JWT válida (3 partes separadas por puntos)
+        if (
+            token && 
+            token !== 'null' && 
+            token !== 'undefined' && 
+            token.trim().split('.').length === 3
+        ) {
+            headers['Authorization'] = `Bearer ${token.trim()}`;
         }
+
         return headers;
     };
 
@@ -45,7 +54,7 @@ export const CategoriasView: React.FC = () => {
                 throw new Error(`Respuesta HTTP ${res.status}`);
             }
         } catch (error) {
-            console.warn('Backend no disponible o requiere autenticación. Usando datos locales de prueba.');
+            console.warn('Backend no disponible o requiere autenticación. Usando datos de respaldo.', error);
             setCategorias((prev) => (prev.length > 0 ? prev : MOCK_CATEGORIAS_INICIALES));
         } finally {
             setLoading(false);
@@ -72,13 +81,18 @@ export const CategoriasView: React.FC = () => {
             });
 
             if (res.ok) {
+                // Si la respuesta fue exitosa, recargamos la lista desde la base de datos
                 await fetchCategorias();
             } else {
-                throw new Error(`Error al guardar en backend (${res.status})`);
+                // 2. MOSTRAR EL ERROR REAL DEL BACKEND (401, 403, 500)
+                const errorText = await res.text();
+                throw new Error(`Error ${res.status}: ${errorText || 'No autorizado o error de servidor'}`);
             }
         } catch (error) {
-            console.warn('Operación realizada localmente en el frontend.');
+            console.error('Error al impactar en el servidor:', error);
+            alert('No se pudo guardar en la base de datos. Verificá que hayas iniciado sesión o la conexión con el servidor.');
 
+            // Fallback de actualización local
             if (isEditing) {
                 setCategorias((prev) =>
                     prev.map((cat) =>
@@ -122,7 +136,7 @@ export const CategoriasView: React.FC = () => {
                 throw new Error(`Error al eliminar del backend (${res.status})`);
             }
         } catch (error) {
-            console.warn('Eliminación realizada localmente.');
+            console.error('Error al eliminar en el servidor:', error);
             setCategorias((prev) => prev.filter((cat) => cat.id !== id));
         }
     };

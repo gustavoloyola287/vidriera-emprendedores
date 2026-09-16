@@ -17,6 +17,7 @@ export interface FotoProducto {
 }
 
 export interface Producto {
+  url_imagen: any;
   id?: number;
   nombre: string;
   descripcion: string;
