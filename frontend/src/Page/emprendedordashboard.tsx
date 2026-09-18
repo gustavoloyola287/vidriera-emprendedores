@@ -10,10 +10,9 @@ import {
     Edit, 
     Trash2, 
     LogOut,
-    Mail,
-    X
+    Mail
 } from 'lucide-react';
-import MailConsultas from '../Components/mailconsultas';
+import MailConsultas from '../components/mailconsultas';
 
 interface Producto {
     id: number;

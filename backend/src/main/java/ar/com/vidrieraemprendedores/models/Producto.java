@@ -24,8 +24,14 @@ public class Producto {
     private Long id;
 
     private String nombre;
+
+    @Column(length = 250) // Limitar la longitud de la descripción a 250 caracteres
     private String descripcion;
+
     private String urlImagen; // Para mostrar la foto en la vidriera
+
+    @Column(nullable = true)
+    private Double precio;
 
     @Column(name = "estado", nullable = false, columnDefinition = "VARCHAR(50) DEFAULT 'DISPONIBLE'")
     private String estado; // Para indicar si el producto está disponible o no

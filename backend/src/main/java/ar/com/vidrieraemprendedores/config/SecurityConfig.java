@@ -38,18 +38,23 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/auth/**",
                     "/api/auth/**",
+                    "/api/productos",
                     "/api/productos/**",
-                    "/productos/**"   
+                    "/productos",
+                    "/productos/**",
+                    "/api/fotos",
+                    "/api/fotos/**",
+                    "/fotos/**",
+                    "/api/categorias",
+                    "/api/categorias/**",
+                    "/categorias/**"   
                 ).permitAll()
 
                 // Lectura pública para el resto de recursos (GET)
                 .requestMatchers(HttpMethod.GET,
                     "/emprendedores/**",
                     "/api/emprendedores/**",
-                    "/categorias/**",
-                    "/api/categorias/**",
-                    "/fotos/**",
-                    "/api/fotos/**"
+                    "/api/emprendedores"
                 ).permitAll()
 
                 // Endpoints exclusivos para el ADMINISTRADOR
