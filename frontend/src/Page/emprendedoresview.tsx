@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Edit, Ban, Trash2, CheckCircle2, Plus } from 'lucide-react';
+import ModalNuevoEmprendedor from '../Components/modalemprendedor';
 
 // Interfaces
-export interface Usuario {
+    export interface Usuario {
     id: number;
     nombre: string;
     email: string;
@@ -43,14 +44,8 @@ export interface Usuario {
 
     const [usuarioAEditar, setUsuarioAEditar] = useState<Usuario | null>(null);
 
-    // Nuevo estado para el modal de creación
+    // Estado para el modal de creación
     const [isCrearModalOpen, setIsCrearModalOpen] = useState<boolean>(false);
-    const [nuevoUsuario, setNuevoUsuario] = useState<Omit<Usuario, 'id'>>({
-        nombre: '',
-        email: '',
-        rol: 'EMPRENDEDOR',
-        estado: 'ACTIVO'
-    });
 
     useEffect(() => {
         const activos = usuarios.filter(u => u.estado === 'ACTIVO').length;
@@ -127,15 +122,6 @@ export interface Usuario {
         if (!usuarioAEditar) return;
         setUsuarios(prev => prev.map(u => u.id === usuarioAEditar.id ? usuarioAEditar : u));
         setUsuarioAEditar(null);
-    };
-
-    // Manejador para crear un usuario nuevo
-    const handleCrearUsuario = (e: React.FormEvent) => {
-        e.preventDefault();
-        const idNuevo = usuarios.length > 0 ? Math.max(...usuarios.map(u => u.id)) + 1 : 1;
-        setUsuarios(prev => [...prev, { id: idNuevo, ...nuevoUsuario }]);
-        setIsCrearModalOpen(false);
-        setNuevoUsuario({ nombre: '', email: '', rol: 'EMPRENDEDOR', estado: 'ACTIVO' });
     };
 
     const renderBadgeEstado = (estado: Usuario['estado']) => {
@@ -226,12 +212,12 @@ export interface Usuario {
                 <div className="col-md-7 position-relative">
                 <Search className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" size={16} />
                 <input 
-                type="text" 
-                className="form-control ps-5" 
-                placeholder="Buscar usuario por nombre o email..." 
-                value={busquedaInput}
-                onChange={(e) => setBusquedaInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
+                    type="text" 
+                    className="form-control ps-5" 
+                    placeholder="Buscar usuario por nombre o email..." 
+                    value={busquedaInput}
+                    onChange={(e) => setBusquedaInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
                 />
                 </div>
                 <div className="col-md-3">
@@ -357,7 +343,7 @@ export interface Usuario {
 
         {/* MODAL DE EDICIÓN */}
         {usuarioAEditar && (
-            <div className="modal fade show d-block tab-index-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <div className="modal-dialog modal-dialog-centered">
                 <div className="modal-content border-0 shadow">
                 <div className="modal-header">
@@ -429,77 +415,13 @@ export interface Usuario {
         )}
 
         {/* MODAL DE CREACIÓN */}
-        {isCrearModalOpen && (
-            <div className="modal fade show d-block tab-index-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-dialog-centered">
-                <div className="modal-content border-0 shadow">
-                <div className="modal-header">
-                    <h6 className="modal-title fw-bold">Nuevo Emprendedor</h6>
-                    <button type="button" className="btn-close" onClick={() => setIsCrearModalOpen(false)}></button>
-                </div>
-                <form onSubmit={handleCrearUsuario}>
-                    <div className="modal-body">
-                    <div className="mb-3">
-                        <label className="form-label small fw-semibold">Nombre Completo</label>
-                        <input 
-                        type="text" 
-                        className="form-control form-control-sm"
-                        placeholder="Ej. María González"
-                        value={nuevoUsuario.nombre}
-                        onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })}
-                        required
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label className="form-label small fw-semibold">Email</label>
-                        <input 
-                        type="email" 
-                        className="form-control form-control-sm"
-                        placeholder="ejemplo@correo.com"
-                        value={nuevoUsuario.email}
-                        onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })}
-                        required
-                        />
-                    </div>
-                    <div className="row g-2">
-                        <div className="col-md-6 mb-3">
-                        <label className="form-label small fw-semibold">Rol</label>
-                        <select 
-                            className="form-select form-select-sm"
-                            value={nuevoUsuario.rol}
-                            onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value as Usuario['rol'] })}
-                        >
-                            <option value="EMPRENDEDOR">Emprendedor</option>
-                            <option value="ADMIN">Admin</option>
-                            <option value="MODERADOR">Moderador</option>
-                        </select>
-                        </div>
-                        <div className="col-md-6 mb-3">
-                        <label className="form-label small fw-semibold">Estado Inicial</label>
-                        <select 
-                            className="form-select form-select-sm"
-                            value={nuevoUsuario.estado}
-                            onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, estado: e.target.value as Usuario['estado'] })}
-                        >
-                            <option value="ACTIVO">Activo</option>
-                            <option value="PENDIENTE">Pendiente</option>
-                        </select>
-                        </div>
-                    </div>
-                    </div>
-                    <div className="modal-footer py-2">
-                    <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setIsCrearModalOpen(false)}>
-                        Cancelar
-                    </button>
-                    <button type="submit" className="btn btn-sm btn-success">
-                        Crear Usuario
-                    </button>
-                    </div>
-                </form>
-                </div>
-            </div>
-            </div>
-        )}
+        <ModalNuevoEmprendedor
+            isOpen={isCrearModalOpen}
+            onClose={() => setIsCrearModalOpen(false)}
+            onSuccess={() => {
+            setIsCrearModalOpen(false);
+            }}
+        />
         </div>
     );
 };

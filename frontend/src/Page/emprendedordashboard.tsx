@@ -12,7 +12,7 @@ import {
     LogOut,
     Mail
 } from 'lucide-react';
-import MailConsultas from '../components/mailconsultas';
+import  { ChatInterno } from '../Components/ChatInterno';
 
 interface Producto {
     id: number;
@@ -22,8 +22,18 @@ interface Producto {
     estado: string;
 }
 
+// 1. Configuración dinámica de las pestañas del sidebar
+const NAV_ITEMS = [
+    { id: 'inicio', label: 'Inicio', icon: Home },
+    { id: 'productos', label: 'Mis Productos', icon: Package },
+    { id: 'mensajes', label: 'Mensajes', icon: MessageSquare, badge: 3 },
+    { id: 'perfil', label: 'Mi Perfil', icon: User },
+] as const;
+
+type TabId = typeof NAV_ITEMS[number]['id'];
+
 export const EmprendedorDashboard: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'inicio' | 'productos' | 'consultas' | 'perfil'>('inicio');
+    const [activeTab, setActiveTab] = useState<TabId>('inicio');
     const [showModal, setShowModal] = useState<boolean>(false);
 
     const [productos, setProductos] = useState<Producto[]>([
@@ -67,34 +77,31 @@ export const EmprendedorDashboard: React.FC = () => {
             <aside className="bg-white border-end d-flex flex-column p-3" style={{ width: '240px', flexShrink: 0 }}>
                 <h4 className="fw-bold text-primary mb-4 ps-2">Mi Panel</h4>
                 
+                {/* Renderizado dinámico del menú desde el array NAV_ITEMS */}
                 <nav className="nav nav-pills flex-column gap-2 justify-content-start">
-                    <button
-                        className={`nav-link text-start d-flex align-items-center gap-2 py-2 px-3 rounded-3 fw-medium ${activeTab === 'inicio' ? 'active bg-primary text-white' : 'text-dark'}`}
-                        onClick={() => setActiveTab('inicio')}
-                    >
-                        <Home size={18} /> Inicio
-                    </button>
-                    <button
-                        className={`nav-link text-start d-flex align-items-center gap-2 py-2 px-3 rounded-3 fw-medium ${activeTab === 'productos' ? 'active bg-primary text-white' : 'text-dark'}`}
-                        onClick={() => setActiveTab('productos')}
-                    >
-                        <Package size={18} /> Mis Productos
-                    </button>
-                    <button
-                        className={`nav-link text-start d-flex align-items-center justify-content-between py-2 px-3 rounded-3 fw-medium ${activeTab === 'consultas' ? 'active bg-primary text-white' : 'text-dark'}`}
-                        onClick={() => setActiveTab('consultas')}
-                    >
-                        <span className="d-flex align-items-center gap-2">
-                            <MessageSquare size={18} /> Consultas
-                        </span>
-                        <span className="badge bg-danger rounded-pill">3</span>
-                    </button>
-                    <button
-                        className={`nav-link text-start d-flex align-items-center gap-2 py-2 px-3 rounded-3 fw-medium ${activeTab === 'perfil' ? 'active bg-primary text-white' : 'text-dark'}`}
-                        onClick={() => setActiveTab('perfil')}
-                    >
-                        <User size={18} /> Mi Perfil
-                    </button>
+                    {NAV_ITEMS.map((item) => {
+                        const IconComponent = item.icon;
+                        const isActive = activeTab === item.id;
+
+                        return (
+                            <button
+                                key={item.id}
+                                className={`nav-link text-start d-flex align-items-center justify-content-between py-2 px-3 rounded-3 fw-medium ${
+                                    isActive ? 'active bg-primary text-white' : 'text-dark'
+                                }`}
+                                onClick={() => setActiveTab(item.id)}
+                            >
+                                <span className="d-flex align-items-center gap-2">
+                                    <IconComponent size={18} /> {item.label}
+                                </span>
+                                {'badge' in item && item.badge && (
+                                    <span className={`badge rounded-pill ${isActive ? 'bg-white text-primary' : 'bg-danger'}`}>
+                                        {item.badge}
+                                    </span>
+                                )}
+                            </button>
+                        );
+                    })}
                 </nav>
 
                 {/* BOTÓN CERRAR SESIÓN AL FINAL */}
@@ -281,16 +288,16 @@ export const EmprendedorDashboard: React.FC = () => {
                         </div>
                     )}
 
-                    {activeTab === 'consultas' && (
+                    {activeTab === 'mensajes' && (
                         <div className="d-flex flex-column gap-3">
                             <div className="card border-0 shadow-sm p-4 text-center rounded-3">
                                 <Mail size={40} className="text-primary mx-auto mb-2" />
-                                <h5 className="fw-bold mb-1">Gestión de Consultas</h5>
-                                <p className="text-muted small mb-0">Responde las consultas recibidas en tu bandeja de entrada.</p>
+                                <h5 className="fw-bold mb-1">Gestión de Mensajes</h5>
+                                <p className="text-muted small mb-0">Responde los mensajes en tu bandeja de entrada.</p>
                             </div>
 
                             <div className="card border-0 shadow-sm p-4 rounded-3">
-                                <MailConsultas />
+                                <ChatInterno esAdmin={false} />
                             </div>
                         </div>
                     )}

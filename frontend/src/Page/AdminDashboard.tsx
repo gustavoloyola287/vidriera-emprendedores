@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -7,20 +7,32 @@ import {
     Package, 
     LogOut, 
     Home, 
-    Settings, 
+    MessageSquare, 
     Bell, 
     Check, 
     X,
     Tags,
     UserPlus,
-    AlertTriangle
+    AlertTriangle,
+    Loader2,
+    Mail
 } from 'lucide-react';
 import { UsuariosView } from './emprendedoresview';
-import { ProductosView } from './productosview';
-import { ModeracionView as ModeracionView } from './moderacionview';
+import { ProductosView } from './Productosview';
+import { ModeracionView } from './moderacionview';
 import { CategoriasView } from './categoriasview';
+import {ChatInterno} from '../Components/ChatInterno';
+// DTO del Backend para Métricas Generales
+export interface AdminDashboardStatsDTO {
+    totalEmprendedores: number;
+    emprendedoresActivos: number;
+    emprendedoresSuspendidos: number;
+    totalAdmins: number;
+    emprendedoresRechazados: number;
+    totalProductos: number;
+    productosPendientes: number;
+}
 
-// Estrutura DTO para Notificaciones
 export interface NotificacionItem {
     id: number;
     titulo: string;
@@ -44,7 +56,6 @@ interface ModalProps {
     onSuccess: () => void;
 }
 
-// Componente Modal Nuevo Emprendedor
 export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, onSuccess }) => {
     const [formData, setFormData] = useState({
         nombre: '',
@@ -52,19 +63,31 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
         rubro: '',
         telefono: '',
     });
+    const [loadingSave, setLoadingSave] = useState(false);
 
     if (!isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoadingSave(true);
         try {
-            // Lógica de registro o llamada a la API
-            // await api.post('/emprendedores', formData);
-            
-            onSuccess();
-            onClose();
+            const response = await fetch('/api/admin/emprendedores', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                setFormData({ nombre: '', email: '', rubro: '', telefono: '' });
+                onSuccess();
+                onClose();
+            } else {
+                console.error('Error al guardar el emprendedor');
+            }
         } catch (error) {
             console.error('Error al registrar emprendedor:', error);
+        } finally {
+            setLoadingSave(false);
         }
     };
 
@@ -74,7 +97,7 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
                 <div className="modal-content">
                     <div className="modal-header">
                         <h5 className="modal-title">Registrar Nuevo Emprendedor</h5>
-                        <button type="button" className="btn-close" onClick={onClose}></button>
+                        <button type="button" className="btn-close" onClick={onClose} disabled={loadingSave}></button>
                     </div>
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
@@ -87,6 +110,7 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
                                         value={formData.nombre}
                                         onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                                         required
+                                        disabled={loadingSave}
                                     />
                                 </div>
                                 <div className="col-md-6">
@@ -97,6 +121,7 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         required
+                                        disabled={loadingSave}
                                     />
                                 </div>
                                 <div className="col-md-6">
@@ -106,6 +131,7 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
                                         className="form-control"
                                         value={formData.rubro}
                                         onChange={(e) => setFormData({ ...formData, rubro: e.target.value })}
+                                        disabled={loadingSave}
                                     />
                                 </div>
                                 <div className="col-md-6">
@@ -115,16 +141,23 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
                                         className="form-control"
                                         value={formData.telefono}
                                         onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                                        disabled={loadingSave}
                                     />
                                 </div>
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button type="button" className="btn btn-secondary" onClick={onClose}>
+                            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loadingSave}>
                                 Cancelar
                             </button>
-                            <button type="submit" className="btn btn-primary">
-                                Guardar Emprendedor
+                            <button type="submit" className="btn btn-primary d-flex align-items-center gap-2" disabled={loadingSave}>
+                                {loadingSave ? (
+                                    <>
+                                        <Loader2 size={16} className="spinner-border spinner-border-sm" /> Guardando...
+                                    </>
+                                ) : (
+                                    'Guardar Emprendedor'
+                                )}
                             </button>
                         </div>
                     </form>
@@ -138,16 +171,61 @@ export const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
     const { logout } = useAuth();
 
-    const [activeTab, setActiveTab] = useState<'inicio' | 'emprendedores' | 'productos' | 'moderacion' | 'categorias' | 'ajustes' | 'usuarios'>('inicio');
+    const [activeTab, setActiveTab] = useState<'inicio' | 'emprendedores' | 'productos' | 'moderacion' | 'categorias' | 'mensajes' | 'usuarios'>('inicio');
     const [filtroEstado, setFiltroEstado] = useState<'Todos' | 'contenido' | 'usuarios'>('Todos');
     const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Estado para las métricas
+    const [stats, setStats] = useState<AdminDashboardStatsDTO>({
+        totalEmprendedores: 0,
+        emprendedoresActivos: 0,
+        emprendedoresSuspendidos: 0,
+        totalAdmins: 0,
+        emprendedoresRechazados: 0,
+        totalProductos: 0,
+        productosPendientes: 0
+    });
+
+    // Estado de Carga General de Estadísticas
+    const [loadingStats, setLoadingStats] = useState<boolean>(true);
+    // Estado para deshabilitar filas en moderación individualmente mientras cargan
+    const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
     const [notificaciones, setNotificaciones] = useState<NotificacionItem[]>([
         { id: 1, titulo: 'Nuevo emprendedor', descripcion: 'Panadería San Carlos solicitó registro.', tiempo: 'Hace 5 min', leida: false, tipo: 'registro' },
         { id: 2, titulo: 'Producto a moderar', descripcion: 'Vidrio templado 10mm requiere aprobación.', tiempo: 'Hace 20 min', leida: false, tipo: 'producto' },
         { id: 3, titulo: 'Reporte recibido', descripcion: 'Comentario reportado en publicación de Laura.', tiempo: 'Hace 1 hora', leida: false, tipo: 'reporte' },
     ]);
+
+    const [itemsModeracion, setItemsModeracion] = useState<ModeracionItem[]>([
+        { id: 1, usuario: 'Santiago Rossi', contenido: 'Publicación de vidrio templado 10mm', estado: 'Pendiente', tipo: 'contenido' },
+        { id: 2, usuario: 'Laura Benítez', contenido: 'Comentario ofensivo reportado', estado: 'Aprobado', tipo: 'contenido' },
+        { id: 3, usuario: 'Carlos G.', contenido: 'Espejo biselado Premium x5', estado: 'Pendiente', tipo: 'contenido' },
+        { id: 4, usuario: 'Sofía Martínez', contenido: 'Imagen de perfil no autorizada', estado: 'Rechazado', tipo: 'usuarios' },
+    ]);
+
+    // Consumo del GET /api/admin/stats con manejo de spinner
+    const fetchDashboardStats = async () => {
+        try {
+            setLoadingStats(true);
+            const response = await fetch('/api/admin/stats');
+            if (response.ok) {
+                const data: AdminDashboardStatsDTO = await response.json();
+                setStats(data);
+            }
+        } catch (error) {
+            console.error('Error al obtener las métricas del Dashboard:', error);
+        } finally {
+            setLoadingStats(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'inicio') {
+            fetchDashboardStats();
+        }
+    }, [activeTab]);
 
     const noLeidasCount = notificaciones.filter(n => !n.leida).length;
 
@@ -161,26 +239,47 @@ export const AdminDashboard: React.FC = () => {
     };
 
     const handleEmprendedorCreado = () => {
-        // Lógica opcional tras guardar exitosamente el emprendedor (ej. refetch de datos)
+        fetchDashboardStats();
     };
 
-    const [itemsModeracion, setItemsModeracion] = useState<ModeracionItem[]>([
-        { id: 1, usuario: 'Santiago Rossi', contenido: 'Publicación de vidrio templado 10mm', estado: 'Pendiente', tipo: 'contenido' },
-        { id: 2, usuario: 'Laura Benítez', contenido: 'Comentario ofensivo reportado', estado: 'Aprobado', tipo: 'contenido' },
-        { id: 3, usuario: 'Carlos G.', contenido: 'Espejo biselado Premium x5', estado: 'Pendiente', tipo: 'contenido' },
-        { id: 4, usuario: 'Sofía Martínez', contenido: 'Imagen de perfil no autorizada', estado: 'Rechazado', tipo: 'usuarios' },
-    ]);
+    const handleAprobar = async (id: number) => {
+        try {
+            setActionLoadingId(id);
+            const response = await fetch(`/api/admin/productos/${id}/estado?nuevoEstado=APROBADO`, {
+                method: 'PUT'
+            });
 
-    const handleAprobar = (id: number) => {
-        setItemsModeracion(prev =>
-            prev.map(item => item.id === id ? { ...item, estado: 'Aprobado' } : item)
-        );
+            if (response.ok) {
+                setItemsModeracion(prev =>
+                    prev.map(item => item.id === id ? { ...item, estado: 'Aprobado' } : item)
+                );
+                fetchDashboardStats();
+            }
+        } catch (error) {
+            console.error('Error al aprobar item:', error);
+        } finally {
+            setActionLoadingId(null);
+        }
     };
 
-    const handleRechazar = (id: number) => {
-        setItemsModeracion(prev =>
-            prev.map(item => item.id === id ? { ...item, estado: 'Rechazado' } : item)
-        );
+    const handleRechazar = async (id: number) => {
+        try {
+            setActionLoadingId(id);
+            const response = await fetch(`/api/admin/productos/${id}/estado?nuevoEstado=RECHAZADO`, {
+                method: 'PUT'
+            });
+
+            if (response.ok) {
+                setItemsModeracion(prev =>
+                    prev.map(item => item.id === id ? { ...item, estado: 'Rechazado' } : item)
+                );
+                fetchDashboardStats();
+            }
+        } catch (error) {
+            console.error('Error al rechazar item:', error);
+        } finally {
+            setActionLoadingId(null);
+        }
     };
 
     const itemsFiltrados = itemsModeracion.filter(item => 
@@ -310,10 +409,10 @@ export const AdminDashboard: React.FC = () => {
                         </li>
                         <li className="nav-item">
                             <button 
-                                className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'ajustes' ? 'active bg-primary' : 'text-dark'}`}
-                                onClick={() => setActiveTab('ajustes')}
+                                className={`nav-link w-100 d-flex align-items-center gap-2 text-start ${activeTab === 'mensajes' ? 'active bg-primary' : 'text-dark'}`}
+                                onClick={() => setActiveTab('mensajes')}
                             >
-                                <Settings size={18} /> Ajustes
+                                <MessageSquare size={18} /> Mensajes
                             </button>
                         </li>
                     </ul>
@@ -336,7 +435,7 @@ export const AdminDashboard: React.FC = () => {
                                 <p className="mb-0 small">Aquí podrás Administrar Emprendedores, Moderar Contenidos y Gestionar Productos.</p>
                             </div>
 
-                            {/* Accesos Directos */}
+                            {/* Accesos Directos con Spinners de Carga */}
                             <div className="row g-3 mb-4">
                                 <div className="col-md-4">
                                     <div className="card border-0 shadow-sm h-100">
@@ -346,7 +445,13 @@ export const AdminDashboard: React.FC = () => {
                                                 <h6 className="card-subtitle text-muted mb-1">Emprendedores</h6>
                                                 <button className="btn btn-sm btn-primary mt-2 px-3" onClick={() => setActiveTab('emprendedores')}>Abrir</button>
                                             </div>
-                                            <span className="display-6 fw-bold">10</span>
+                                            <span className="display-6 fw-bold">
+                                                {loadingStats ? (
+                                                    <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                                ) : (
+                                                    stats.totalEmprendedores
+                                                )}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -356,10 +461,16 @@ export const AdminDashboard: React.FC = () => {
                                         <div className="card-body d-flex align-items-center justify-content-between p-3">
                                             <div>
                                                 <ShieldCheck className="text-primary mb-2" size={32} />
-                                                <h6 className="card-subtitle text-muted mb-1">Moderar</h6>
+                                                <h6 className="card-subtitle text-muted mb-1">Moderar (Pendientes)</h6>
                                                 <button className="btn btn-sm btn-primary mt-2 px-3" onClick={() => setActiveTab('moderacion')}>Abrir</button>
                                             </div>
-                                            <span className="display-6 fw-bold">5</span>
+                                            <span className="display-6 fw-bold">
+                                                {loadingStats ? (
+                                                    <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                                ) : (
+                                                    stats.productosPendientes
+                                                )}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -369,23 +480,38 @@ export const AdminDashboard: React.FC = () => {
                                         <div className="card-body d-flex align-items-center justify-content-between p-3">
                                             <div>
                                                 <Package className="text-primary mb-2" size={32} />
-                                                <h6 className="card-subtitle text-muted mb-1">Productos</h6>
+                                                <h6 className="card-subtitle text-muted mb-1">Productos Totales</h6>
                                                 <button className="btn btn-sm btn-primary mt-2 px-3" onClick={() => setActiveTab('productos')}>Abrir</button>
                                             </div>
-                                            <span className="display-6 fw-bold">30</span>
+                                            <span className="display-6 fw-bold">
+                                                {loadingStats ? (
+                                                    <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                                ) : (
+                                                    stats.totalProductos
+                                                )}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Métricas de Emprendedores */}
-                            <h6 className="fw-bold mb-3">Emprendedores totales: 150</h6>
+                            {/* Métricas Secundarias */}
+                            <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
+                                Emprendedores totales: 
+                                {loadingStats ? (
+                                    <span className="spinner-border spinner-border-sm text-secondary" role="status"></span>
+                                ) : (
+                                    stats.totalEmprendedores
+                                )}
+                            </h6>
                             <div className="row g-3 mb-4">
                                 <div className="col-6 col-md-3">
                                     <div className="card border-0 shadow-sm">
                                         <div className="card-body p-3">
                                             <span className="text-muted text-uppercase fw-semibold small">ACTIVOS</span>
-                                            <h3 className="fw-bold my-1">25</h3>
+                                            <h3 className="fw-bold my-1">
+                                                {loadingStats ? <div className="spinner-border spinner-border-sm text-primary" /> : stats.emprendedoresActivos}
+                                            </h3>
                                         </div>
                                     </div>
                                 </div>
@@ -393,7 +519,9 @@ export const AdminDashboard: React.FC = () => {
                                     <div className="card border-0 shadow-sm">
                                         <div className="card-body p-3">
                                             <span className="text-muted text-uppercase fw-semibold small">SUSPENDIDOS</span>
-                                            <h3 className="fw-bold my-1">5</h3>
+                                            <h3 className="fw-bold my-1">
+                                                {loadingStats ? <div className="spinner-border spinner-border-sm text-primary" /> : stats.emprendedoresSuspendidos}
+                                            </h3>
                                         </div>
                                     </div>
                                 </div>
@@ -401,7 +529,9 @@ export const AdminDashboard: React.FC = () => {
                                     <div className="card border-0 shadow-sm">
                                         <div className="card-body p-3">
                                             <span className="text-muted text-uppercase fw-semibold small">ADMINS</span>
-                                            <h3 className="fw-bold my-1">2</h3>
+                                            <h3 className="fw-bold my-1">
+                                                {loadingStats ? <div className="spinner-border spinner-border-sm text-primary" /> : stats.totalAdmins}
+                                            </h3>
                                         </div>
                                     </div>
                                 </div>
@@ -409,7 +539,9 @@ export const AdminDashboard: React.FC = () => {
                                     <div className="card border-0 shadow-sm">
                                         <div className="card-body p-3">
                                             <span className="text-muted text-uppercase fw-semibold small">RECHAZADOS</span>
-                                            <h3 className="fw-bold my-1">3</h3>
+                                            <h3 className="fw-bold my-1">
+                                                {loadingStats ? <div className="spinner-border spinner-border-sm text-primary" /> : stats.emprendedoresRechazados}
+                                            </h3>
                                         </div>
                                     </div>
                                 </div>
@@ -436,9 +568,10 @@ export const AdminDashboard: React.FC = () => {
                                             <thead className="table-light">
                                                 <tr>
                                                     <th>Usuario</th>
-                                                    <th>Contenido</th>
+                                                    <th>Detalle</th>
+                                                    <th>Tipo</th>
                                                     <th>Estado</th>
-                                                    <th className="text-end">Acción</th>
+                                                    <th className="text-end">Acciones</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -447,28 +580,39 @@ export const AdminDashboard: React.FC = () => {
                                                         <td>{item.usuario}</td>
                                                         <td>{item.contenido}</td>
                                                         <td>
+                                                            <span className={`badge ${item.tipo === 'contenido' ? 'bg-info' : 'bg-warning'} text-dark`}>
+                                                                {item.tipo}
+                                                            </span>
+                                                        </td>
+                                                        <td>
                                                             <span className={`badge ${
-                                                                item.estado === 'Pendiente' ? 'bg-warning text-dark' :
-                                                                item.estado === 'Aprobado' ? 'bg-success' : 'bg-danger'
+                                                                item.estado === 'Aprobado' ? 'bg-success' : 
+                                                                item.estado === 'Rechazado' ? 'bg-danger' : 'bg-secondary'
                                                             }`}>
                                                                 {item.estado}
                                                             </span>
                                                         </td>
                                                         <td className="text-end">
-                                                            <button 
-                                                                className="btn btn-sm btn-success me-1"
-                                                                onClick={() => handleAprobar(item.id)}
-                                                                disabled={item.estado === 'Aprobado'}
-                                                            >
-                                                                <Check size={14} /> Aprobar
-                                                            </button>
-                                                            <button 
-                                                                className="btn btn-sm btn-danger"
-                                                                onClick={() => handleRechazar(item.id)}
-                                                                disabled={item.estado === 'Rechazado'}
-                                                            >
-                                                                <X size={14} /> Rechazar
-                                                            </button>
+                                                            {actionLoadingId === item.id ? (
+                                                                <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                                            ) : (
+                                                                <>
+                                                                    <button 
+                                                                        className="btn btn-sm btn-outline-success me-1"
+                                                                        onClick={() => handleAprobar(item.id)}
+                                                                        disabled={item.estado === 'Aprobado'}
+                                                                    >
+                                                                        <Check size={14} />
+                                                                    </button>
+                                                                    <button 
+                                                                        className="btn btn-sm btn-outline-danger"
+                                                                        onClick={() => handleRechazar(item.id)}
+                                                                        disabled={item.estado === 'Rechazado'}
+                                                                    >
+                                                                        <X size={14} />
+                                                                    </button>
+                                                                </>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -484,10 +628,22 @@ export const AdminDashboard: React.FC = () => {
                     {activeTab === 'productos' && <ProductosView />}
                     {activeTab === 'moderacion' && <ModeracionView />}
                     {activeTab === 'categorias' && <CategoriasView />}
+                        {activeTab === 'mensajes' && (
+                        <div className="d-flex flex-column gap-3">
+                            <div className="card border-0 shadow-sm p-4 text-center rounded-3">
+                                <Mail size={40} className="text-primary mx-auto mb-2" />
+                                <h5 className="fw-bold mb-1">Gestión de Mensajes</h5>
+                                <p className="text-muted small mb-0">Responde los mensajes en tu bandeja de entrada.</p>
+                            </div>
+
+                            <div className="card border-0 shadow-sm p-4 rounded-3">
+                                <ChatInterno esAdmin={true} />
+                            </div>
+                        </div>
+                    )}
                 </main>
             </div>
 
-            {/* Modal de Registro */}
             <ModalNuevoEmprendedor 
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)} 
