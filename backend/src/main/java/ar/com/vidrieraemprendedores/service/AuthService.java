@@ -12,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import ar.com.vidrieraemprendedores.dto.CrearAdminDTO;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -54,6 +55,32 @@ public class AuthService {
         // Generamos el token de inmediato para que quede autenticado al registrarse
         String jwtToken = jwtService.generateToken(emprendedor);
         return new AuthResponse(jwtToken);
+    }
+
+    // Este método es invocado exclusivamente por el SuperAdminController
+    public AuthResponse crearAdmin(CrearAdminDTO request) {
+        // 1. Validar que no exista un usuario/emprendedor registrado con ese mismo email
+        if (emprendedorRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("El email ya se encuentra registrado");
+        }
+
+        // 2. Instanciar el nuevo Administrador
+        Emprendedor admin = new Emprendedor();
+        admin.setNombreCompleto(request.getNombre());
+        admin.setEmail(request.getEmail());
+        admin.setPassword(passwordEncoder.encode(request.getPassword()));
+        
+        // Asignación explícita del Rol de Administrador
+        admin.setRol(Rol.ROLE_ADMIN);
+        
+        // Los administradores nacen en estado ACTIVO directamente
+        admin.setEstado("ACTIVO");
+
+        // 3. Guardar en PostgreSQL
+        emprendedorRepository.save(admin);
+
+        // 4. Retornar confirmación
+        return new AuthResponse("Administrador creado exitosamente");
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -105,5 +132,7 @@ public class AuthService {
         emprendedor.setResetPasswordTokenExpiry(null);
         emprendedorRepository.save(emprendedor);
     }
+
+    
 
 }
