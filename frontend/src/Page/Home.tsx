@@ -102,6 +102,7 @@ function Home() {
                 <h1>Vidriera Virtual VCP</h1>
                 <p>Explorá los productos y emprendimientos locales de Villa Carlos Paz.</p>
             </div>
+            
 
             <div className="filtros-container" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                 <input
