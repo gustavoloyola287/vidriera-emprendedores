@@ -3,7 +3,6 @@ import { productoService } from '../services/productoService';
 import type { Producto, Categoria } from '../types/Producto';
 import { ChevronDown, ChevronUp, Package, Utensils, Shirt, Palette, Sparkles } from 'lucide-react';
 
-// Mapa opcional de íconos por nombre de categoría
 const ICONOS: Record<string, React.ElementType> = {
     gastronomia: Utensils,
     indumentaria: Shirt,
@@ -65,7 +64,6 @@ export const CategoriasPage = () => {
         <div className="min-h-screen bg-gray-50 py-12">
             <div className="max-w-7xl mx-auto px-4">
                 
-                {/* Encabezado Centrado */}
                 <div className="text-center mb-10">
                     <h1 className="text-4xl font-extrabold mb-2" style={{ color: '#002040' }}>
                         Categorías
@@ -119,7 +117,6 @@ export const CategoriasPage = () => {
                             })}
                         </div>
 
-                        {/* Sección Desplegable Centrada de Productos */}
                         {categoriaAbierta !== null && (
                             <div className="w-full max-w-5xl bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8 animate-fadeIn">
                                 {loadingProductos ? (
@@ -131,7 +128,6 @@ export const CategoriasPage = () => {
                                                 key={prod.id ?? index}
                                                 className="flex flex-col bg-gray-50 rounded-xl overflow-hidden border border-gray-100 hover:shadow-md transition-shadow"
                                             >
-                                                {/* Previsualización de Imagen del Producto */}
                                                 {prod.url_imagen ? (
                                                     <img 
                                                         src={prod.url_imagen} 

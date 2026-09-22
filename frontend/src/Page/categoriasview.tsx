@@ -21,14 +21,14 @@ export const CategoriasView: React.FC = () => {
     const [editandoId, setEditandoId] = useState<number | null>(null);
     const [formData, setFormData] = useState<{ nombre: string; descripcion: string }>({ nombre: '', descripcion: '' });
 
-    // 1. VALIDACIÓN RIGUROSA DEL TOKEN JWT
+    
     const getAuthHeaders = () => {
         const token = localStorage.getItem('token');
         const headers: Record<string, string> = {
             'Content-Type': 'application/json'
         };
 
-        // Valida que el token exista y tenga la estructura JWT válida (3 partes separadas por puntos)
+    
         if (
             token && 
             token !== 'null' && 
@@ -81,10 +81,10 @@ export const CategoriasView: React.FC = () => {
             });
 
             if (res.ok) {
-                // Si la respuesta fue exitosa, recargamos la lista desde la base de datos
+                
                 await fetchCategorias();
             } else {
-                // 2. MOSTRAR EL ERROR REAL DEL BACKEND (401, 403, 500)
+                
                 const errorText = await res.text();
                 throw new Error(`Error ${res.status}: ${errorText || 'No autorizado o error de servidor'}`);
             }
@@ -92,7 +92,7 @@ export const CategoriasView: React.FC = () => {
             console.error('Error al impactar en el servidor:', error);
             alert('No se pudo guardar en la base de datos. Verificá que hayas iniciado sesión o la conexión con el servidor.');
 
-            // Fallback de actualización local
+            
             if (isEditing) {
                 setCategorias((prev) =>
                     prev.map((cat) =>

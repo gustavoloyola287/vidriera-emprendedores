@@ -103,7 +103,6 @@ function Home() {
                 <p>Explorá los productos y emprendimientos locales de Villa Carlos Paz.</p>
             </div>
 
-            {/* Filtros de Búsqueda y Categoría */}
             <div className="filtros-container" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                 <input
                     type="text"
