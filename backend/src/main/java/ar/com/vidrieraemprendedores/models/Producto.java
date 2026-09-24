@@ -38,10 +38,13 @@ public class Producto {
     @PrePersist
     protected void onCreate() {
         this.fechaCreacion = LocalDateTime.now();
+        if (this.estado == null) {
+            this.estado = "DISPONIBLE"; // Asigna el estado por defecto si no se proporciona
+        }
     }
 
-    @Column(name = "estado", nullable = false, columnDefinition = "VARCHAR(50) DEFAULT 'DISPONIBLE'")
-    private String estado; // Para indicar si el producto está disponible o no
+    @Column(name = "estado", nullable = false, length = 50)
+    private String estado = "DISPONIBLE"; // Para indicar si el producto está disponible o no
 
     // Relación: Muchos productos pertenecen a un mismo Emprendedor
     @ManyToOne
@@ -53,5 +56,4 @@ public class Producto {
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
     
-
-}
+}  

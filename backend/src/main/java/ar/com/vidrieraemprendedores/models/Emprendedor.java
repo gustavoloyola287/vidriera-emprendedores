@@ -36,14 +36,14 @@ public class Emprendedor implements UserDetails {
 
     private String telefono;
 
-    @Column(nullable = false, columnDefinition = "VARCHAR(255) DEFAULT '12345678'")
-    private String password;
+    @Column(nullable = false)
+    private String password = "defaultPassword"; // Valor por defecto
 
     @Enumerated(EnumType.STRING)
     private Rol rol;
 
-    @Column (name = "estado", nullable = false, columnDefinition = "VARCHAR(50) DEFAULT 'PENDIENTE'")
-    private String estado; // Pendiente, Activo, Suspendido
+    @Column (name = "estado", nullable = false, length = 50)
+    private String estado = "PENDIENTE"; // Pendiente, Activo, Suspendido
 
     // Recuperacion de contraseña
     @Column(name = "reset_password_token")
@@ -61,7 +61,15 @@ public class Emprendedor implements UserDetails {
     @PrePersist
     protected void onCreate() {
         this.fechaCreacion = LocalDateTime.now();
+        if (this.estado == null) {
+            this.estado = "PENDIENTE";
+        }
+        
+        if (this.rol == null) {
+            this.rol = Rol.ROLE_EMPRENDEDOR; // Asigna el rol por defecto si no se proporciona      
+        }
     }
+      
 
     @OneToOne 
     @JoinColumn(name = "usuario_id")
