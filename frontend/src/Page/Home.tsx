@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ProductosDestacados } from "../Components/productosdestacados";
 import { useNavigate } from "react-router-dom";
 
 export interface ProductoDTO {
@@ -102,7 +103,7 @@ function Home() {
                 <h1>Vidriera Virtual VCP</h1>
                 <p>Explorá los productos y emprendimientos locales de Villa Carlos Paz.</p>
             </div>
-            
+            <ProductosDestacados  />
 
             <div className="filtros-container" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                 <input

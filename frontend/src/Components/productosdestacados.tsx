@@ -168,7 +168,7 @@ export const ProductosDestacados: React.FC = () => {
                         onClick={() => setCurrentIndex(index)}
                         style={{
                             ...styles.dot,
-                            backgroundColor: index === currentIndex ? '#00A896' : '#ccc',
+                            backgroundColor: index === currentIndex ? '#0051a8' : '#ccc',
                         }}
                     />
                 ))}
