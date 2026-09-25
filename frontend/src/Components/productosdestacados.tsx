@@ -295,7 +295,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     precio: {
         fontSize: '1.3rem',
         fontWeight: 'bold',
-        color: '#00A896',
+        color: '#0078a8',
         margin: 0,
     },
     dotsContainer: {
