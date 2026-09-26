@@ -21,8 +21,13 @@ import { UsuariosView } from './emprendedoresview';
 import { ProductosView } from './Productosview';
 import { ModeracionView } from './moderacionview';
 import { CategoriasView } from './categoriasview';
-import {ChatInterno} from '../Components/ChatInterno';
-// DTO del Backend para Métricas Generales
+import { ChatInterno } from '../Components/ChatInterno';
+
+const UsuariosViewWithActions = UsuariosView as React.ComponentType<{
+    onEmprendedorCreado: () => void;
+    onOpenModal: () => void;
+}>;
+
 export interface AdminDashboardStatsDTO {
     totalEmprendedores: number;
     emprendedoresActivos: number;
@@ -64,12 +69,15 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
         telefono: '',
     });
     const [loadingSave, setLoadingSave] = useState(false);
+    const [modalError, setModalError] = useState<string | null>(null);
 
     if (!isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoadingSave(true);
+        setModalError(null); // Limpiar errores previos
+
         try {
             const response = await fetch('/api/admin/emprendedores', {
                 method: 'POST',
@@ -82,10 +90,12 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
                 onSuccess();
                 onClose();
             } else {
-                console.error('Error al guardar el emprendedor');
+                const errorData = await response.json().catch(() => null);
+                setModalError(errorData?.message || 'No se pudo registrar el emprendedor. Revisa los datos ingresados.');
             }
         } catch (error) {
             console.error('Error al registrar emprendedor:', error);
+            setModalError('Error de conexión con el servidor. Inténtalo de nuevo.');
         } finally {
             setLoadingSave(false);
         }
@@ -101,6 +111,14 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
                     </div>
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
+                            {/* Alerta de Error en la Vista */}
+                            {modalError && (
+                                <div className="alert alert-danger d-flex align-items-center gap-2 py-2 small mb-3" role="alert">
+                                    <AlertTriangle size={16} />
+                                    <span>{modalError}</span>
+                                </div>
+                            )}
+
                             <div className="row g-3">
                                 <div className="col-md-6">
                                     <label className="form-label">Nombre Completo</label>
@@ -176,6 +194,10 @@ export const AdminDashboard: React.FC = () => {
     const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    // Estados de Error en Vista
+    const [dashError, setDashError] = useState<string | null>(null);
+    const [moderacionError, setModeracionError] = useState<string | null>(null);
+
     // Estado para las métricas
     const [stats, setStats] = useState<AdminDashboardStatsDTO>({
         totalEmprendedores: 0,
@@ -187,25 +209,14 @@ export const AdminDashboard: React.FC = () => {
         productosPendientes: 0
     });
 
-    // Estado de Carga General de Estadísticas
     const [loadingStats, setLoadingStats] = useState<boolean>(true);
-    // Estado para deshabilitar filas en moderación individualmente mientras cargan
+    const [loadingModeracion, setLoadingModeracion] = useState<boolean>(false);
     const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
-    const [notificaciones, setNotificaciones] = useState<NotificacionItem[]>([
-        { id: 1, titulo: 'Nuevo emprendedor', descripcion: 'Panadería San Carlos solicitó registro.', tiempo: 'Hace 5 min', leida: false, tipo: 'registro' },
-        { id: 2, titulo: 'Producto a moderar', descripcion: 'Vidrio templado 10mm requiere aprobación.', tiempo: 'Hace 20 min', leida: false, tipo: 'producto' },
-        { id: 3, titulo: 'Reporte recibido', descripcion: 'Comentario reportado en publicación de Laura.', tiempo: 'Hace 1 hora', leida: false, tipo: 'reporte' },
-    ]);
+    const [notificaciones, setNotificaciones] = useState<NotificacionItem[]>([]);
+    const [itemsModeracion, setItemsModeracion] = useState<ModeracionItem[]>([]);
 
-    const [itemsModeracion, setItemsModeracion] = useState<ModeracionItem[]>([
-        { id: 1, usuario: 'Santiago Rossi', contenido: 'Publicación de vidrio templado 10mm', estado: 'Pendiente', tipo: 'contenido' },
-        { id: 2, usuario: 'Laura Benítez', contenido: 'Comentario ofensivo reportado', estado: 'Aprobado', tipo: 'contenido' },
-        { id: 3, usuario: 'Carlos G.', contenido: 'Espejo biselado Premium x5', estado: 'Pendiente', tipo: 'contenido' },
-        { id: 4, usuario: 'Sofía Martínez', contenido: 'Imagen de perfil no autorizada', estado: 'Rechazado', tipo: 'usuarios' },
-    ]);
-
-    // Consumo del GET /api/admin/stats con manejo de spinner
+    // Fetch Métricas Generales
     const fetchDashboardStats = async () => {
         try {
             setLoadingStats(true);
@@ -213,24 +224,69 @@ export const AdminDashboard: React.FC = () => {
             if (response.ok) {
                 const data: AdminDashboardStatsDTO = await response.json();
                 setStats(data);
+            } else {
+                setDashError('No se pudieron cargar las estadísticas principales.');
             }
         } catch (error) {
-            console.error('Error al obtener las métricas del Dashboard:', error);
+            console.error('Error al obtener métricas:', error);
+            setDashError('Error de red al conectar con el servidor.');
         } finally {
             setLoadingStats(false);
+        }
+    };
+
+    // Fetch Tabla de Moderación Reciente
+    const fetchModeracionReciente = async () => {
+        try {
+            setLoadingModeracion(true);
+            setModeracionError(null);
+            const response = await fetch('/api/admin/moderacion/reciente');
+            if (response.ok) {
+                const data = await response.json();
+                setItemsModeracion(data);
+            } else {
+                setModeracionError('No se pudieron recuperar los elementos de moderación.');
+            }
+        } catch (error) {
+            console.error('Error al obtener moderación:', error);
+            setModeracionError('Fallo al comunicarse con el servidor.');
+        } finally {
+            setLoadingModeracion(false);
+        }
+    };
+
+    // Fetch Notificaciones
+    const fetchNotificaciones = async () => {
+        try {
+            const response = await fetch('/api/admin/notificaciones');
+            if (response.ok) {
+                const data = await response.json();
+                setNotificaciones(data);
+            }
+        } catch (error) {
+            console.error('Error al cargar notificaciones:', error);
         }
     };
 
     useEffect(() => {
         if (activeTab === 'inicio') {
             fetchDashboardStats();
+            fetchModeracionReciente();
+            fetchNotificaciones();
         }
     }, [activeTab]);
 
     const noLeidasCount = notificaciones.filter(n => !n.leida).length;
 
-    const handleMarcarTodasLeidas = () => {
-        setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })));
+    const handleMarcarTodasLeidas = async () => {
+        try {
+            const response = await fetch('/api/admin/notificaciones/marcar-leidas', { method: 'PUT' });
+            if (response.ok) {
+                setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })));
+            }
+        } catch (error) {
+            console.error('Error al marcar notificaciones como leídas:', error);
+        }
     };
 
     const handleLogout = () => {
@@ -245,6 +301,7 @@ export const AdminDashboard: React.FC = () => {
     const handleAprobar = async (id: number) => {
         try {
             setActionLoadingId(id);
+            setModeracionError(null);
             const response = await fetch(`/api/admin/productos/${id}/estado?nuevoEstado=APROBADO`, {
                 method: 'PUT'
             });
@@ -254,9 +311,12 @@ export const AdminDashboard: React.FC = () => {
                     prev.map(item => item.id === id ? { ...item, estado: 'Aprobado' } : item)
                 );
                 fetchDashboardStats();
+            } else {
+                setModeracionError('No se pudo aprobar el elemento seleccionado.');
             }
         } catch (error) {
             console.error('Error al aprobar item:', error);
+            setModeracionError('Ocurrió un error al procesar la aprobación.');
         } finally {
             setActionLoadingId(null);
         }
@@ -265,6 +325,7 @@ export const AdminDashboard: React.FC = () => {
     const handleRechazar = async (id: number) => {
         try {
             setActionLoadingId(id);
+            setModeracionError(null);
             const response = await fetch(`/api/admin/productos/${id}/estado?nuevoEstado=RECHAZADO`, {
                 method: 'PUT'
             });
@@ -274,9 +335,12 @@ export const AdminDashboard: React.FC = () => {
                     prev.map(item => item.id === id ? { ...item, estado: 'Rechazado' } : item)
                 );
                 fetchDashboardStats();
+            } else {
+                setModeracionError('No se pudo rechazar el elemento seleccionado.');
             }
         } catch (error) {
             console.error('Error al rechazar item:', error);
+            setModeracionError('Ocurrió un error al procesar el rechazo.');
         } finally {
             setActionLoadingId(null);
         }
@@ -285,6 +349,9 @@ export const AdminDashboard: React.FC = () => {
     const itemsFiltrados = itemsModeracion.filter(item => 
         filtroEstado === 'Todos' ? true : item.tipo === filtroEstado
     );
+
+    const nombreAdmin = 'Administrador';
+    const inicialAdmin = nombreAdmin.charAt(0).toUpperCase();
 
     return (
         <div className="d-flex flex-column vh-100 bg-light">
@@ -356,9 +423,9 @@ export const AdminDashboard: React.FC = () => {
 
                     <div className="d-flex align-items-center gap-2">
                         <div className="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
-                            <span className="fw-bold fs-7">M</span>
+                            <span className="fw-bold fs-7">{inicialAdmin}</span>
                         </div>
-                        <span className="small fw-semibold d-none d-sm-inline">Marcos Admin</span>
+                        <span className="small fw-semibold d-none d-sm-inline">{nombreAdmin}</span>
                     </div>
                 </div>
             </header>
@@ -429,13 +496,24 @@ export const AdminDashboard: React.FC = () => {
                 <main className="flex-grow-1 p-4 overflow-auto">
                     {activeTab === 'inicio' && (
                         <div className="container-fluid p-0">
+                            {/* Alerta de Error Principal */}
+                            {dashError && (
+                                <div className="alert alert-danger d-flex align-items-center justify-content-between mb-4 shadow-sm" role="alert">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <AlertTriangle size={18} />
+                                        <span>{dashError}</span>
+                                    </div>
+                                    <button className="btn btn-sm btn-outline-danger" onClick={fetchDashboardStats}>Reintentar</button>
+                                </div>
+                            )}
+
                             {/* Banner de Bienvenida */}
                             <div className="alert alert-success border-0 shadow-sm mb-4" role="alert">
-                                <h5 className="alert-heading fw-bold mb-1 fs-6">Bienvenido admin: Marcos</h5>
+                                <h5 className="alert-heading fw-bold mb-1 fs-6">Bienvenido admin: {nombreAdmin}</h5>
                                 <p className="mb-0 small">Aquí podrás Administrar Emprendedores, Moderar Contenidos y Gestionar Productos.</p>
                             </div>
 
-                            {/* Accesos Directos con Spinners de Carga */}
+                            {/* Accesos Directos */}
                             <div className="row g-3 mb-4">
                                 <div className="col-md-4">
                                     <div className="card border-0 shadow-sm h-100">
@@ -563,6 +641,14 @@ export const AdminDashboard: React.FC = () => {
                                         </select>
                                     </div>
 
+                                    {/* Alerta de error en la tabla de moderación */}
+                                    {moderacionError && (
+                                        <div className="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-3" role="alert">
+                                            <AlertTriangle size={16} />
+                                            <span>{moderacionError}</span>
+                                        </div>
+                                    )}
+
                                     <div className="table-responsive">
                                         <table className="table align-middle mb-0">
                                             <thead className="table-light">
@@ -575,47 +661,67 @@ export const AdminDashboard: React.FC = () => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {itemsFiltrados.map((item) => (
-                                                    <tr key={item.id}>
-                                                        <td>{item.usuario}</td>
-                                                        <td>{item.contenido}</td>
-                                                        <td>
-                                                            <span className={`badge ${item.tipo === 'contenido' ? 'bg-info' : 'bg-warning'} text-dark`}>
-                                                                {item.tipo}
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            <span className={`badge ${
-                                                                item.estado === 'Aprobado' ? 'bg-success' : 
-                                                                item.estado === 'Rechazado' ? 'bg-danger' : 'bg-secondary'
-                                                            }`}>
-                                                                {item.estado}
-                                                            </span>
-                                                        </td>
-                                                        <td className="text-end">
-                                                            {actionLoadingId === item.id ? (
-                                                                <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
-                                                            ) : (
-                                                                <>
-                                                                    <button 
-                                                                        className="btn btn-sm btn-outline-success me-1"
-                                                                        onClick={() => handleAprobar(item.id)}
-                                                                        disabled={item.estado === 'Aprobado'}
-                                                                    >
-                                                                        <Check size={14} />
-                                                                    </button>
-                                                                    <button 
-                                                                        className="btn btn-sm btn-outline-danger"
-                                                                        onClick={() => handleRechazar(item.id)}
-                                                                        disabled={item.estado === 'Rechazado'}
-                                                                    >
-                                                                        <X size={14} />
-                                                                    </button>
-                                                                </>
-                                                            )}
+                                                {loadingModeracion ? (
+                                                    <tr>
+                                                        <td colSpan={5} className="text-center py-4">
+                                                            <div className="spinner-border spinner-border-sm text-primary me-2" /> Cargando lista...
                                                         </td>
                                                     </tr>
-                                                ))}
+                                                ) : itemsFiltrados.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={5} className="text-center py-4 text-muted">
+                                                            No hay elementos para moderar.
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    itemsFiltrados.map((item) => (
+                                                        <tr key={item.id}>
+                                                            <td>{item.usuario}</td>
+                                                            <td>{item.contenido}</td>
+                                                            <td>
+                                                                <span className={`badge ${item.tipo === 'contenido' ? 'bg-info' : 'bg-warning'} text-dark`}>
+                                                                    {item.tipo}
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <span className={`badge ${
+                                                                    item.estado === 'Aprobado' ? 'bg-success' : 
+                                                                    item.estado === 'Rechazado' ? 'bg-danger' : 'bg-secondary'
+                                                                }`}>
+                                                                    {item.estado}
+                                                                </span>
+                                                            </td>
+                                                            <td className="text-end">
+                                                                <div className="btn-group btn-group-sm">
+                                                                    <button
+                                                                        className="btn btn-outline-success p-1"
+                                                                        onClick={() => handleAprobar(item.id)}
+                                                                        disabled={actionLoadingId === item.id || item.estado !== 'Pendiente'}
+                                                                        title="Aprobar"
+                                                                    >
+                                                                        {actionLoadingId === item.id ? (
+                                                                            <Loader2 size={14} className="spinner-border spinner-border-sm" />
+                                                                        ) : (
+                                                                            <Check size={14} />
+                                                                        )}
+                                                                    </button>
+                                                                    <button
+                                                                        className="btn btn-outline-danger p-1"
+                                                                        onClick={() => handleRechazar(item.id)}
+                                                                        disabled={actionLoadingId === item.id || item.estado !== 'Pendiente'}
+                                                                        title="Rechazar"
+                                                                    >
+                                                                        {actionLoadingId === item.id ? (
+                                                                            <Loader2 size={14} className="spinner-border spinner-border-sm" />
+                                                                        ) : (
+                                                                            <X size={14} />
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>
@@ -624,30 +730,25 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                     )}
 
-                    {activeTab === 'emprendedores' && <UsuariosView />}
+                    {/* Vistas Secundarias por Pestaña */}
+                    {activeTab === 'emprendedores' && (
+                        <UsuariosViewWithActions 
+                            onEmprendedorCreado={handleEmprendedorCreado} 
+                            onOpenModal={() => setIsModalOpen(true)}
+                        />
+                    )}
                     {activeTab === 'productos' && <ProductosView />}
                     {activeTab === 'moderacion' && <ModeracionView />}
                     {activeTab === 'categorias' && <CategoriasView />}
-                        {activeTab === 'mensajes' && (
-                        <div className="d-flex flex-column gap-3">
-                            <div className="card border-0 shadow-sm p-4 text-center rounded-3">
-                                <Mail size={40} className="text-primary mx-auto mb-2" />
-                                <h5 className="fw-bold mb-1">Gestión de Mensajes</h5>
-                                <p className="text-muted small mb-0">Responde los mensajes en tu bandeja de entrada.</p>
-                            </div>
-
-                            <div className="card border-0 shadow-sm p-4 rounded-3">
-                                <ChatInterno esAdmin={true} />
-                            </div>
-                        </div>
-                    )}
+                    {activeTab === 'mensajes' && <ChatInterno />}
                 </main>
             </div>
 
+            {/* Modal para alta de Emprendedores */}
             <ModalNuevoEmprendedor 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                onSuccess={handleEmprendedorCreado} 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={handleEmprendedorCreado}
             />
         </div>
     );

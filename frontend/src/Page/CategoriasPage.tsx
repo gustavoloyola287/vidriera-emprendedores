@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { productoService } from '../services/productoService';
 import type { Producto, Categoria } from '../types/Producto';
-import { ChevronDown, ChevronUp, Package, Utensils, Shirt, Palette, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronUp, Package, Utensils, Shirt, Palette, Sparkles, Cpu, Film, AlertTriangle } from 'lucide-react';
 
 const ICONOS: Record<string, React.ElementType> = {
     gastronomia: Utensils,
     indumentaria: Shirt,
+    arte: Palette,
     artesania: Palette,
     artesanias: Palette,
+    tecnologia: Cpu,
+    cultura: Film,
 };
 
 export const CategoriasPage = () => {
@@ -16,6 +19,7 @@ export const CategoriasPage = () => {
     const [categoriaAbierta, setCategoriaAbierta] = useState<number | string | null>(null);
     const [productosCategoria, setProductosCategoria] = useState<Producto[]>([]);
     const [loadingProductos, setLoadingProductos] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         productoService.getCategorias()
@@ -24,7 +28,10 @@ export const CategoriasPage = () => {
                     setCategorias(data);
                 }
             })
-            .catch((err) => console.error('Error al obtener categorías:', err))
+            .catch((err) => {
+                console.error('Error al obtener categorías:', err);
+                setError('No se pudieron cargar las categorías desde el servidor.');
+            })
             .finally(() => setLoading(false));
     }, []);
 
@@ -64,6 +71,7 @@ export const CategoriasPage = () => {
         <div className="min-h-screen bg-gray-50 py-12">
             <div className="max-w-7xl mx-auto px-4">
                 
+                {/* Cabecera */}
                 <div className="text-center mb-10">
                     <h1 className="text-4xl font-extrabold mb-2" style={{ color: '#002040' }}>
                         Categorías
@@ -73,13 +81,21 @@ export const CategoriasPage = () => {
                     </p>
                 </div>
 
+                {/* Mensaje de Error en pantalla si falla el Fetch */}
+                {error && (
+                    <div className="max-w-md mx-auto mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center justify-center gap-2">
+                        <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                        <span className="text-sm font-medium">{error}</span>
+                    </div>
+                )}
+
                 {loading ? (
                     <div className="p-8 text-center text-gray-500">Cargando categorías...</div>
                 ) : (
                     <div className="flex flex-col items-center gap-8">
                         
-                        {/* Grilla Centrada de Tarjetas de Categoría */}
-                        <div className="flex flex-wrap justify-center gap-6 w-full">
+                        {/* Grilla Centrada y Equilibrada de Tarjetas */}
+                        <div className="flex flex-wrap justify-center items-stretch gap-6 w-full">
                             {categorias.map((cat, idx) => {
                                 const catId = typeof cat === 'object' && cat?.id ? cat.id : idx;
                                 const catNombre = typeof cat === 'object' ? cat.nombre : String(cat);
@@ -117,8 +133,9 @@ export const CategoriasPage = () => {
                             })}
                         </div>
 
+                        {/* Panel Desplegable de Productos */}
                         {categoriaAbierta !== null && (
-                            <div className="w-full max-w-5xl bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8 animate-fadeIn">
+                            <div className="w-full max-w-5xl bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8 animate-fadeIn mt-4">
                                 {loadingProductos ? (
                                     <div className="text-center py-8 text-gray-500">Cargando productos de la categoría...</div>
                                 ) : productosCategoria.length > 0 ? (
