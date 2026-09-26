@@ -79,7 +79,7 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
         setModalError(null); // Limpiar errores previos
 
         try {
-            const response = await fetch('/api/admin/emprendedores', {
+            const response = await fetch('/api/admin/dashboard/emprendedores', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -94,7 +94,7 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
                 setModalError(errorData?.message || 'No se pudo registrar el emprendedor. Revisa los datos ingresados.');
             }
         } catch (error) {
-            console.error('Error al registrar emprendedor:', error);
+            setModalError('Error al registrar emprendedor:');
             setModalError('Error de conexión con el servidor. Inténtalo de nuevo.');
         } finally {
             setLoadingSave(false);
@@ -220,7 +220,7 @@ export const AdminDashboard: React.FC = () => {
     const fetchDashboardStats = async () => {
         try {
             setLoadingStats(true);
-            const response = await fetch('/api/admin/stats');
+            const response = await fetch('/api/admin/dashboard/stats');
             if (response.ok) {
                 const data: AdminDashboardStatsDTO = await response.json();
                 setStats(data);
@@ -240,7 +240,7 @@ export const AdminDashboard: React.FC = () => {
         try {
             setLoadingModeracion(true);
             setModeracionError(null);
-            const response = await fetch('/api/admin/moderacion/reciente');
+            const response = await fetch('/api/admin/dashboard/moderacion/reciente');
             if (response.ok) {
                 const data = await response.json();
                 setItemsModeracion(data);
@@ -258,7 +258,7 @@ export const AdminDashboard: React.FC = () => {
     // Fetch Notificaciones
     const fetchNotificaciones = async () => {
         try {
-            const response = await fetch('/api/admin/notificaciones');
+            const response = await fetch('/api/admin/dashboard/notificaciones');
             if (response.ok) {
                 const data = await response.json();
                 setNotificaciones(data);
@@ -280,7 +280,7 @@ export const AdminDashboard: React.FC = () => {
 
     const handleMarcarTodasLeidas = async () => {
         try {
-            const response = await fetch('/api/admin/notificaciones/marcar-leidas', { method: 'PUT' });
+            const response = await fetch('/api/admin/dashboard/notificaciones/marcar-leidas', { method: 'PUT' });
             if (response.ok) {
                 setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })));
             }
@@ -302,7 +302,7 @@ export const AdminDashboard: React.FC = () => {
         try {
             setActionLoadingId(id);
             setModeracionError(null);
-            const response = await fetch(`/api/admin/productos/${id}/estado?nuevoEstado=APROBADO`, {
+            const response = await fetch(`/api/admin/dashboard/productos/${id}/estado?nuevoEstado=APROBADO`, {
                 method: 'PUT'
             });
 
@@ -326,7 +326,7 @@ export const AdminDashboard: React.FC = () => {
         try {
             setActionLoadingId(id);
             setModeracionError(null);
-            const response = await fetch(`/api/admin/productos/${id}/estado?nuevoEstado=RECHAZADO`, {
+            const response = await fetch(`/api/admin/dashboard/productos/${id}/estado?nuevoEstado=RECHAZADO`, {
                 method: 'PUT'
             });
 
