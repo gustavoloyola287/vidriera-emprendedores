@@ -18,11 +18,10 @@ public class AdminDashboardController {
     // 1. Métricas generales para las tarjetas superiores (devuelve el DTO tipado)
     @GetMapping("/stats")
     public ResponseEntity<AdminDashboardStatsDTO> getDashboardStats() {
-        AdminDashboardStatsDTO stats = AdminDashboardStatsDTO.builder()
-                .totalEmprendedores(emprendedorService.contarEmprendedores())
-                .totalProductos(productoService.contarProductos())
-                .productosPendientes(productoService.contarPendientes())
-                .build();
+        AdminDashboardStatsDTO stats = new AdminDashboardStatsDTO();
+        stats.setTotalEmprendedores(emprendedorService.contarEmprendedores());
+        stats.setTotalProductos(productoService.contarProductos());
+        stats.setProductosPendientes(productoService.contarPendientes());
 
         return ResponseEntity.ok(stats);
     }

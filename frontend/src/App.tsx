@@ -33,11 +33,11 @@ function App() {
                         <Route path="/restablecer-password" element={<RestablecerPassword />} />
                         <Route path="/emprendedores" element={<EmprendedoresPage />} />
                         <Route path="/categorias" element={<CategoriasPage />} />
-                        <Route path="/admindashboard" element={<AdminDashboard />} />
-                        <Route path="/emprendedordashboard" element={<EmprendedorDashboard />} />
+                        
                         {/* Ruta protegida de productos */}
-                        <Route 
-                            path="/productos" element={ <ProtectedRoute> <ProductosPage /> </ProtectedRoute> }/>
+                        <Route path="/productos" element={ <ProtectedRoute> <ProductosPage /> </ProtectedRoute> }/>
+                        <Route path="/admindashboard" element={ <ProtectedRoute> <AdminDashboard /> </ProtectedRoute> } />
+                        <Route path="/emprendedordashboard" element={ <ProtectedRoute> <EmprendedorDashboard /> </ProtectedRoute> } />
                     </Routes>
                 </main>
 

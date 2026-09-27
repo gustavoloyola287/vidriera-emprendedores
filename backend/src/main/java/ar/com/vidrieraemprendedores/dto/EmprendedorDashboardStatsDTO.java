@@ -1,14 +1,13 @@
 package ar.com.vidrieraemprendedores.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+
 public class EmprendedorDashboardStatsDTO {
     private long totalProductos;
     private long maxProductosPermitidos; // 5 por regla de negocio
