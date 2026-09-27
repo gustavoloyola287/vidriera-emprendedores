@@ -24,13 +24,12 @@ public class EmprendedorDashboardController {
     public ResponseEntity<EmprendedorDashboardStatsDTO> getStats(@AuthenticationPrincipal Emprendedor emprendedor) {
         long cantidadActual = productoService.contarProductosPorEmprendedor(emprendedor.getId());
 
-        EmprendedorDashboardStatsDTO stats = EmprendedorDashboardStatsDTO.builder()
-                .totalProductos(cantidadActual)
-                .maxProductosPermitidos(15)
-                .visitasTotales(0) 
-                .consultasRecibidas(0)
-                .consultasSinLeer(0)
-                .build();
+        EmprendedorDashboardStatsDTO stats = new EmprendedorDashboardStatsDTO();
+        stats.setTotalProductos(cantidadActual);
+        stats.setMaxProductosPermitidos(15);
+        stats.setVisitasTotales(0);
+        stats.setConsultasRecibidas(0);
+        stats.setConsultasSinLeer(0);
 
         return ResponseEntity.ok(stats);
     }
