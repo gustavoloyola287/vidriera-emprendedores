@@ -25,31 +25,8 @@ export const Login: React.FC = () => {
 
         setLoading(true);
 
-        // --- SIMULACIÓN PARA DESARROLLO SIN BACKEND ---
-        if (emailTrimmed === 'admin@correo.com') {
-            const mockToken = 'fake-jwt-admin-token';
-            localStorage.setItem('token', mockToken);
-            localStorage.setItem('nombreEmprendedor', 'Marcos Admin');
-            localStorage.setItem('role', 'ROLE_ADMIN');
-            login(mockToken);
-            navigate('/admindashboard');
-            setLoading(false);
-            return;
-        }
-
-        if (emailTrimmed === 'emprendedor@correo.com') {
-            const mockToken = 'fake-jwt-emprendedor-token';
-            localStorage.setItem('token', mockToken);
-            localStorage.setItem('nombreEmprendedor', 'Mi Emprendimiento');
-            localStorage.setItem('role', 'ROLE_EMPRENDEDOR');
-            login(mockToken);
-            navigate('/emprendedordashboard');
-            setLoading(false);
-            return;
-        }
-        // ---------------------------------------------
-
         try {
+
             const response = await api.post('/auth/login', {
                 email: emailTrimmed,
                 password,
@@ -58,52 +35,43 @@ export const Login: React.FC = () => {
             const { token, id, emprendedorId, nombre, nombreEmprendimiento, emprendimiento, role } = response.data;
 
             // 1. Guardar Token y Datos de sesión
+            if (token) {
             localStorage.setItem('token', token);
+            }
 
             const idFinal = emprendedorId || id;
             const nombreFinal = nombreEmprendimiento || emprendimiento || nombre;
 
-            if (idFinal) {
-                localStorage.setItem('emprendedorId', idFinal.toString());
-            }
-            if (nombreFinal) {
-                localStorage.setItem('nombreEmprendedor', nombreFinal);
-            }
-            if (role) {
-                localStorage.setItem('role', role);
-            }
-
+            if (idFinal) localStorage.setItem('emprendedorId', idFinal.toString());
+            if (nombreFinal) localStorage.setItem('nombreEmprendedor', nombreFinal);
+            if (role) localStorage.setItem('role', role);
+            
             // 2. Actualizar estado global
             login(token);
 
             // 3. Redirección según Rol recibido del Backend
             const userRole = role?.toUpperCase();
 
-            if (userRole === 'ROLE_ADMIN' || userRole === 'ADMIN' || emailTrimmed.includes('admin')) {
+            if (userRole === 'ROLE_SUPER_ADMIN' || userRole === 'SUPER_ADMIN' || emailTrimmed.includes('superadmin')) {
+                navigate('/superadmindashboard');
+            } else if (userRole === 'ROLE_ADMIN' || userRole === 'ADMIN' || emailTrimmed.includes('admin')) {
                 navigate('/admindashboard');
             } else if (userRole === 'ROLE_EMPRENDEDOR' || userRole === 'EMPRENDEDOR') {
                 navigate('/emprendedordashboard');
             } else {
-                // Ruta por defecto si el rol no coincide con los anteriores
-                navigate('/emprendedordashboard');
+                navigate('/');
             }
 
         } catch (err: any) {
+
             if (err.response && err.response.data && err.response.data.message) {
                 setError(err.response.data.message);
+            } else if (err.response && err.response.status === 401) {
+                setError('Credenciales inválidas. Por favor, verifique su email y contraseña.');
             } else if (err.code === 'ERR_NETWORK') {
-                // Simulación en caso de caída de red durante desarrollo
-                if (emailTrimmed.includes('admin')) {
-                    login('fake-jwt-admin-token');
-                    navigate('/admindashboard');
-                    return;
-                } else {
-                    login('fake-jwt-emprendedor-token');
-                    navigate('/emprendedordashboard');
-                    return;
-                }
+                setError('Error de conexión. Asegurate que el backend esté corriendo y que la URL base sea correcta.');
             } else {
-                setError('Credenciales inválidas o error inesperado.');
+                setError('Ocurrio un error inesperado al iniciar la sesión');
             }
         } finally {
             setLoading(false);

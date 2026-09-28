@@ -1,8 +1,10 @@
 package ar.com.vidrieraemprendedores.service;
 
 import ar.com.vidrieraemprendedores.models.Emprendedor;
+import ar.com.vidrieraemprendedores.models.Rol;
 import ar.com.vidrieraemprendedores.repository.EmprendedorRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,7 @@ public class EmprendedorService implements IEmprendedorService {
 
     // Inyectamos el repositorio (usamos final + @RequiredArgsConstructor, que es mejor práctica que @Autowired)
     private final EmprendedorRepository emprendedorRepository;
+    private final PasswordEncoder passwordEncoder; // Inyectamos el PasswordEncoder para encriptar contraseñas
 
     @Override
     public List<Emprendedor> listarEmprendedores() {
@@ -22,7 +25,6 @@ public class EmprendedorService implements IEmprendedorService {
 
     @Override
     public Emprendedor buscarPorId(Long id) {
-        // Si no lo encuentra, por ahora lanzamos una excepción básica de runtime
         return emprendedorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Emprendedor no encontrado con el ID: " + id));
     }
@@ -34,7 +36,6 @@ public class EmprendedorService implements IEmprendedorService {
 
     @Override
     public void eliminarEmprendedor(Long id) {
-        // Verificamos si existe antes de borrar para evitar errores feos
         if (!emprendedorRepository.existsById(id)) {
             throw new RuntimeException("No se puede eliminar. Emprendedor no encontrado con el ID: " + id);
         }
@@ -54,5 +55,25 @@ public class EmprendedorService implements IEmprendedorService {
 
         emprendedor.setEstado(nuevoEstado);
         emprendedorRepository.save(emprendedor);
+    }
+
+    //Método para que el Super Admin cree un nuevo Admin 
+    @Override
+    @Transactional
+    public Emprendedor crearAdministrador(String nombre, String email, String passwordPlano) {
+        // Validar que el mail no este en uso
+        if (emprendedorRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("Ya existe un usuario registrado con el email: " + email);
+        }
+
+        // Crear un nuevo ADMIN
+        Emprendedor nuevoAdmin = new Emprendedor();
+        nuevoAdmin.setNombreCompleto(nombre);
+        nuevoAdmin.setEmail(email);
+        nuevoAdmin.setPassword(passwordEncoder.encode(passwordPlano));
+        nuevoAdmin.setRol(Rol.ROLE_ADMIN);
+        nuevoAdmin.setEstado("ACTIVO");
+
+        return emprendedorRepository.save(nuevoAdmin);
     }
 }

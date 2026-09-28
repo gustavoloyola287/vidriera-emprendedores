@@ -10,6 +10,8 @@ public interface IEmprendedorService {
     // Buscar uno solo por su ID
     Emprendedor buscarPorId(Long id);
 
+    Emprendedor crearAdministrador(String nombre, String email, String passwordPlano);
+
     // Guardar o crear un nuevo emprendedor
     Emprendedor guardarEmprendedor(Emprendedor emprendedor);
 
