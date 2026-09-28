@@ -38,37 +38,24 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/auth/**",
                     "/api/auth/**",
-                    "/api/productos",
-                    "/api/productos/**",
-                    "/productos",
-                    "/productos/**",
-                    "/api/fotos",
-                    "/api/fotos/**",
-                    "/fotos/**",
-                    "/api/categorias",
-                    "/api/categorias/**",
-                    "/categorias/**"   
+                    "/api/productos", "/api/productos/**",
+                    "/api/fotos", "/api/fotos/**",
+                    "/api/categorias", "/api/categorias/**"     
                 ).permitAll()
 
                 // Lectura pública para el resto de recursos (GET)
                 .requestMatchers(HttpMethod.GET,
-                    "/emprendedores/**",
-                    "/api/emprendedores/**",
-                    "/api/emprendedores"
+                    "/api/emprendedores/**", "/api/emprendedores"
                 ).permitAll()
 
-                // Endpoints exclusivos para el ADMINISTRADOR
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // Endpoints exclusivos para el ADMINISTRADOR y s
+                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                 // Endpoints exclusivos para el EMPRENDEDOR (gestión de sus productos y panel)
                 .requestMatchers("/api/emprendedor/**").hasRole("EMPRENDEDOR")
-
-
                 .anyRequest().authenticated()
             )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -78,7 +65,6 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));

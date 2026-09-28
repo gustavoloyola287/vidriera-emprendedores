@@ -21,28 +21,34 @@ public class ProductoController {
 
     private final IProductoService productoService;
 
-    // 1. LISTAR TODOS LOS PRODUCTOS DE LA VIDRIERA (Devuelve DTO con fotos de Mongo)
+    @GetMapping("/destacados")
+    public ResponseEntity<List<ProductoDTO>> listarDestacados() {
+        List<ProductoDTO> lista = productoService.obtenerCatalogoPublico();
+        return ResponseEntity.ok(lista);
+    }
+
+    //  LISTAR TODOS LOS PRODUCTOS DE LA VIDRIERA (Devuelve DTO con fotos de Mongo)
     @GetMapping
     public ResponseEntity<List<ProductoDTO>> listarTodos() {
         List<ProductoDTO> lista = productoService.obtenerCatalogoPublico();
         return ResponseEntity.ok(lista);
     }
 
-    // 2. BUSCAR UN PRODUCTO POR ID
+    //  BUSCAR UN PRODUCTO POR ID
     @GetMapping("/{id}")
     public ResponseEntity<Producto> buscarPorId(@PathVariable Long id) {
         Producto producto = productoService.buscarPorId(id);
         return ResponseEntity.ok(producto);
     }
 
-    // 3. CREAR UN NUEVO PRODUCTO ASOCIADO A EMPRENDEDOR Y CATEGORÍA (JSON plano)
+    //  CREAR UN NUEVO PRODUCTO ASOCIADO A EMPRENDEDOR Y CATEGORÍA (JSON plano)
     @PostMapping
     public ResponseEntity<Producto> crear(@RequestBody Producto producto) {
         Producto nuevo = productoService.guardarProducto(producto);
         return new ResponseEntity<>(nuevo, HttpStatus.CREATED);
     }
 
-    // 4. CREAR UN NUEVO PRODUCTO CON FOTO (Multipart Form-Data)
+    //  CREAR UN NUEVO PRODUCTO CON FOTO (Multipart Form-Data)
     @PostMapping(value = "/con-foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> crearConFoto(
             @RequestParam("nombre") String nombre,
@@ -52,8 +58,6 @@ public class ProductoController {
             @RequestParam(value = "foto", required = false) MultipartFile foto) {
 
         try {
-            // Nota: Si tenés un método específico en tu Service para procesar foto, llamalo acá.
-            // De lo contrario, este mapeo pasa los datos al servicio de guardado:
             Producto nuevoProducto = productoService.guardarProductoConFoto(nombre, descripcion, idCategoria, idEmprendedor, foto);
             return new ResponseEntity<>(nuevoProducto, HttpStatus.CREATED);
         } catch (Exception e) {
@@ -61,7 +65,7 @@ public class ProductoController {
         }
     }
 
-    // 5. ELIMINAR UN PRODUCTO DEL CATÁLOGO
+    //  ELIMINAR UN PRODUCTO DEL CATÁLOGO
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         productoService.eliminarProducto(id);

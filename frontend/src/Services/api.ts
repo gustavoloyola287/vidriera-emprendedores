@@ -4,17 +4,15 @@ const api = axios.create({
   baseURL: 'http://localhost:8080',
 });
 
-// Interceptor para adjuntar el JWT token a todas las solicitudes enviadas
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
 
     // Validar que el token existe y no es una cadena 'null' o 'undefined'
-    if (token && token !== 'null' && token !== 'undefined' && token.trim() !== '') {
+    if (token && token !== 'null' && token !== 'undefined' && token.trim().length > 10) {
       if (config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      
+        config.headers.Authorization = `Bearer ${token.trim()}`;
+      }  
     } else{
       // Si no hay token, asegurarnos de borrar el header Authorization
       if (config.headers) {
@@ -28,6 +26,5 @@ api.interceptors.request.use(
   }
 );
 
-// Exportamos de ambas formas para soportar "import api" e "import { api }"
 export { api };
 export default api;
