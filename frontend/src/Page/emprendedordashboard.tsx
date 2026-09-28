@@ -22,6 +22,11 @@ interface Producto {
     estado: string;
 }
 
+interface Categoria {
+    id: number;
+    nombre: string;
+}
+
 // 1. Configuración dinámica de las pestañas del sidebar
 const NAV_ITEMS = [
     { id: 'inicio', label: 'Inicio', icon: Home },
@@ -45,6 +50,13 @@ export const EmprendedorDashboard: React.FC = () => {
     const [nuevoNombre, setNuevoNombre] = useState('');
     const [nuevaCategoria, setNuevaCategoria] = useState('Hogar y Decoración');
     const [nuevoPrecio, setNuevoPrecio] = useState('');
+    const [nuevaDescripcion, setNuevaDescripcion] = useState('');
+    const categorias: Categoria[] = [
+        { id: 1, nombre: 'Hogar y Decoración' },
+        { id: 2, nombre: 'Regalería' },
+        { id: 3, nombre: 'Indumentaria' },
+        { id: 4, nombre: 'Gastronomía' }
+    ];
 
     // Función para redirigir a 'productos' y abrir el modal
     const handleOpenNuevoProducto = () => {
@@ -70,6 +82,10 @@ export const EmprendedorDashboard: React.FC = () => {
         setNuevoPrecio('');
         setShowModal(false);
     };
+
+    function setFotoFile(arg0: File) {
+        throw new Error('Function not implemented.');
+    }
 
     return (
         <div className="d-flex vh-100 bg-light">
@@ -311,74 +327,119 @@ export const EmprendedorDashboard: React.FC = () => {
                 </div>
             </main>
 
-            {/* MODAL PARA NUEVO PRODUCTO */}
-            {showModal && (
-                <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className="modal-content border-0 shadow rounded-3">
-                            <div className="modal-header border-bottom-0 pb-0">
-                                <h5 className="modal-title fw-bold">Crear Nuevo Producto</h5>
-                                <button 
-                                    type="button" 
-                                    className="btn-close" 
-                                    onClick={() => setShowModal(false)}
-                                ></button>
-                            </div>
-                            <form onSubmit={handleCrearProducto}>
-                                <div className="modal-body py-3">
-                                    <div className="mb-3">
-                                        <label className="form-label fw-medium">Nombre del producto</label>
-                                        <input 
-                                            type="text" 
-                                            className="form-control rounded-2" 
-                                            placeholder="Ej. Taza sublimada"
-                                            value={nuevoNombre}
-                                            onChange={(e) => setNuevoNombre(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label fw-medium">Categoría</label>
-                                        <select 
-                                            className="form-select rounded-2"
-                                            value={nuevaCategoria}
-                                            onChange={(e) => setNuevaCategoria(e.target.value)}
-                                        >
-                                            <option value="Hogar y Decoración">Hogar y Decoración</option>
-                                            <option value="Regalería">Regalería</option>
-                                            <option value="Indumentaria">Indumentaria</option>
-                                            <option value="Gastronomía">Gastronomía</option>
-                                        </select>
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label fw-medium">Precio</label>
-                                        <input 
-                                            type="text" 
-                                            className="form-control rounded-2" 
-                                            placeholder="Ej. 5000"
-                                            value={nuevoPrecio}
-                                            onChange={(e) => setNuevoPrecio(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                                <div className="modal-footer border-top-0 pt-0">
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-light rounded-2" 
-                                        onClick={() => setShowModal(false)}
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button type="submit" className="btn btn-primary rounded-2">
-                                        Guardar Producto
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+           {/* MODAL PARA NUEVO PRODUCTO INTEGRADO */}
+{showModal && (
+    <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow rounded-3">
+                <div className="modal-header border-bottom-0 pb-0">
+                    <h5 className="modal-title fw-bold">Crear Nuevo Producto</h5>
+                    <button 
+                        type="button" 
+                        className="btn-close" 
+                        onClick={() => setShowModal(false)}
+                    ></button>
                 </div>
-            )}
+                <form onSubmit={handleCrearProducto}>
+                    <div className="modal-body py-3">
+                        
+                        {/* 1. Nombre del Producto */}
+                        <div className="mb-3">
+                            <label className="form-label fw-medium">Nombre del producto</label>
+                            <input 
+                                type="text" 
+                                className="form-control rounded-2" 
+                                placeholder="Ej. Taza sublimada"
+                                value={nuevoNombre}
+                                onChange={(e) => setNuevoNombre(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        {/* 2. Categoría */}
+                        <div className="mb-3">
+                            <label className="form-label fw-medium">Categoría</label>
+                            <select 
+                                className="form-select rounded-2"
+                                value={nuevaCategoria}
+                                onChange={(e) => setNuevaCategoria(e.target.value)}
+                                required
+                            >
+                                {categorias.length > 0 ? (
+                                    categorias.map((cat) => (
+                                        <option key={cat.id} value={cat.id}>
+                                            {cat.nombre}
+                                        </option>
+                                    ))
+                                ) : (
+                                    <>
+                                        <option value="Hogar y Decoración">Hogar y Decoración</option>
+                                        <option value="Regalería">Regalería</option>
+                                        <option value="Indumentaria">Indumentaria</option>
+                                        <option value="Gastronomía">Gastronomía</option>
+                                    </>
+                                )}
+                            </select>
+                        </div>
+
+                        {/* 3. Precio */}
+                        <div className="mb-3">
+                            <label className="form-label fw-medium">Precio</label>
+                            <input 
+                                type="number" 
+                                className="form-control rounded-2" 
+                                placeholder="Ej. 5000"
+                                value={nuevoPrecio}
+                                onChange={(e) => setNuevoPrecio(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        {/* 4. Descripción (Integrado de ProductosPage) */}
+                       <div className="mb-3">
+  <label className="form-label fw-medium">Descripción</label>
+  <textarea
+    className="form-control rounded-2"
+    rows={3}
+    placeholder="Describe las características principales de tu producto..."
+    value={nuevaDescripcion}
+    onChange={(e) => setNuevaDescripcion(e.target.value)}
+  ></textarea>
+</div>
+
+                        {/* 5. Carga de Imagen (Integrado de ProductosPage) */}
+                        <div className="mb-3">
+                            <label className="form-label fw-medium">Imagen del Producto</label>
+                            <input
+                                type="file"
+                                className="form-control rounded-2"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                        setFotoFile(e.target.files[0]);
+                                    }
+                                }}
+                            />
+                        </div>
+
+                    </div>
+                    <div className="modal-footer border-top-0 pt-0">
+                        <button 
+                            type="button" 
+                            className="btn btn-light rounded-2" 
+                            onClick={() => setShowModal(false)}
+                        >
+                            Cancelar
+                        </button>
+                        <button type="submit" className="btn btn-primary rounded-2">
+                            Guardar Producto
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
+    </div>
+)}
+            </div>
     );
 };

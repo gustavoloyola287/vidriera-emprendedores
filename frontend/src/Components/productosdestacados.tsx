@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-// Interface ajustada a la estructura de tu proyecto
+// Estructura que retorna FotoController (/api/fotos)
+export interface FotoProducto {
+    id: number;
+    rutaFoto?: string;
+    imagenBase64?: string;
+}
+
 export interface ProductoDTO {
     id: number;
     nombre: string;
@@ -9,13 +15,12 @@ export interface ProductoDTO {
     nombreEmprendedor?: string;
     idEmprendedor?: number;
     nombreCategoria?: string;
-    fotoPrincipal?: {
-        imagenBase64?: string;
-    };
+    fotoPrincipal?: FotoProducto;
+    fotos?: FotoProducto[]; // Se llena dinámicamente llamando a FotoController
     destacado?: boolean;
 }
 
-// Datos MOCK de respaldo si la API no está lista o falla
+// Datos MOCK de respaldo si la API falla
 const MOCK_DESTACADOS: ProductoDTO[] = [
     {
         id: 101,
@@ -51,17 +56,37 @@ export const ProductosDestacados: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [currentIndex, setCurrentIndex] = useState<number>(0);
 
-    // 1. Cargar productos destacados desde el Backend (o fallback MOCK)
+    // 1. Cargar productos destacados Y sus fotos desde FotoController
     useEffect(() => {
-        const fetchDestacados = async () => {
+        const fetchDestacadosYFotos = async () => {
             try {
                 const res = await fetch('http://localhost:8080/api/productos/destacados');
-                if (res.ok) {
-                    const data: ProductoDTO[] = await res.json();
-                    setDestacados(data.length > 0 ? data : MOCK_DESTACADOS);
-                } else {
-                    throw new Error('Respuesta HTTP no OK');
-                }
+                if (!res.ok) throw new Error('Respuesta HTTP no OK');
+                
+                const productosData: ProductoDTO[] = await res.json();
+                const listaProductos = productosData.length > 0 ? productosData : MOCK_DESTACADOS;
+
+                // CONEXIÓN A FotoController: Peticiones en paralelo para las fotos de cada producto
+                const productosConFotos = await Promise.all(
+                    listaProductos.map(async (prod) => {
+                        try {
+                            const resFotos = await fetch(`http://localhost:8080/api/fotos/producto/${prod.id}`);
+                            if (resFotos.ok) {
+                                const fotos: FotoProducto[] = await resFotos.json();
+                                return {
+                                    ...prod,
+                                    fotos,
+                                    fotoPrincipal: fotos.length > 0 ? fotos[0] : prod.fotoPrincipal
+                                };
+                            }
+                        } catch (e) {
+                            console.warn(`No se pudieron cargar fotos para el producto ID ${prod.id}`, e);
+                        }
+                        return prod;
+                    })
+                );
+
+                setDestacados(productosConFotos);
             } catch (error) {
                 console.warn('No se pudieron obtener productos destacados del servidor. Usando MOCK.', error);
                 setDestacados(MOCK_DESTACADOS);
@@ -70,7 +95,7 @@ export const ProductosDestacados: React.FC = () => {
             }
         };
 
-        fetchDestacados();
+        fetchDestacadosYFotos();
     }, []);
 
     // 2. Transición automática del carrusel cada 5 segundos
@@ -84,7 +109,7 @@ export const ProductosDestacados: React.FC = () => {
         return () => clearInterval(interval);
     }, [destacados]);
 
-    // 3. Manejadores de navegación manual
+    // 3. Navegación manual
     const handlePrev = () => {
         setCurrentIndex((prev) => (prev === 0 ? destacados.length - 1 : prev - 1));
     };
@@ -93,14 +118,25 @@ export const ProductosDestacados: React.FC = () => {
         setCurrentIndex((prev) => (prev + 1) % destacados.length);
     };
 
-    // 4. Formateador de imagen Base64
+    // 4. Formateador de imágenes (Soporta Base64 o URL completa de la API)
     const obtenerImagenSrc = (prod: ProductoDTO) => {
-        const imagen = prod.fotoPrincipal?.imagenBase64;
-        if (imagen && imagen.trim() !== '') {
-            return imagen.startsWith('data:') || imagen.startsWith('http')
-                ? imagen
-                : `data:image/jpeg;base64,${imagen}`;
+        const foto = prod.fotoPrincipal;
+        if (!foto) return null;
+
+        // Si viene como string Base64
+        if (foto.imagenBase64 && foto.imagenBase64.trim() !== '') {
+            return foto.imagenBase64.startsWith('data:') || foto.imagenBase64.startsWith('http')
+                ? foto.imagenBase64
+                : `data:image/jpeg;base64,${foto.imagenBase64}`;
         }
+
+        // Si viene como URL/Ruta desde el servidor
+        if (foto.rutaFoto && foto.rutaFoto.trim() !== '') {
+            return foto.rutaFoto.startsWith('http')
+                ? foto.rutaFoto
+                : `http://localhost:8080/${foto.rutaFoto}`;
+        }
+
         return null;
     };
 
@@ -177,7 +213,7 @@ export const ProductosDestacados: React.FC = () => {
     );
 };
 
-// Estilos en línea para asegurar diseño limpio y responsivo inmediato
+// Estilos en línea
 const styles: { [key: string]: React.CSSProperties } = {
     container: {
         maxWidth: '1100px',
@@ -314,3 +350,5 @@ const styles: { [key: string]: React.CSSProperties } = {
         transition: 'background-color 0.3s',
     },
 };
+
+export default ProductosDestacados;
