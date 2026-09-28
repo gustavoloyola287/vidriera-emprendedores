@@ -87,10 +87,6 @@ export const EmprendedorDashboard: React.FC = () => {
         throw new Error('Function not implemented.');
     }
 
-    function setNuevaDescripcion(value: string): void {
-        throw new Error('Function not implemented.');
-    }
-
     return (
         <div className="d-flex vh-100 bg-light">
             {/* SIDEBAR LATERAL */}
