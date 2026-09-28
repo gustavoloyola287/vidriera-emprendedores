@@ -1,8 +1,17 @@
 import axios from 'axios';
-import type { Producto, Categoria } from '../Types/Producto';
+import type { Producto, Categoria } from '../types/Producto';
 
 const API_URL = 'http://localhost:8080/api/productos';
 const API_CATEGORIAS_URL = 'http://localhost:8080/api/categorias';
+const API_FOTOS_URL = 'http://localhost:8080/api/fotos';
+
+// Interfaz exportable para manejar las fotografías desde FotoController
+export interface FotoProducto {
+  id: number;
+  rutaFoto?: string;
+  imagenBase64?: string;
+  productoId?: number;
+}
 
 // Helper para limpiar comillas extras del token si viene de JSON.stringify
 const getCleanToken = (): string | null => {
@@ -23,6 +32,10 @@ const getAuthHeaders = (isMultipart = false) => {
 };
 
 export const productoService = {
+  // ---------------------------------------------------------------------------
+  // MÉTODOS DE PRODUCTOS Y CATEGORÍAS
+  // ---------------------------------------------------------------------------
+
   // Obtener todos los productos para la vidriera principal (público)
   getAll: async (): Promise<Producto[]> => {
     const response = await axios.get<Producto[]>(API_URL);
@@ -35,7 +48,7 @@ export const productoService = {
     return response.data;
   },
 
-  // NUEVO MÉTODO: Obtener productos filtrados por ID de categoría
+  // Obtener productos filtrados por ID de categoría
   getProductosPorCategoria: async (categoriaId: number | string): Promise<Producto[]> => {
     const response = await axios.get<Producto[]>(`${API_URL}/categoria/${categoriaId}`);
     return response.data;
@@ -69,6 +82,33 @@ export const productoService = {
   // Eliminar un producto por ID (requiere auth)
   delete: async (id: number): Promise<void> => {
     await axios.delete(`${API_URL}/${id}`, getAuthHeaders());
+  },
+
+  // ---------------------------------------------------------------------------
+  // MÉTODOS DIRECTOS CON FotoController (/api/fotos)
+  // ---------------------------------------------------------------------------
+
+  // GET /api/fotos/producto/{productoId} -> Obtener la galería de fotos de un producto
+  getFotosByProducto: async (productoId: number): Promise<FotoProducto[]> => {
+    const response = await axios.get<FotoProducto[]>(
+      `${API_FOTOS_URL}/producto/${productoId}`
+    );
+    return response.data;
+  },
+
+  // POST /api/fotos -> Guardar/Subir una nueva foto asociada a un producto
+  guardarFoto: async (fotoData: { productoId: number; imagenBase64?: string; rutaFoto?: string }): Promise<FotoProducto> => {
+    const response = await axios.post<FotoProducto>(
+      API_FOTOS_URL, 
+      fotoData, 
+      getAuthHeaders()
+    );
+    return response.data;
+  },
+
+  // DELETE /api/fotos/{id} -> Eliminar una foto individual por ID
+  deleteFoto: async (fotoId: number): Promise<void> => {
+    await axios.delete(`${API_FOTOS_URL}/${fotoId}`, getAuthHeaders());
   }
 };
 
