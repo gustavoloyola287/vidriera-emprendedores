@@ -14,7 +14,7 @@ import { RestablecerPassword } from "./page/RestablecerPassword";
 import { CategoriasPage } from "./page/CategoriasPage";
 import { EmprendedoresPage } from "./page/EmprendedoresPage";
 import {AdminDashboard} from "./page/AdminDashboard";
-import { EmprendedorDashboard } from "./page/emprendedordashboard";
+import { EmprendedorDashboard } from "./page/Emprendedordashboard";
 
 function App() {
     return (
@@ -35,9 +35,10 @@ function App() {
                         <Route path="/categorias" element={<CategoriasPage />} />
                         
                         {/* Ruta protegida de productos */}
-                        <Route path="/productos" element={ <ProtectedRoute> <ProductosPage /> </ProtectedRoute> }/>
-                        <Route path="/admindashboard" element={ <ProtectedRoute> <AdminDashboard /> </ProtectedRoute> } />
-                        <Route path="/emprendedordashboard" element={ <ProtectedRoute> <EmprendedorDashboard /> </ProtectedRoute> } />
+                        <Route path="/productos" element={ <ProtectedRoute > <ProductosPage /> </ProtectedRoute> }/>
+                        <Route path="/superadmindashboard" element={ <ProtectedRoute > <AdminDashboard isSuperAdmin={true} /> </ProtectedRoute> }/>
+                        <Route path="/admindashboard" element={ <ProtectedRoute requiredRole="ROLE_ADMIN"> <AdminDashboard /> </ProtectedRoute> } />
+                        <Route path="/emprendedordashboard" element={ <ProtectedRoute > <EmprendedorDashboard /> </ProtectedRoute> } />
                     </Routes>
                 </main>
 

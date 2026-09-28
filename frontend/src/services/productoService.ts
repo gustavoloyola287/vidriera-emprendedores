@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Producto, Categoria } from '../Types/Producto';
+import type { Producto, Categoria } from '../types/Producto';
 
 const API_URL = 'http://localhost:8080/api/productos';
 const API_CATEGORIAS_URL = 'http://localhost:8080/api/categorias';
