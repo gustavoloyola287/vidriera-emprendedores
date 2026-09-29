@@ -13,6 +13,7 @@ import {
     Mail
 } from 'lucide-react';
 import  { ChatInterno } from '../components/ChatInterno';
+import {misproductos} from './misproductos';
 
 interface Producto {
     id: number;
@@ -252,59 +253,8 @@ export const EmprendedorDashboard: React.FC = () => {
                             </div>
                         </div>
                     )}
-
-                    {activeTab === 'productos' && (
-                        <div className="card border-0 shadow-sm p-4 rounded-3">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h5 className="fw-bold mb-0">Gestión de Productos</h5>
-                                <button 
-                                    className="btn btn-primary d-flex align-items-center gap-1"
-                                    onClick={() => setShowModal(true)}
-                                >
-                                    <Plus size={16} /> Nuevo Producto
-                                </button>
-                            </div>
-                            
-                            <div className="table-responsive mt-3">
-                                <table className="table table-hover align-middle mb-0">
-                                    <thead className="table-light">
-                                        <tr>
-                                            <th scope="col" className="fw-bold">Producto</th>
-                                            <th scope="col" className="fw-bold">Categoría</th>
-                                            <th scope="col" className="fw-bold">Precio</th>
-                                            <th scope="col" className="fw-bold">Estado</th>
-                                            <th scope="col" className="fw-bold">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {productos.map((prod) => (
-                                            <tr key={prod.id}>
-                                                <td className="fw-semibold">{prod.nombre}</td>
-                                                <td className="text-secondary">{prod.categoria}</td>
-                                                <td className="fw-semibold">{prod.precio}</td>
-                                                <td>
-                                                    <span className="badge bg-success px-2 py-1" style={{ fontSize: '0.75rem' }}>
-                                                        {prod.estado}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <div className="d-flex gap-2">
-                                                        <button className="btn btn-outline-primary btn-sm p-1 rounded">
-                                                            <Edit size={16} />
-                                                        </button>
-                                                        <button className="btn btn-outline-danger btn-sm p-1 rounded">
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
-
+                    
+                    
                     {activeTab === 'mensajes' && (
                         <div className="d-flex flex-column gap-3">
                             <div className="card border-0 shadow-sm p-4 text-center rounded-3">
@@ -405,7 +355,7 @@ export const EmprendedorDashboard: React.FC = () => {
     placeholder="Describe las características principales de tu producto..."
     value={nuevaDescripcion}
     onChange={(e) => setNuevaDescripcion(e.target.value)}
-  ></textarea>
+        ></textarea>
 </div>
 
                         {/* 5. Carga de Imagen (Integrado de ProductosPage) */}
@@ -422,7 +372,7 @@ export const EmprendedorDashboard: React.FC = () => {
                                 }}
                             />
                         </div>
-
+                                
                     </div>
                     <div className="modal-footer border-top-0 pt-0">
                         <button 
