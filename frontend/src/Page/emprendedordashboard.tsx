@@ -12,7 +12,7 @@ import {
     LogOut,
     Mail
 } from 'lucide-react';
-import  { ChatInterno } from '../Components/ChatInterno';
+import  { ChatInterno } from '../components/ChatInterno';
 
 interface Producto {
     id: number;

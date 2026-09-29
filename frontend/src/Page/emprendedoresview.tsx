@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Edit, Ban, Trash2, CheckCircle2, Plus, RefreshCw } from 'lucide-react';
-import ModalNuevoEmprendedor from '../Components/modalemprendedor';
+import ModalNuevoEmprendedor from '../components/modalemprendedor';
 
 // URL Base del Controller existente
 const API_URL = 'http://localhost:8080/api/emprendedores';

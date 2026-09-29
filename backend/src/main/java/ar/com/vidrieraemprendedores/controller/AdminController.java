@@ -3,6 +3,7 @@ package ar.com.vidrieraemprendedores.controller;
 import ar.com.vidrieraemprendedores.dto.AdminDashboardStatsDTO;
 import ar.com.vidrieraemprendedores.dto.CrearAdminDTO;
 import ar.com.vidrieraemprendedores.models.Emprendedor;
+import ar.com.vidrieraemprendedores.models.Rol;
 import ar.com.vidrieraemprendedores.service.IEmprendedorService;
 import ar.com.vidrieraemprendedores.service.IProductoService;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +25,18 @@ public class AdminController {
     @GetMapping("/stats")
     public ResponseEntity<AdminDashboardStatsDTO> getDashboardStats() {
         AdminDashboardStatsDTO stats = new AdminDashboardStatsDTO();
+
+
         stats.setTotalEmprendedores(emprendedorService.contarEmprendedores());
         stats.setTotalProductos(productoService.contarProductos());
         stats.setProductosPendientes(productoService.contarPendientes());
+
+
+        
+        stats.setEmprendedoresActivos(0);
+        stats.setEmprendedoresSuspendidos(0);
+        stats.setEmprendedoresRechazados(0);
+        stats.setTotalAdmins(0);
 
         return ResponseEntity.ok(stats);
     }
@@ -51,11 +61,32 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Estado actualizado correctamente"));
     }
 
-    // Endpoints para la gestión de administradores (Solo Super Admin)
+    
+    // Crear nuevo emprendedor
+    @PostMapping("/emprendedores")
+    public ResponseEntity<?> crearEmprendedorManual(@RequestBody Emprendedor emprendedor) {
+        try{
+            
+            emprendedor.setRol(Rol.ROLE_EMPRENDEDOR);
+            if (emprendedor.getEstado() == null || emprendedor.getEstado().isEmpty()   ) {
+                emprendedor.setEstado("ACTIVO");
+            }
 
-
-
-
+           Emprendedor guardado = emprendedorService.guardarEmprendedor(emprendedor);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "message", "Emprendedor registrado exitosamente",
+                "id", guardado.getId()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message","Error al registrar el emprendedor: " + e.getMessage()));
+        }
+    }
+   
+   
+   
+   
+   
+    // Crear nuevo administrador
     @PostMapping("/crear-admin")
     public ResponseEntity<?> crearAdministrador(@RequestBody CrearAdminDTO crearAdminDTO) {
         try{

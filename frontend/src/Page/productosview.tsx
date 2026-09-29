@@ -1,16 +1,8 @@
 import React, { useState } from 'react';
-import { 
-    Search, 
-    Filter, 
-    Check, 
-    X, 
-    Eye, 
-    Star, 
-    Trash2, 
-    Package, 
-    AlertCircle,
-    ExternalLink
-    } from 'lucide-react';
+import { Search, Filter, Check, X, 
+    Eye, Star, Trash2, 
+    Package, AlertCircle,
+    ExternalLink } from 'lucide-react';
 
     // Interface alineada al modelo de datos del Backend
     export interface ProductoItem {

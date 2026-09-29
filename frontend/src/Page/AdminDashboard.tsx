@@ -1,27 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-    Users, 
-    ShieldCheck, 
-    Package, 
-    LogOut, 
-    Home, 
-    MessageSquare, 
-    Bell, 
-    Check, 
-    X,
-    Tags,
-    UserPlus,
-    AlertTriangle,
-    Loader2,
-    Mail
-} from 'lucide-react';
-import { UsuariosView } from './emprendedoresview';
+import { Users, ShieldCheck, Package, 
+    LogOut, Home, MessageSquare, 
+    Bell, Check, X, Tags, UserPlus,
+    AlertTriangle, Loader2, Mail } from 'lucide-react';
+import { UsuariosView } from './Emprendedoresview';
 import { ProductosView } from './Productosview';
-import { ModeracionView } from './moderacionview';
-import { CategoriasView } from './categoriasview';
-import { ChatInterno } from '../Components/ChatInterno';
+import { ModeracionView } from './Moderacionview';
+import { CategoriasView } from './Categoriasview';
+import { ChatInterno } from '../components/ChatInterno';
 
 const UsuariosViewWithActions = UsuariosView as React.ComponentType<{
     onEmprendedorCreado: () => void;
