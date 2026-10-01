@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Eye, MessageSquare, Plus, Pencil, Trash2 } from 'lucide-react';
+import emprendedorService from '../services/emprendedorService';
 
 // Interfaz para el modelo de Producto
 export interface Producto {
@@ -62,59 +63,18 @@ export const InicioDash: React.FC = () => {
         setShowModal(true);
     };
 
-    // Abrir Modal para editar
-    const handleEditar = (producto: Producto) => {
-        setProductoEditar(producto);
-        setFormData({
-            nombre: producto.nombre,
-            categoria: producto.categoria,
-            precio: producto.precio.toString(),
-            estado: producto.estado
-        });
-        setShowModal(true);
-    };
+    function handleVerDetalle(id: number): void {
+        const producto = productos.find((prod) => prod.id === id);
 
-    // Eliminar producto
-    const handleEliminar = (id: number) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
-            // TODO: Lógica para enviar DELETE a la API mediante el controller/servicio
-            // productoService.eliminarProducto(id).then(...)
-            setProductos(prev => prev.filter(p => p.id !== id));
-        }
-    };
-
-    // Guardar (Crear o Actualizar)
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (productoEditar) {
-            // MODO EDICIÓN
-            const productoActualizado: Producto = {
-                ...productoEditar,
-                nombre: formData.nombre,
-                categoria: formData.categoria,
-                precio: parseFloat(formData.precio) || 0,
-                estado: formData.estado
-            };
-
-            // TODO: productoService.actualizarProducto(productoActualizado).then(...)
-            setProductos(prev => prev.map(p => p.id === productoEditar.id ? productoActualizado : p));
-        } else {
-            // MODO CREACIÓN
-            const nuevoProducto: Producto = {
-                id: Date.now(), // ID temporal local
-                nombre: formData.nombre,
-                categoria: formData.categoria,
-                precio: parseFloat(formData.precio) || 0,
-                estado: formData.estado
-            };
-
-            // TODO: productoService.crearProducto(nuevoProducto).then(...)
-            setProductos(prev => [...prev, nuevoProducto]);
+        if (!producto) {
+            window.alert('No se encontró el producto seleccionado.');
+            return;
         }
 
-        setShowModal(false);
-    };
+        window.alert(
+            `Producto: ${producto.nombre}\nCategoría: ${producto.categoria}\nPrecio: $${producto.precio.toLocaleString('es-AR')}\nEstado: ${producto.estado}`
+        );
+    }
 
     return (
         <div className="container-fluid p-0">
@@ -125,13 +85,13 @@ export const InicioDash: React.FC = () => {
                     <span className="badge bg-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }}>
                         E
                     </span>
-                    <span className="fw-semibold text-secondary">Marcos Admin</span>
+                    <span className="fw-semibold text-secondary">Emprendedor</span>
                 </div>
             </div>
 
             {/* 2. Banner Verde de Bienvenida */}
             <div className="alert border-0 rounded-3 p-4 mb-4" style={{ backgroundColor: '#d1e7dd', color: '#0f5132' }}>
-                <h5 className="fw-bold mb-1">¡Hola, Marcos Admin!</h5>
+                <h5 className="fw-bold mb-1">¡Hola, emprendedor!</h5>
                 <p className="mb-0">Gestioná tus productos, mantené tu catálogo actualizado y revisá tus estadísticas.</p>
             </div>
 
@@ -188,7 +148,7 @@ export const InicioDash: React.FC = () => {
                                 <th scope="col" className="fw-bold">Categoría</th>
                                 <th scope="col" className="fw-bold">Precio</th>
                                 <th scope="col" className="fw-bold">Estado</th>
-                                <th scope="col" className="fw-bold">Acciones</th>
+                                <th scope="col" className="fw-bold">Accion</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -207,33 +167,21 @@ export const InicioDash: React.FC = () => {
                                         <td>
                                             <span 
                                                 className="badge px-2 py-1 fw-semibold" 
-                                                style={{ backgroundColor: '#198754', borderRadius: '4px' }}
+                                                style={{ backgroundColor: '#0d9c50', borderRadius: '4px' }}
                                             >
                                                 {prod.estado}
                                             </span>
                                         </td>
                                         <td>
                                             <div className="d-flex gap-2">
-                                                {/* Botón Editar (Lápiz azul) */}
                                                 <button 
                                                     type="button"
-                                                    className="btn btn-outline-primary btn-sm p-1 d-flex align-items-center justify-content-center"
+                                                    className="btn btn-outline-secondary btn-sm p-1 d-flex align-items-center justify-content-center"
                                                     style={{ width: '32px', height: '32px' }}
-                                                    onClick={() => handleEditar(prod)}
-                                                    title="Editar"
+                                                    onClick={() => handleVerDetalle(prod.id)}
+                                                    title="Ver detalles"
                                                 >
-                                                    <Pencil size={16} />
-                                                </button>
-
-                                                {/* Botón Eliminar (Tacho rojo) */}
-                                                <button 
-                                                    type="button"
-                                                    className="btn btn-outline-danger btn-sm p-1 d-flex align-items-center justify-content-center"
-                                                    style={{ width: '32px', height: '32px' }}
-                                                    onClick={() => handleEliminar(prod.id)}
-                                                    title="Eliminar"
-                                                >
-                                                    <Trash2 size={16} />
+                                                    <Eye size={16} />
                                                 </button>
                                             </div>
                                         </td>
@@ -244,84 +192,6 @@ export const InicioDash: React.FC = () => {
                     </table>
                 </div>
             </div>
-
-            {/* 5. Modal para Crear / Editar Producto */}
-            {showModal && (
-                <div className="modal fade show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className="modal-content border-0 shadow">
-                            <div className="modal-header">
-                                <h5 className="modal-title fw-bold">
-                                    {productoEditar ? 'Editar Producto' : 'Nuevo Producto'}
-                                </h5>
-                                <button 
-                                    type="button" 
-                                    className="btn-close" 
-                                    onClick={() => setShowModal(false)}
-                                ></button>
-                            </div>
-                            <form onSubmit={handleSubmit}>
-                                <div className="modal-body">
-                                    <div className="mb-3">
-                                        <label className="form-label fw-semibold">Nombre del Producto</label>
-                                        <input 
-                                            type="text" 
-                                            className="form-control" 
-                                            required 
-                                            value={formData.nombre}
-                                            onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label fw-semibold">Categoría</label>
-                                        <input 
-                                            type="text" 
-                                            className="form-control" 
-                                            required 
-                                            value={formData.categoria}
-                                            onChange={(e) => setFormData({...formData, categoria: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label fw-semibold">Precio ($)</label>
-                                        <input 
-                                            type="number" 
-                                            className="form-control" 
-                                            required 
-                                            value={formData.precio}
-                                            onChange={(e) => setFormData({...formData, precio: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label fw-semibold">Estado</label>
-                                        <select 
-                                            className="form-select"
-                                            value={formData.estado}
-                                            onChange={(e) => setFormData({...formData, estado: e.target.value})}
-                                        >
-                                            <option value="Publicado">Publicado</option>
-                                            <option value="Borrador">Borrador</option>
-                                            <option value="Pausado">Pausado</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="modal-footer border-top-0 pt-0">
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-light" 
-                                        onClick={() => setShowModal(false)}
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button type="submit" className="btn btn-primary">
-                                        {productoEditar ? 'Guardar Cambios' : 'Crear Producto'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
