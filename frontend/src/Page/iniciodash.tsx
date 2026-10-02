@@ -36,6 +36,8 @@ export const InicioDash: React.FC = () => {
     // Estado para controlar el modal de Bootstrap y saber si editamos o creamos
     const [showModal, setShowModal] = useState<boolean>(false);
     const [productoEditar, setProductoEditar] = useState<Producto | null>(null);
+    // Estado para controlar la vista de detalle del producto
+    const [productoDetalle, setProductoDetalle] = useState<any | null>(null);
 
     // Formulario de edición / creación
     const [formData, setFormData] = useState({
