@@ -136,20 +136,21 @@ import { Info } from 'lucide-react';
 
                 {/* Rol y Estado */}
                 <div className="row g-2 mb-2">
-                    <div className="col-6">
-                    <label className="form-label text-muted fw-semibold style-small mb-1">
-                        Rol
-                    </label>
-                    <select
-                        className="form-select form-select-sm"
-                        value={rol}
-                        onChange={(e) => setRol(e.target.value as Usuario['rol'])}
-                    >
-                        <option value="EMPRENDEDOR">Emprendedor</option>
-                        <option value="ADMIN">Admin</option>
-                        <option value="MODERADOR">Moderador</option>
-                    </select>
-                    </div>
+                <div className="col-6">
+    <label className="form-label text-muted fw-semibold style-small mb-1">
+        Rol
+    </label>
+    <select
+        className="form-select form-select-sm"
+        value={rol}
+        onChange={(e) => setRol(e.target.value as Usuario['rol'])}
+        disabled={rol === 'EMPRENDEDOR'}
+    >
+        <option value="EMPRENDEDOR">Emprendedor</option>
+        <option value="ADMIN">Admin</option>
+        <option value="MODERADOR">Moderador</option>
+    </select>
+</div>
                     <div className="col-6">
                     <label className="form-label text-muted fw-semibold style-small mb-1">
                         Estado Inicial
@@ -166,7 +167,6 @@ import { Info } from 'lucide-react';
                     </select>
                     </div>
                 </div>
-
                 {/* Descripción */}
                 <div className="mb-2">
                     <div className="d-flex justify-content-between mb-1">
