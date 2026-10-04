@@ -10,9 +10,13 @@ export interface Producto {
     precio: number;
     estado: string;
 }
+type TabTipo = "inicio" | "productos" | "perfil" | "mensajes";
+interface InicioDashProps {
+    setActiveTab?: (tab: string) => void; // El '?' hace que la prop sea opcional
+}
 
-export const InicioDash: React.FC = () => {
-    // ------------------------------------------------------------------
+export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
+    
     // ESTADOS
     // ------------------------------------------------------------------
     // Estado de productos inicializado con los datos de la foto
@@ -38,6 +42,7 @@ export const InicioDash: React.FC = () => {
     const [productoEditar, setProductoEditar] = useState<Producto | null>(null);
     // Estado para controlar la vista de detalle del producto
     const [productoDetalle, setProductoDetalle] = useState<any | null>(null);
+    
 
     // Formulario de edición / creación
     const [formData, setFormData] = useState({
@@ -60,9 +65,11 @@ export const InicioDash: React.FC = () => {
     // ------------------------------------------------------------------
     // Abrir Modal para crear
     const handleNuevoProducto = () => {
-        setProductoEditar(null);
-        setFormData({ nombre: '', categoria: '', precio: '', estado: 'Publicado' });
-        setShowModal(true);
+        if (setActiveTab) {
+            setActiveTab('productos'); 
+        } else {
+            console.warn('setActiveTab no fue provisto al componente InicioDash');
+        }
     };
 
     function handleVerDetalle(id: number): void {
@@ -197,3 +204,4 @@ export const InicioDash: React.FC = () => {
         </div>
     );
 };
+

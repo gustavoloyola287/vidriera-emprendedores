@@ -11,6 +11,7 @@ import ChatInterno from '../components/ChatInterno';
 export const EmprendedorDashboard: React.FC = () => {
     // Estado para controlar qué sección del menú lateral está activa
     const [activeTab, setActiveTab] = useState<'inicio' | 'productos' | 'perfil' | 'mensajes'>('inicio');
+    
     const emprendedor = false;
 
     const handleCerrarSesion = () => {
@@ -103,7 +104,13 @@ export const EmprendedorDashboard: React.FC = () => {
 
             {/* ÁREA PRINCIPAL: Renderizado modular según la pestaña activa */}
             <main className="flex-grow-1 p-4 overflow-auto">
-                {activeTab === 'inicio' && <InicioDash />}
+                {activeTab === 'inicio' && (
+                    <InicioDash />
+                )}
+
+            {activeTab === 'productos' && (
+                        <MisProductos />
+                    )}
                 {activeTab === 'productos' && <MisProductos />}
                 {activeTab === 'perfil' && <MiPerfil />}
                 {activeTab === 'mensajes' && <ChatInterno />}
