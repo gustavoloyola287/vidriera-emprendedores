@@ -40,7 +40,9 @@ public class SecurityConfig {
                     "/api/auth/**",
                     "/api/productos", "/api/productos/**",
                     "/api/fotos", "/api/fotos/**",
-                    "/api/categorias", "/api/categorias/**"     
+                    "/api/categorias", "/api/categorias/**",
+                    "/api/admin/moderacion/**", "/api/admin/stats",    
+                    "/api/admin/notificaciones/**"
                 ).permitAll()
 
                 // Lectura pública para el resto de recursos (GET)

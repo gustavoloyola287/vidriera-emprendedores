@@ -13,7 +13,7 @@ import {
     Mail
 } from 'lucide-react';
 import  { ChatInterno } from '../components/ChatInterno';
-import {misproductos} from './misproductos';
+import { MisProductos } from './misproductos';
 
 interface Producto {
     id: number;

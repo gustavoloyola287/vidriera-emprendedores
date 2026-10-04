@@ -14,7 +14,7 @@ import { RestablecerPassword } from "./page/RestablecerPassword";
 import { CategoriasPage } from "./page/CategoriasPage";
 import { EmprendedoresPage } from "./page/EmprendedoresPage";
 import {AdminDashboard} from "./page/AdminDashboard";
-import { EmprendedorDashboard } from "./page/Emprendedordashboard";
+import { EmprendedorDashboard } from "./page/emprendedordashboard";
 
 function App() {
     return (
