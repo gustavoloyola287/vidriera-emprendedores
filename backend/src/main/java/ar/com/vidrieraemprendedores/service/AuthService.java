@@ -1,6 +1,5 @@
 package ar.com.vidrieraemprendedores.service;
 
-
 import ar.com.vidrieraemprendedores.dto.AuthResponse;
 import ar.com.vidrieraemprendedores.dto.LoginRequest;
 import ar.com.vidrieraemprendedores.dto.RegisterRequest;
@@ -12,7 +11,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import ar.com.vidrieraemprendedores.dto.CrearAdminDTO;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -39,7 +37,8 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
         this.emailService = emailService;
     }
-    // Este metodo viene del frontend y se encarga de registrar un nuevo emprendedor
+
+    // 1. Registrar nuevo emprendedor
     public AuthResponse register(RegisterRequest request) {                                        
         Emprendedor emprendedor = new Emprendedor();                    
         emprendedor.setNombreCompleto(request.getNombreCompleto());
@@ -52,39 +51,35 @@ public class AuthService {
 
         emprendedorRepository.save(emprendedor);
 
-        // Generamos el token de inmediato para que quede autenticado al registrarse
         String jwtToken = jwtService.generateToken(emprendedor);
-        return new AuthResponse(jwtToken);
+        
+        return AuthResponse.builder()
+                .token(jwtToken)
+                .role(emprendedor.getRol().name()) 
+                .id(emprendedor.getId())
+                .nombre(emprendedor.getNombreCompleto())
+                .build();
     }
 
-    // Este método es invocado exclusivamente por el SuperAdminController
-    public AuthResponse crearAdmin(CrearAdminDTO request) {
-        // 1. Validar que no exista un usuario/emprendedor registrado con ese mismo email
-        if (emprendedorRepository.findByEmail(request.getEmail()).isPresent()) {
+    // 2. Crear Administrador (Coincide exactamente con lo que llama tu AdminController)
+    public Emprendedor crearAdministrador(String nombre, String email, String password) {
+        if (emprendedorRepository.findByEmail(email).isPresent()) {
             throw new RuntimeException("El email ya se encuentra registrado");
         }
 
-        // 2. Instanciar el nuevo Administrador
         Emprendedor admin = new Emprendedor();
-        admin.setNombreCompleto(request.getNombre());
-        admin.setEmail(request.getEmail());
-        admin.setPassword(passwordEncoder.encode(request.getPassword()));
-        
-        // Asignación explícita del Rol de Administrador
+        admin.setNombreCompleto(nombre);
+        admin.setEmail(email);
+        admin.setPassword(passwordEncoder.encode(password));
         admin.setRol(Rol.ROLE_ADMIN);
-        
-        // Los administradores nacen en estado ACTIVO directamente
         admin.setEstado("ACTIVO");
 
-        // 3. Guardar en PostgreSQL
-        emprendedorRepository.save(admin);
-
-        // 4. Retornar confirmación
-        return new AuthResponse("Administrador creado exitosamente");
+        // Retornamos el objeto Emprendedor guardado, que es lo que espera el Controller
+        return emprendedorRepository.save(admin);
     }
 
+    // 3. Login 
     public AuthResponse login(LoginRequest request) {
-        // Valida que el email y la contraseña sean correctos
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -92,47 +87,45 @@ public class AuthService {
                 )
         );
 
-        // Si pasa la autenticación, buscamos al emprendedor y generamos el token
         Emprendedor emprendedor = emprendedorRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Emprendedor no encontrado"));
 
         String jwtToken = jwtService.generateToken(emprendedor);
-        return new AuthResponse(jwtToken);
+        
+        return AuthResponse.builder()
+                .token(jwtToken)
+                .role(emprendedor.getRol().name()) // Devuelve "ROLE_SUPER_ADMIN", "ROLE_ADMIN", etc.
+                .id(emprendedor.getId())
+                .nombre(emprendedor.getNombreCompleto())
+                .build();
     }
 
-    // Procesa la solicitud inicial de recuperación de contraseña, generando un token y enviando un correo electrónico
+    // 4. Recuperación de contraseña
     public void processPasswordRecovery(String email) {
         Emprendedor emprendedor = emprendedorRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Emprendedor no encontrado"));
 
-        // Generamos un token de recuperación de contraseña (puede ser un UUID o cualquier otro token seguro)
         String token = UUID.randomUUID().toString();
         emprendedor.setResetPasswordToken(token);
-        emprendedor.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(15)); // Token expira en 15 minutos
+        emprendedor.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(15));
         emprendedorRepository.save(emprendedor);
 
-        // Enviar el correo electrónico con el enlace de recuperación
-        String resetLink = "http://localhost:3000/reset-password?token=" + token; // Cambiar al dominio real en producción
+        String resetLink = "http://localhost:5173/restablecer-password?token=" + token; // Ajustado al puerto de Vite
         emailService.sendPasswordResetEmail(emprendedor.getEmail(), resetLink);
     }
 
-    // Verifica el token de recuperación de contraseña y permite al usuario establecer una nueva contraseña
+    // 5. Restablecer contraseña
     public void resetPassword(String token, String newPassword) {
         Emprendedor emprendedor = emprendedorRepository.findByResetPasswordToken(token)
                 .orElseThrow(() -> new RuntimeException("Token de recuperación inválido"));
 
-        // Verificar si el token ha expirado
         if (emprendedor.getResetPasswordTokenExpiry().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("El token de recuperación ha expirado");
         }
 
-        // Actualizar la contraseña y limpiar el token
         emprendedor.setPassword(passwordEncoder.encode(newPassword));
         emprendedor.setResetPasswordToken(null);
         emprendedor.setResetPasswordTokenExpiry(null);
         emprendedorRepository.save(emprendedor);
     }
-
-    
-
 }

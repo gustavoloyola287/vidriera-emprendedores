@@ -36,8 +36,8 @@ function App() {
                         
                         {/* Ruta protegida de productos */}
                         <Route path="/productos" element={ <ProtectedRoute > <ProductosPage /> </ProtectedRoute> }/>
-                        <Route path="/superadmindashboard" element={ <ProtectedRoute > <AdminDashboard isSuperAdmin={true} /> </ProtectedRoute> }/>
-                        <Route path="/admindashboard" element={ <ProtectedRoute requiredRole="ROLE_ADMIN"> <AdminDashboard /> </ProtectedRoute> } />
+                        <Route path="/superadmindashboard" element={ <ProtectedRoute requiredRole="ROLE_SUPER_ADMIN"> <AdminDashboard isSuperAdmin={true} /> </ProtectedRoute> }/>
+                        <Route path="/admindashboard" element={ <ProtectedRoute requiredRole="ROLE_ADMIN"> <AdminDashboard isSuperAdmin={false} /> </ProtectedRoute> } />
                         <Route path="/emprendedordashboard" element={ <ProtectedRoute > <EmprendedorDashboard /> </ProtectedRoute> } />
                     </Routes>
                 </main>
