@@ -28,9 +28,9 @@ public class AdminController {
     @GetMapping("/stats")
     public ResponseEntity<AdminDashboardStatsDTO> getDashboardStats() {
         AdminDashboardStatsDTO stats = new AdminDashboardStatsDTO();
-        stats.setTotalEmprendedores(0);
-        stats.setTotalProductos(0);
-        stats.setProductosPendientes(0);
+        stats.setTotalEmprendedores(emprendedorService.contarEmprendedores());
+        stats.setTotalProductos(productoService.contarProductos());
+        stats.setProductosPendientes(0); // Cambiá esto si tenés el método
         stats.setEmprendedoresActivos(0);
         stats.setEmprendedoresSuspendidos(0);
         stats.setEmprendedoresRechazados(0);
@@ -58,7 +58,7 @@ public class AdminController {
 
     // 4. Crear emprendedor
     @PostMapping("/emprendedores")
-    public ResponseEntity<?> crearEmprendedorManual(@RequestBody Emprendedor emprendedor) {
+    public ResponseEntity<?> crearEmprendedor(@RequestBody Emprendedor emprendedor) {
         try {
             emprendedor.setRol(Rol.ROLE_EMPRENDEDOR);
             if (emprendedor.getEstado() == null || emprendedor.getEstado().isEmpty()) {
@@ -70,11 +70,11 @@ public class AdminController {
                 "id", guardado.getId()
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Error al registrar: " + e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", "Error: " + e.getMessage()));
         }
     }
 
-    // 5. Crear administrador (Solo Super Admin)
+    // 5. Crear administrador
     @PostMapping("/crear-admin")
     public ResponseEntity<?> crearAdministrador(@RequestBody CrearAdminDTO crearAdminDTO) {
         try {
