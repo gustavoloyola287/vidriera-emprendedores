@@ -173,7 +173,7 @@ import { Info } from 'lucide-react';
                     <label className="form-label text-muted fw-semibold style-small mb-0">
                         Descripción del Emprendimiento <span className="text-danger">*</span>
                     </label>
-                    <span className="text-muted style-micro">{descripcion.length}/250</span>
+                    <span className="text-muted style-micro">{descripcion.length}/</span>
                     </div>
                     <textarea
                     className="form-control form-control-sm"

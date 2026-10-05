@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Eye, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Eye, Edit, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
 
 export interface Producto {
     id: string | number;
@@ -13,9 +13,15 @@ export interface Producto {
     estado: 'Activo' | 'Inactivo';
 }
 
+const API_BASE_URL = 'http://localhost:8080/api/productos'; 
+
 export const MisProductos: React.FC = () => {
-    // Estados de lista y modales
+    // Estados principales
     const [productos, setProductos] = useState<Producto[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [errorApi, setErrorApi] = useState<string | null>(null);
+
+    // Estados de modales
     const [showModal, setShowModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
@@ -35,7 +41,100 @@ export const MisProductos: React.FC = () => {
     const [imagenUrl, setImagenUrl] = useState('');
     const [errorImagen, setErrorImagen] = useState('');
 
-    // Abrir Modal para Crear o Editar
+    // --- CONSUMO DE API (CRUD) ---
+
+    // 1. Obtener todos los productos (GET)
+    const fetchProductos = async () => {
+        setLoading(true);
+        setErrorApi(null);
+        try {
+            const response = await fetch(API_BASE_URL);
+            if (!response.ok) throw new Error('Error al cargar la lista de productos.');
+            const data = await response.json();
+            setProductos(data);
+        } catch (err: any) {
+            setErrorApi(err.message || 'Error de conexión con el servidor.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProductos();
+    }, []);
+
+    // 2. Guardar / Editar Producto (POST / PUT)
+    const handleGuardar = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setErrorApi(null);
+
+        const productoData: Partial<Producto> = {
+            nombre,
+            tipoClasificacion,
+            clasificacionNombre,
+            precioHabilitado,
+            precio: precioHabilitado && precio !== '' ? Number(precio) : undefined,
+            descripcion,
+            imagenUrl,
+            estado: productoEditar ? productoEditar.estado : 'Activo',
+        };
+
+        try {
+            let response;
+            if (productoEditar) {
+                // Editar (PUT)
+                response = await fetch(`${API_BASE_URL}/${productoEditar.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(productoData),
+                });
+            } else {
+                // Crear (POST)
+                response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(productoData),
+                });
+            }
+
+            if (!response.ok) throw new Error('No se pudo guardar el producto.');
+
+            // Recargar la lista desde el servidor
+            await fetchProductos();
+            setShowModal(false);
+        } catch (err: any) {
+            setErrorApi(err.message || 'Error al guardar cambios.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 3. Confirmar y Eliminar Producto (DELETE)
+    const handleConfirmarEliminar = async () => {
+        if (productoEliminarId === null) return;
+        setLoading(true);
+        setErrorApi(null);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/${productoEliminarId}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) throw new Error('No se pudo eliminar el producto.');
+
+            setProductoEliminarId(null);
+            setShowDeleteModal(false);
+            await fetchProductos();
+        } catch (err: any) {
+            setErrorApi(err.message || 'Error al intentar eliminar.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- MANEJO DE INTERFAZ Y MODALES ---
+
     const handleAbrirModal = (prod?: Producto) => {
         setErrorImagen('');
         if (prod) {
@@ -60,18 +159,15 @@ export const MisProductos: React.FC = () => {
         setShowModal(true);
     };
 
-    // Manejo de carga e validación de imagen
     const handleImagenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validar tamaño (máx 2MB)
         if (file.size > 2 * 1024 * 1024) {
             setErrorImagen('El archivo excede el tamaño máximo permitido de 2MB.');
             return;
         }
 
-        // Validar formato
         const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!validTypes.includes(file.type)) {
             setErrorImagen('Formato no válido. Utiliza JPG, PNG o WEBP.');
@@ -79,46 +175,11 @@ export const MisProductos: React.FC = () => {
         }
 
         setErrorImagen('');
-        // Previsualización local
         const reader = new FileReader();
         reader.onloadend = () => {
             setImagenUrl(reader.result as string);
         };
         reader.readAsDataURL(file);
-    };
-
-    // Guardar (Crear / Editar)
-    const handleGuardar = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        const nuevoProducto: Producto = {
-            id: productoEditar ? productoEditar.id : Date.now(),
-            nombre,
-            tipoClasificacion,
-            clasificacionNombre,
-            precioHabilitado,
-            precio: precioHabilitado && precio !== '' ? Number(precio) : undefined,
-            descripcion,
-            imagenUrl,
-            estado: productoEditar ? productoEditar.estado : 'Activo',
-        };
-
-        if (productoEditar) {
-            setProductos(productos.map((p) => (p.id === productoEditar.id ? nuevoProducto : p)));
-        } else {
-            setProductos([...productos, nuevoProducto]);
-        }
-
-        setShowModal(false);
-    };
-
-    // Confirmar Eliminación
-    const handleConfirmarEliminar = () => {
-        if (productoEliminarId !== null) {
-            setProductos(productos.filter((p) => p.id !== productoEliminarId));
-            setProductoEliminarId(null);
-        }
-        setShowDeleteModal(false);
     };
 
     return (
@@ -130,6 +191,14 @@ export const MisProductos: React.FC = () => {
                     + Publicar Nuevo Producto
                 </button>
             </div>
+
+            {/* Banner de errores de la API */}
+            {errorApi && (
+                <div className="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                    {errorApi}
+                    <button type="button" className="btn-close" onClick={() => setErrorApi(null)}></button>
+                </div>
+            )}
 
             {/* Listado de Productos */}
             <div className="table-responsive shadow-sm rounded">
@@ -145,7 +214,14 @@ export const MisProductos: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {productos.length === 0 ? (
+                        {loading && productos.length === 0 ? (
+                            <tr>
+                                <td colSpan={6} className="text-center py-4">
+                                    <Loader2 className="spinner-border text-primary me-2" size={24} />
+                                    <span>Cargando productos...</span>
+                                </td>
+                            </tr>
+                        ) : productos.length === 0 ? (
                             <tr>
                                 <td colSpan={6} className="text-center text-muted py-4">
                                     No hay productos registrados.
@@ -233,221 +309,219 @@ export const MisProductos: React.FC = () => {
                 </table>
             </div>
 
-{/* MODAL FORMULARIO: ALTA / EDICIÓN */}
-{showModal && (
-    <div 
-        className="modal show d-block bg-dark bg-opacity-50" 
-        tabIndex={-1}
-        style={{ overflowX: 'hidden', overflowY: 'auto' }}
-    >
-        <div className="modal-dialog modal-dialog-centered modal-lg px-2">
-            <div className="modal-content border-0 shadow overflow-hidden">
-                
-                {/* Header: Título Centrado y Botón 'X' Posicionado */}
-                <div className="modal-header border-0 pb-0 px-4 pt-4 position-relative d-flex justify-content-center align-items-center">
-                    <h5 className="modal-title fw-bold text-dark fs-5 text-center m-0 w-100">
-                        {productoEditar ? 'Editar Producto' : 'Publicar Nuevo Producto'}
-                    </h5>
-                    <button
-                        type="button"
-                        className="btn-close position-absolute"
-                        style={{ right: '1.25rem', top: '1.25rem', zIndex: 10 }}
-                        onClick={() => setShowModal(false)}
-                    ></button>
-                </div>
-
-                <form onSubmit={handleGuardar} className="w-100 m-0">
-                    <div className="modal-body p-3 p-md-4">
-                        {/* Contenedor Grid con flex/box-sizing forzado */}
-                        <div className="row g-3 align-items-start m-0 w-100">
-                            
-                            {/* Nombre del Producto */}
-                            <div className="col-12 col-md-6 px-2">
-                                <label className="form-label fw-semibold text-dark mb-1">
-                                    Nombre del Producto*
-                                </label>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    maxLength={15}
-                                    value={nombre}
-                                    onChange={(e) => setNombre(e.target.value)}
-                                    placeholder="Máx. 15 caracteres"
-                                    required
-                                />
-                                <small className="text-muted d-block mt-1">
-                                    {nombre.length}/15 caracteres
-                                </small>
+            {/* MODAL FORMULARIO: ALTA / EDICIÓN */}
+            {showModal && (
+                <div
+                    className="modal show d-block bg-dark bg-opacity-50"
+                    tabIndex={-1}
+                    style={{ overflowX: 'hidden', overflowY: 'auto' }}
+                >
+                    <div className="modal-dialog modal-dialog-centered modal-lg px-2">
+                        <div className="modal-content border-0 shadow overflow-hidden">
+                            <div className="modal-header border-0 pb-0 px-4 pt-4 position-relative d-flex justify-content-center align-items-center">
+                                <h5 className="modal-title fw-bold text-dark fs-5 text-center m-0 w-100">
+                                    {productoEditar ? 'Editar Producto' : 'Publicar Nuevo Producto'}
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close position-absolute"
+                                    style={{ right: '1.25rem', top: '1.25rem', zIndex: 10 }}
+                                    onClick={() => setShowModal(false)}
+                                    disabled={loading}
+                                ></button>
                             </div>
 
-                            {/* Clasificación */}
-                            <div className="col-12 col-md-6 px-2">
-                                <div className="row g-2 m-0 w-100">
-                                    <div className="col-6 p-0 pe-1">
-                                        <label className="form-label fw-semibold text-dark mb-1">
-                                            Clasificar por
-                                        </label>
-                                        <select
-                                            className="form-select"
-                                            value={tipoClasificacion}
-                                            onChange={(e) =>
-                                                setTipoClasificacion(
-                                                    e.target.value as 'CATEGORIA' | 'RUBRO'
-                                                )
-                                            }
-                                        >
-                                            <option value="CATEGORIA">Categoría</option>
-                                            <option value="RUBRO">Rubro</option>
-                                        </select>
-                                    </div>
-                                    <div className="col-6 p-0 ps-1">
-                                        <label className="form-label fw-semibold text-dark mb-1 text-truncate d-block">
-                                            Nombre de {tipoClasificacion}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            value={clasificacionNombre}
-                                            onChange={(e) => setClasificacionNombre(e.target.value)}
-                                            placeholder="Ej. Calzados..."
-                                            required
-                                        />
+                            <form onSubmit={handleGuardar} className="w-100 m-0">
+                                <div className="modal-body p-3 p-md-4">
+                                    <div className="row g-3 align-items-start m-0 w-100">
+                                        {/* Nombre del Producto */}
+                                        <div className="col-12 col-md-6 px-2">
+                                            <label className="form-label fw-semibold text-dark mb-1">
+                                                Nombre del Producto*
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                maxLength={15}
+                                                value={nombre}
+                                                onChange={(e) => setNombre(e.target.value)}
+                                                placeholder="Máx. 15 caracteres"
+                                                required
+                                            />
+                                            <small className="text-muted d-block mt-1">
+                                                {nombre.length}/15 caracteres
+                                            </small>
+                                        </div>
+
+                                        {/* Clasificación */}
+                                        <div className="col-12 col-md-6 px-2">
+                                            <div className="row g-2 m-0 w-100">
+                                                <div className="col-6 p-0 pe-1">
+                                                    <label className="form-label fw-semibold text-dark mb-1">
+                                                        Clasificar por
+                                                    </label>
+                                                    <select
+                                                        className="form-select"
+                                                        value={tipoClasificacion}
+                                                        onChange={(e) =>
+                                                            setTipoClasificacion(
+                                                                e.target.value as 'CATEGORIA' | 'RUBRO'
+                                                            )
+                                                        }
+                                                    >
+                                                        <option value="CATEGORIA">Categoría</option>
+                                                        <option value="RUBRO">Rubro</option>
+                                                    </select>
+                                                </div>
+                                                <div className="col-6 p-0 ps-1">
+                                                    <label className="form-label fw-semibold text-dark mb-1 text-truncate d-block">
+                                                        Nombre de {tipoClasificacion}
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control"
+                                                        value={clasificacionNombre}
+                                                        onChange={(e) => setClasificacionNombre(e.target.value)}
+                                                        placeholder="Ej. Calzados..."
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Visibilidad de Precio */}
+                                        <div className="col-12 col-md-6 px-2">
+                                            <label className="form-label fw-semibold text-dark mb-1 d-block">
+                                                Visibilidad de Precio
+                                            </label>
+                                            <div className="form-check form-switch mt-2">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    id="precioSwitch"
+                                                    checked={precioHabilitado}
+                                                    onChange={(e) => setPrecioHabilitado(e.target.checked)}
+                                                />
+                                                <label className="form-check-label ms-1" htmlFor="precioSwitch">
+                                                    {precioHabilitado
+                                                        ? 'Precio visible'
+                                                        : 'Ocultar precio (Consultar)'}
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {/* Campo Precio */}
+                                        <div className="col-12 col-md-6 px-2">
+                                            {precioHabilitado ? (
+                                                <>
+                                                    <label className="form-label fw-semibold text-dark mb-1">
+                                                        Precio ($)
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        className="form-control"
+                                                        min={0}
+                                                        value={precio}
+                                                        onChange={(e) =>
+                                                            setPrecio(
+                                                                e.target.value ? Number(e.target.value) : ''
+                                                            )
+                                                        }
+                                                        placeholder="0.00"
+                                                        required={precioHabilitado}
+                                                    />
+                                                </>
+                                            ) : (
+                                                <div style={{ height: '62px' }} />
+                                            )}
+                                        </div>
+
+                                        {/* Descripción */}
+                                        <div className="col-12 px-2">
+                                            <label className="form-label fw-semibold text-dark mb-1">
+                                                Descripción*
+                                            </label>
+                                            <textarea
+                                                className="form-control"
+                                                rows={3}
+                                                maxLength={250}
+                                                value={descripcion}
+                                                onChange={(e) => setDescripcion(e.target.value)}
+                                                placeholder="Describe tu producto (máximo 250 caracteres)..."
+                                                required
+                                            ></textarea>
+                                            <small className="text-muted d-block mt-1">
+                                                {descripcion.length}/250 caracteres
+                                            </small>
+                                        </div>
+
+                                        {/* Carga de Imagen */}
+                                        <div className="col-12 col-md-7 px-2">
+                                            <label className="form-label fw-semibold text-dark mb-1">
+                                                Imagen del Producto
+                                            </label>
+                                            <input
+                                                type="file"
+                                                className="form-control"
+                                                accept="image/png, image/jpeg, image/webp"
+                                                onChange={handleImagenChange}
+                                            />
+                                            {errorImagen && (
+                                                <small className="text-danger d-block mt-1">{errorImagen}</small>
+                                            )}
+                                            <small className="text-muted d-block mt-1">
+                                                Formatos: JPG, PNG, WEBP. Máx: 2MB.
+                                            </small>
+                                        </div>
+
+                                        {/* Previsualización */}
+                                        <div className="col-12 col-md-5 px-2 d-flex flex-column align-items-center">
+                                            <label className="form-label fw-semibold text-dark mb-2">
+                                                Previsualización
+                                            </label>
+                                            {imagenUrl ? (
+                                                <img
+                                                    src={imagenUrl}
+                                                    alt="Vista previa"
+                                                    className="rounded border object-fit-cover shadow-sm"
+                                                    style={{ width: '100px', height: '100px' }}
+                                                />
+                                            ) : (
+                                                <div
+                                                    className="border rounded d-flex flex-column align-items-center justify-content-center text-muted"
+                                                    style={{
+                                                        width: '100px',
+                                                        height: '100px',
+                                                        backgroundColor: '#f8f9fa',
+                                                    }}
+                                                >
+                                                    <ImageIcon size={24} />
+                                                    <span style={{ fontSize: '0.7rem' }}>Sin imagen</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Visibilidad de Precio */}
-                            <div className="col-12 col-md-6 px-2">
-                                <label className="form-label fw-semibold text-dark mb-1 d-block">
-                                    Visibilidad de Precio
-                                </label>
-                                <div className="form-check form-switch mt-2">
-                                    <input
-                                        className="form-check-input"
-                                        type="checkbox"
-                                        id="precioSwitch"
-                                        checked={precioHabilitado}
-                                        onChange={(e) => setPrecioHabilitado(e.target.checked)}
-                                    />
-                                    <label className="form-check-label ms-1" htmlFor="precioSwitch">
-                                        {precioHabilitado
-                                            ? 'Precio visible'
-                                            : 'Ocultar precio (Consultar)'}
-                                    </label>
-                                </div>
-                            </div>
-
-                            {/* Campo Precio */}
-                            <div className="col-12 col-md-6 px-2">
-                                {precioHabilitado ? (
-                                    <>
-                                        <label className="form-label fw-semibold text-dark mb-1">
-                                            Precio ($)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            className="form-control"
-                                            min={0}
-                                            value={precio}
-                                            onChange={(e) =>
-                                                setPrecio(
-                                                    e.target.value ? Number(e.target.value) : ''
-                                                )
-                                            }
-                                            placeholder="0.00"
-                                            required={precioHabilitado}
-                                        />
-                                    </>
-                                ) : (
-                                    <div style={{ height: '62px' }} />
-                                )}
-                            </div>
-
-                            {/* Descripción */}
-                            <div className="col-12 px-2">
-                                <label className="form-label fw-semibold text-dark mb-1">
-                                    Descripción*
-                                </label>
-                                <textarea
-                                    className="form-control"
-                                    rows={3}
-                                    maxLength={250}
-                                    value={descripcion}
-                                    onChange={(e) => setDescripcion(e.target.value)}
-                                    placeholder="Describe tu producto (máximo 250 caracteres)..."
-                                    required
-                                ></textarea>
-                                <small className="text-muted d-block mt-1">
-                                    {descripcion.length}/250 caracteres
-                                </small>
-                            </div>
-
-                            {/* Carga de Imagen */}
-                            <div className="col-12 col-md-7 px-2">
-                                <label className="form-label fw-semibold text-dark mb-1">
-                                    Imagen del Producto
-                                </label>
-                                <input
-                                    type="file"
-                                    className="form-control"
-                                    accept="image/png, image/jpeg, image/webp"
-                                    onChange={handleImagenChange}
-                                />
-                                {errorImagen && (
-                                    <small className="text-danger d-block mt-1">{errorImagen}</small>
-                                )}
-                                <small className="text-muted d-block mt-1">
-                                    Formatos: JPG, PNG, WEBP. Máx: 2MB.
-                                </small>
-                            </div>
-
-                            {/* Previsualización */}
-                            <div className="col-12 col-md-5 px-2 d-flex flex-column align-items-center">
-                                <label className="form-label fw-semibold text-dark mb-2">
-                                    Previsualización
-                                </label>
-                                {imagenUrl ? (
-                                    <img
-                                        src={imagenUrl}
-                                        alt="Vista previa"
-                                        className="rounded border object-fit-cover shadow-sm"
-                                        style={{ width: '100px', height: '100px' }}
-                                    />
-                                ) : (
-                                    <div
-                                        className="border rounded d-flex flex-column align-items-center justify-content-center text-muted"
-                                        style={{
-                                            width: '100px',
-                                            height: '100px',
-                                            backgroundColor: '#f8f9fa',
-                                        }}
+                                <div className="modal-footer border-0 px-4 pb-4 pt-2 d-flex justify-content-center align-items-center gap-2">
+                                    <button
+                                        type="button"
+                                        className="btn btn-light px-4"
+                                        onClick={() => setShowModal(false)}
+                                        disabled={loading}
                                     >
-                                        <ImageIcon size={24} />
-                                        <span style={{ fontSize: '0.7rem' }}>Sin imagen</span>
-                                    </div>
-                                )}
-                            </div>
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" className="btn btn-primary px-4" disabled={loading}>
+                                        {loading ? 'Guardando...' : productoEditar ? 'Guardar Cambios' : 'Publicar Producto'}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
+                </div>
+            )}
 
-                    {/* Footer: Botones centrados */}
-                    <div className="modal-footer border-0 px-4 pb-4 pt-2 d-flex justify-content-center align-items-center gap-2">
-                        <button
-                            type="button"
-                            className="btn btn-light px-4"
-                            onClick={() => setShowModal(false)}
-                        >
-                            Cancelar
-                        </button>
-                        <button type="submit" className="btn btn-primary px-4">
-                            {productoEditar ? 'Guardar Cambios' : 'Publicar Producto'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-)}
             {/* MODAL ELIMINAR */}
             {showDeleteModal && (
                 <div className="modal show d-block bg-dark bg-opacity-50" tabIndex={-1}>
@@ -459,6 +533,7 @@ export const MisProductos: React.FC = () => {
                                     type="button"
                                     className="btn-close btn-close-white"
                                     onClick={() => setShowDeleteModal(false)}
+                                    disabled={loading}
                                 ></button>
                             </div>
                             <div className="modal-body text-center py-3">
@@ -471,6 +546,7 @@ export const MisProductos: React.FC = () => {
                                     type="button"
                                     className="btn btn-light btn-sm"
                                     onClick={() => setShowDeleteModal(false)}
+                                    disabled={loading}
                                 >
                                     Cancelar
                                 </button>
@@ -478,8 +554,9 @@ export const MisProductos: React.FC = () => {
                                     type="button"
                                     className="btn btn-danger btn-sm"
                                     onClick={handleConfirmarEliminar}
+                                    disabled={loading}
                                 >
-                                    Eliminar
+                                    {loading ? 'Eliminando...' : 'Eliminar'}
                                 </button>
                             </div>
                         </div>

@@ -108,9 +108,7 @@ export const EmprendedorDashboard: React.FC = () => {
                     <InicioDash />
                 )}
 
-            {activeTab === 'productos' && (
-                        <MisProductos />
-                    )}
+                
                 {activeTab === 'productos' && <MisProductos />}
                 {activeTab === 'perfil' && <MiPerfil />}
                 {activeTab === 'mensajes' && <ChatInterno />}
