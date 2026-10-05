@@ -11,7 +11,13 @@ export const EmprendedoresPage = () => {
 
     useEffect(() => {
         emprendedorService.getAll()
-            .then(data => setEmprendedores(data))
+            .then(data => {
+                // ✅ FILTRAR: Mostrar solo los que tienen rol de emprendedor
+                const soloEmprendedores = data.filter(emp => 
+                    emp.rol === 'ROLE_EMPRENDEDOR' || emp.rol === 'EMPRENDEDOR'
+                );
+                setEmprendedores(soloEmprendedores);
+            })
             .catch(err => console.error('Error al obtener emprendedores:', err))
             .finally(() => setLoading(false));
     }, []);
