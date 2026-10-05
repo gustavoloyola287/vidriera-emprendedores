@@ -1,6 +1,7 @@
 package ar.com.vidrieraemprendedores.repository;
 
 import ar.com.vidrieraemprendedores.models.Emprendedor;
+import ar.com.vidrieraemprendedores.models.Rol;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 
@@ -14,4 +15,6 @@ public interface EmprendedorRepository extends JpaRepository<Emprendedor, Long> 
 
     // Método para buscar un emprendedor por su token de recuperación de contraseña
     Optional <Emprendedor> findByResetPasswordToken(String token);
+
+    long countByRol(Rol rol);
 }

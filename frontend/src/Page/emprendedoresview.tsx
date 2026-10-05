@@ -52,7 +52,6 @@ export const UsuariosView: React.FC = () => {
             
             const data = await response.json();
             
-            // ✅ CORREGIDO: Ahora lee el rol real de la base de datos
             const usuariosMapeados: Usuario[] = data.map((emp: any) => {
                 let rolNormalizado: 'ADMIN' | 'EMPRENDEDOR' | 'MODERADOR' | 'SUPER_ADMIN' = 'EMPRENDEDOR';
                 
@@ -83,18 +82,20 @@ export const UsuariosView: React.FC = () => {
         obtenerEmprendedores();
     }, []);
 
+    // ✅ CORREGIDO: Las métricas ahora calculan SOLO sobre los usuarios con rol EMPRENDEDOR
     useEffect(() => {
-        const activos = usuarios.filter(u => u.estado === 'ACTIVO').length;
-        const suspendidos = usuarios.filter(u => u.estado === 'SUSPENDIDO').length;
-        const admins = usuarios.filter(u => u.rol === 'ADMIN' || u.rol === 'SUPER_ADMIN').length;
-        const rechazados = usuarios.filter(u => u.estado === 'RECHAZADO').length;
+        const soloEmprendedores = usuarios.filter(u => u.rol === 'EMPRENDEDOR');
+
+        const activos = soloEmprendedores.filter(u => u.estado === 'ACTIVO').length;
+        const suspendidos = soloEmprendedores.filter(u => u.estado === 'SUSPENDIDO').length;
+        const rechazados = soloEmprendedores.filter(u => u.estado === 'RECHAZADO').length;
 
         setMetricas({
             activos,
             suspendidos,
-            admins,
+            admins: 0, // Mantenemos la propiedad pero en 0, ya que esta vista es solo para emprendedores
             rechazados,
-            total: usuarios.length
+            total: soloEmprendedores.length
         });
     }, [usuarios]);
 
@@ -117,7 +118,6 @@ export const UsuariosView: React.FC = () => {
     };
 
     const handleToggleSuspender = async (id: number) => {
-        // Nota: Esto actualiza solo el frontend. Para hacerlo real, necesitas el endpoint PUT en el backend
         setUsuarios(prev => prev.map(u => {
             if (u.id === id) {
                 const nuevoEstado = u.estado === 'SUSPENDIDO' ? 'ACTIVO' : 'SUSPENDIDO';
@@ -138,10 +138,10 @@ export const UsuariosView: React.FC = () => {
         setUsuarioAEditar(null);
     };
 
-    // ✅ CORREGIDO: Filtrado estricto para OCULTAR Admins y Super Admins de esta vista
+    // Filtrado estricto para OCULTAR Admins y Super Admins de esta vista
     const usuariosFiltrados = useMemo(() => {
         return usuarios.filter(u => {
-            // 1. REGLA DE ORO: Si es Admin o Super Admin, NO lo mostramos en esta lista
+            // 1. REGLA DE ORO: Si es Admin, Super Admin o Moderador, NO lo mostramos en esta lista
             if (u.rol === 'ADMIN' || u.rol === 'SUPER_ADMIN' || u.rol === 'MODERADOR') {
                 return false; 
             }
@@ -154,7 +154,7 @@ export const UsuariosView: React.FC = () => {
 
             let coincideCard = true;
             if (filtroEstadoCard === 'ADMIN') {
-                coincideCard = false; // Ya no tiene sentido filtrar por admin aquí
+                coincideCard = false; 
             } else if (filtroEstadoCard !== 'TODOS') {
                 coincideCard = u.estado === filtroEstadoCard;
             }
@@ -232,7 +232,6 @@ export const UsuariosView: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                {/* ✅ CORREGIDO: Eliminé la card de "Admins" de aquí porque esta vista es solo para Emprendedores */}
             </div>
 
             {/* BARRA DE BÚSQUEDA Y FILTROS */}

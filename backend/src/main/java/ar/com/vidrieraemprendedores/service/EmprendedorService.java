@@ -11,12 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor // ⬅️ Lombok genera el constructor para inyectar el repositorio automáticamente
+@RequiredArgsConstructor
 public class EmprendedorService implements IEmprendedorService {
 
-    // Inyectamos el repositorio (usamos final + @RequiredArgsConstructor, que es mejor práctica que @Autowired)
     private final EmprendedorRepository emprendedorRepository;
-    private final PasswordEncoder passwordEncoder; // Inyectamos el PasswordEncoder para encriptar contraseñas
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<Emprendedor> listarEmprendedores() {
@@ -42,9 +41,10 @@ public class EmprendedorService implements IEmprendedorService {
         emprendedorRepository.deleteById(id);
     }
 
+    // ✅ CORREGIDO: Ahora cuenta SOLO los que tienen rol de emprendedor
     @Override
     public long contarEmprendedores() {
-        return emprendedorRepository.count();
+        return emprendedorRepository.countByRol(Rol.ROLE_EMPRENDEDOR);
     }
 
     @Override
@@ -57,16 +57,14 @@ public class EmprendedorService implements IEmprendedorService {
         emprendedorRepository.save(emprendedor);
     }
 
-    //Método para que el Super Admin cree un nuevo Admin 
+    // Método para que el Super Admin cree un nuevo Admin 
     @Override
     @Transactional
     public Emprendedor crearAdministrador(String nombre, String email, String passwordPlano) {
-        // Validar que el mail no este en uso
         if (emprendedorRepository.findByEmail(email).isPresent()) {
             throw new RuntimeException("Ya existe un usuario registrado con el email: " + email);
         }
 
-        // Crear un nuevo ADMIN
         Emprendedor nuevoAdmin = new Emprendedor();
         nuevoAdmin.setNombreCompleto(nombre);
         nuevoAdmin.setEmail(email);
