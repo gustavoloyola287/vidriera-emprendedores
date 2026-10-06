@@ -13,69 +13,69 @@ export const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
+    e.preventDefault();
+    setError(null);
 
-        const emailTrimmed = email.trim().toLowerCase();
+    const emailTrimmed = email.trim().toLowerCase();
 
-        if (!emailTrimmed || !password) {
-            setError('Por favor complete todos los campos.');
-            return;
-        }
+    if (!emailTrimmed || !password) {
+        setError('Por favor complete todos los campos.');
+        return;
+    }
 
-        setLoading(true);
+    setLoading(true);
 
-        try {
+    try {
+        const response = await api.post('/auth/login', {
+            email: emailTrimmed,
+            password,
+        });
 
-            const response = await api.post('/auth/login', {
-                email: emailTrimmed,
-                password,
-            });
+        // ✅ Ahora el backend SÍ devuelve role, id y nombre
+        const { token, role, id, nombre } = response.data;
 
-            const { token, id, emprendedorId, nombre, nombreEmprendimiento, emprendimiento, role } = response.data;
-
-            // 1. Guardar Token y Datos de sesión
-            if (token) {
+        if (token) {
             localStorage.setItem('token', token);
-            }
-
-            const idFinal = emprendedorId || id;
-            const nombreFinal = nombreEmprendimiento || emprendimiento || nombre;
-
-            if (idFinal) localStorage.setItem('emprendedorId', idFinal.toString());
-            if (nombreFinal) localStorage.setItem('nombreEmprendedor', nombreFinal);
-            if (role) localStorage.setItem('role', role);
-            
-            // 2. Actualizar estado global
-            login(token);
-
-            // 3. Redirección según Rol recibido del Backend
-            const userRole = role?.toUpperCase();
-
-            if (userRole === 'ROLE_SUPER_ADMIN' || userRole === 'SUPER_ADMIN' || emailTrimmed.includes('superadmin')) {
-                navigate('/superadmindashboard');
-            } else if (userRole === 'ROLE_ADMIN' || userRole === 'ADMIN' || emailTrimmed.includes('admin')) {
-                navigate('/admindashboard');
-            } else if (userRole === 'ROLE_EMPRENDEDOR' || userRole === 'EMPRENDEDOR') {
-                navigate('/emprendedordashboard');
-            } else {
-                navigate('/');
-            }
-
-        } catch (err: any) {
-
-            if (err.response && err.response.data && err.response.data.message) {
-                setError(err.response.data.message);
-            } else if (err.response && err.response.status === 401) {
-                setError('Credenciales inválidas. Por favor, verifique su email y contraseña.');
-            } else if (err.code === 'ERR_NETWORK') {
-                setError('Error de conexión. Asegurate que el backend esté corriendo y que la URL base sea correcta.');
-            } else {
-                setError('Ocurrio un error inesperado al iniciar la sesión');
-            }
-        } finally {
-            setLoading(false);
         }
+        if (role) {
+            localStorage.setItem('role', role);
+        }
+        if (id) {
+            localStorage.setItem('emprendedorId', id.toString());
+        }
+        if (nombre) {
+            localStorage.setItem('nombreEmprendedor', nombre);
+        }
+        
+        // Actualizar estado global
+        login(token);
+
+        // Redirección según Rol recibido del Backend
+        const userRole = role?.toUpperCase();
+
+        if (userRole === 'ROLE_SUPER_ADMIN' || userRole === 'SUPER_ADMIN') {
+            navigate('/superadmindashboard');
+        } else if (userRole === 'ROLE_ADMIN' || userRole === 'ADMIN') {
+            navigate('/admindashboard');
+        } else if (userRole === 'ROLE_EMPRENDEDOR' || userRole === 'EMPRENDEDOR') {
+            navigate('/emprendedordashboard');
+        } else {
+            navigate('/');
+        }
+
+    } catch (err: any) {
+        if (err.response?.data?.message) {
+            setError(err.response.data.message);
+        } else if (err.response?.status === 401) {
+            setError('Credenciales inválidas. Por favor, verifique su email y contraseña.');
+        } else if (err.code === 'ERR_NETWORK') {
+            setError('Error de conexión. Asegurate que el backend esté corriendo.');
+        } else {
+            setError('Ocurrió un error inesperado al iniciar la sesión');
+        }
+    } finally {
+        setLoading(false);
+    }
     };
 
     return (
