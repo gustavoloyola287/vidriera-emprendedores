@@ -219,10 +219,7 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
                                         Rol
                                     </label>
                                     <select
-                                        className="form-select form-select-sm"
-                                        value={rol}
-                                        onChange={(e) => setRol(e.target.value as Usuario['rol'])}
-                                        disabled={rol === 'EMPRENDEDOR'}
+                                    
                                     >
                                         <option value="EMPRENDEDOR">Emprendedor</option>
                                         <option value="ADMIN">Admin</option>
