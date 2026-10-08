@@ -74,4 +74,9 @@ public class EmprendedorService implements IEmprendedorService {
 
         return emprendedorRepository.save(nuevoAdmin);
     }
+
+    @Override
+    public long contarAdministradores() {
+        return emprendedorRepository.countByRol(Rol.ROLE_ADMIN);
+    }
 }

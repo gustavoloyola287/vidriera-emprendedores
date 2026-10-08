@@ -22,7 +22,7 @@ public interface IEmprendedorService {
     void cambiarEstado(Long id, String nuevoEstado);
 
        // Contar la cantidad de emprendedores  
-     long contarEmprendedores();
-    
+    long contarEmprendedores();
 
+    long contarAdministradores();
 }
