@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { Eye, EyeOff } from 'lucide-react';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -11,6 +12,7 @@ export const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +95,7 @@ export const Login: React.FC = () => {
                             </div>
                         )}
 
-                        <form onSubmit={handleSubmit} noValidate>
+                        <form onSubmit={handleSubmit} noValidate autoComplete="off">
                             <div className="mb-3 text-start">
                                 <label htmlFor="loginEmail" className="form-label fw-semibold text-secondary">
                                     Email
@@ -105,7 +107,7 @@ export const Login: React.FC = () => {
                                     placeholder="ejemplo@correo.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    autoComplete="email"
+                                    autoComplete="off"
                                     required
                                 />
                             </div>
@@ -114,16 +116,25 @@ export const Login: React.FC = () => {
                                 <label htmlFor="loginPassword" className="form-label fw-semibold text-secondary">
                                     Contraseña
                                 </label>
+                                <div className="input-group">
                                 <input
                                     id="loginPassword"
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     className="form-control"
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    autoComplete="current-password"
+                                    autoComplete="new-password"
                                     required
                                 />
+                                <button
+                                    type="button"
+                                    className="btn btn-link position-absolute top-50 end-0 translate-middle-y"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                                </div>
                             </div>
 
                             <button

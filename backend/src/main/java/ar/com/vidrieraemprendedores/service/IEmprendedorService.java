@@ -18,9 +18,11 @@ public interface IEmprendedorService {
     // Eliminar un emprendedor por su ID
     void eliminarEmprendedor(Long id);
 
-    // Contar la cantidad de emprendedores  
-    @Override
-    public long contarEmprendedores();
 
     void cambiarEstado(Long id, String nuevoEstado);
+
+       // Contar la cantidad de emprendedores  
+     long contarEmprendedores();
+    
+
 }
