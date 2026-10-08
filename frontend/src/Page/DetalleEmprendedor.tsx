@@ -18,6 +18,10 @@ export function DetalleEmprendedor() {
     const [fotosGaleria, setFotosGaleria] = useState<FotoProducto[]>([]);
     const [cargandoGaleria, setCargandoGaleria] = useState(false);
 
+    // Estados para el formulario de nuevas valoraciones
+    const [nuevaCalificacion, setNuevaCalificacion] = useState(5);
+    const [nuevoComentario, setNuevoComentario] = useState("");
+
     useEffect(() => {
         if (!id) return;
 
@@ -70,7 +74,6 @@ export function DetalleEmprendedor() {
     const obtenerLinkWhatsApp = (nombreProducto?: string) => {
         if (!emprendedor?.telefono) return "#";
 
-        // Formatear el teléfono limpiando espacios, guiones y paréntesis
         const telefonoLimpio = emprendedor.telefono.replace(/\D/g, "");
 
         const textoMensaje = nombreProducto
@@ -126,7 +129,7 @@ export function DetalleEmprendedor() {
     return (
         <div className="min-h-screen bg-gray-50 py-5">
             <div className="container">
-                {/* Cabecera del Emprendimiento */}
+                {/* 1. CABECERA DEL EMPRENDIMIENTO */}
                 <div className="bg-white rounded shadow-sm p-4 mb-4">
                     <div className="d-flex justify-content-between align-items-start">
                         <div>
@@ -135,11 +138,19 @@ export function DetalleEmprendedor() {
                                 <strong>Emprendedor/a:</strong> {emprendedor.nombreCompleto}
                             </p>
                             <p className="mb-3">{emprendedor.descripcion}</p>
-                            <p className="mb-3 text-secondary">
+                            <p className="mb-2 text-secondary">
                                 <strong>📞 Teléfono de Contacto:</strong> {emprendedor.telefono}
                             </p>
+
+                            {/* INSIGNIA DE CALIFICACIÓN RÁPIDA EN CABECERA */}
+                            <div className="d-flex align-items-center gap-2 mb-3">
+                                <span className="badge bg-warning text-dark fs-6 px-3 py-2">
+                                    ★ 4.8 / 5.0
+                                </span>
+                                <span className="text-muted small">(24 valoraciones)</span>
+                            </div>
                             
-                            {/* BOTÓN WHATSAPP GENERAL EN LA CABECERA */}
+                            {/* BOTÓN WHATSAPP GENERAL */}
                             <a
                                 href={obtenerLinkWhatsApp()}
                                 target="_blank"
@@ -155,7 +166,7 @@ export function DetalleEmprendedor() {
                     </div>
                 </div>
 
-                {/* Catálogo de Productos del Emprendedor */}
+                {/* 2. CATÁLOGO DE PRODUCTOS */}
                 <h2 className="h4 font-bold text-gray-800 mb-3">Catálogo de Productos</h2>
 
                 {productos.length > 0 ? (
@@ -173,7 +184,6 @@ export function DetalleEmprendedor() {
                                         <h5 className="card-title font-bold text-dark">{prod.nombre}</h5>
                                         <p className="card-text text-muted small flex-grow-1">{prod.descripcion}</p>
                                         
-                                        {/* ACCIONES DE LA TARJETA */}
                                         <div className="d-flex flex-column gap-2 mt-3">
                                             <button
                                                 className="btn btn-sm btn-outline-primary w-100"
@@ -182,7 +192,6 @@ export function DetalleEmprendedor() {
                                                 📷 Ver Imágenes
                                             </button>
 
-                                            {/* BOTÓN WHATSAPP POR PRODUCTO */}
                                             <a
                                                 href={obtenerLinkWhatsApp(prod.nombre)}
                                                 target="_blank"
@@ -203,7 +212,106 @@ export function DetalleEmprendedor() {
                     </div>
                 )}
 
-                {/* Modal de Galería de Fotos Pública */}
+                <hr className="my-5" />
+
+                {/* 3. SECCIÓN COMPLETA DE RESEÑAS Y VALORACIONES */}
+                <section className="mb-5">
+                    <h2 className="h4 font-bold text-gray-800 mb-3">Reputación y Opiniones</h2>
+
+                    {/* A) Tarjeta resumen de métricas */}
+                    <div className="bg-white rounded shadow-sm p-4 mb-4">
+                        <div className="row align-items-center text-center text-md-start">
+                            <div className="col-md-4 border-end-md pb-3 pb-md-0 text-center">
+                                <span className="text-muted small">Promedio General</span>
+                                <h3 className="display-4 fw-bold text-warning mb-0">4.8</h3>
+                                <p className="text-warning mb-1">★ ★ ★ ★ ★</p>
+                                <span className="text-muted small">(Basado en 24 comentarios)</span>
+                            </div>
+                            <div className="col-md-8 ps-md-4 mt-3 mt-md-0">
+                                <div className="d-flex justify-content-between mb-2 border-bottom pb-1">
+                                    <span className="text-muted">Calidad del producto:</span>
+                                    <strong className="text-success">4.9 / 5</strong>
+                                </div>
+                                <div className="d-flex justify-content-between mb-2 border-bottom pb-1">
+                                    <span className="text-muted">Puntualidad en la entrega:</span>
+                                    <strong className="text-primary">4.7 / 5</strong>
+                                </div>
+                                <div className="d-flex justify-content-between">
+                                    <span className="text-muted">Atención al cliente:</span>
+                                    <strong className="text-info">5.0 / 5</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* B) Formulario para dejar una nueva reseña */}
+                    <div className="bg-white rounded shadow-sm p-4 mb-4 border">
+                        <h3 className="h5 font-bold text-dark mb-3">¿Compraste en este emprendimiento? Deja tu opinión</h3>
+                        <form onSubmit={(e) => { e.preventDefault(); alert("Reseña enviada correctamente"); }}>
+                            <div className="mb-3">
+                                <label className="form-label text-muted small d-block">Selecciona tu calificación:</label>
+                                <select 
+                                    className="form-select w-auto d-inline-block"
+                                    value={nuevaCalificacion}
+                                    onChange={(e) => setNuevaCalificacion(Number(e.target.value))}
+                                >
+                                    <option value={5}>★★★★★ (5/5) - Excelente</option>
+                                    <option value={4}>★★★★☆ (4/5) - Muy Bueno</option>
+                                    <option value={3}>★★★☆☆ (3/5) - Bueno</option>
+                                    <option value={2}>★★☆☆☆ (2/5) - Regular</option>
+                                    <option value={1}>★☆☆☆☆ (1/5) - Malo</option>
+                                </select>
+                            </div>
+                            <div className="mb-3">
+                                <textarea
+                                    className="form-control"
+                                    rows={3}
+                                    placeholder="Cuéntanos tu experiencia con la entrega, la calidad y la atención..."
+                                    value={nuevoComentario}
+                                    onChange={(e) => setNuevoComentario(e.target.value)}
+                                />
+                            </div>
+                            <button type="submit" className="btn btn-primary fw-bold">
+                                Publicar Reseña
+                            </button>
+                        </form>
+                    </div>
+
+                    {/* C) Listado de Comentarios con Respuestas */}
+                    <div className="d-flex flex-column gap-3">
+                        {/* Comentario Ejemplo 1 */}
+                        <div className="bg-white rounded shadow-sm p-4 border">
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                <strong className="text-dark">Mariana Gómez</strong>
+                                <span className="text-muted small">Hace 2 días</span>
+                            </div>
+                            <div className="text-warning small mb-2">★ ★ ★ ★ ★</div>
+                            <p className="text-secondary mb-2">
+                                "Excelente atención por WhatsApp. El producto llegó super rápido y la calidad superó mis expectativas."
+                            </p>
+
+                            {/* Respuesta del Emprendedor */}
+                            <div className="bg-light p-3 rounded border-start border-4 border-primary ms-3 mt-2">
+                                <strong className="text-primary small d-block mb-1">Respuesta de {emprendedor.nombreEmprendimiento}:</strong>
+                                <p className="text-dark small mb-0">¡Muchas gracias Mariana por tu compra! Nos alegra un montón que hayas quedado conforme.</p>
+                            </div>
+                        </div>
+
+                        {/* Comentario Ejemplo 2 */}
+                        <div className="bg-white rounded shadow-sm p-4 border">
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                <strong className="text-dark">Carlos Rodríguez</strong>
+                                <span className="text-muted small">Hace 5 días</span>
+                            </div>
+                            <div className="text-warning small mb-2">★ ★ ★ ★ ☆</div>
+                            <p className="text-secondary mb-0">
+                                "Muy buenos productos, de excelente terminación. Solamente se demoró un día más la entrega por el transporte."
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                {/* MODAL DE GALERÍA DE FOTOS */}
                 {productoSeleccionado && (
                     <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
                         <div className="modal-dialog modal-lg">
@@ -235,7 +343,6 @@ export function DetalleEmprendedor() {
                                     )}
                                 </div>
                                 <div className="modal-footer d-flex justify-content-between">
-                                    {/* BOTÓN WHATSAPP DENTRO DEL MODAL */}
                                     <a
                                         href={obtenerLinkWhatsApp(productoSeleccionado.nombre)}
                                         target="_blank"
