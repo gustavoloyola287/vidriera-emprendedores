@@ -11,6 +11,7 @@ import { ProductosView } from './Productosview';
 import { ModeracionView } from './Moderacionview';
 import { CategoriasView } from './Categoriasview';
 import { ChatInterno } from '../components/ChatInterno';
+import { AdminsView } from './Adminsview';
 
 const UsuariosViewWithActions = UsuariosView as React.ComponentType<{
     onEmprendedorCreado: () => void;
@@ -186,7 +187,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
         'Authorization': `Bearer ${localStorage.getItem('token')}`
     });
 
-    // ✅ URL CORREGIDA: /api/admin/stats (no /api/admin/dashboard/stats)
+    // ✅ URL CORREGIDA: /api/admin/stats 
     const fetchDashboardStats = async () => {
         try {
             setLoadingStats(true);
@@ -713,61 +714,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
 
                     {/* ✅ NUEVO: Vista para crear Administradores (Solo Super Admin) */}
                     {activeTab === 'admins' && isSuperAdmin && (
-                        <div className="container-fluid p-0">
-                            <h4 className="fw-bold mb-3 text-primary">👑 Gestión de Administradores</h4>
-                            <p className="text-muted mb-4">Crea nuevos administradores para que puedan moderar emprendedores y productos.</p>
-                            
-                            {mensajeAdmin && (
-                                <div className={`alert ${mensajeAdmin.includes('✅') ? 'alert-success' : 'alert-danger'} d-flex align-items-center gap-2 shadow-sm`}>
-                                    {mensajeAdmin.includes('✅') ? <Check size={18} /> : <AlertTriangle size={18} />}
-                                    <span>{mensajeAdmin}</span>
-                                </div>
-                            )}
-
-                            <div className="card border-0 shadow-sm p-4" style={{ maxWidth: '600px' }}>
-                                <form onSubmit={handleCrearAdmin} className="row g-3">
-                                    <div className="col-12">
-                                        <label className="form-label fw-semibold">Nombre Completo</label>
-                                        <input 
-                                            type="text" 
-                                            className="form-control" 
-                                            value={nuevoAdmin.nombre}
-                                            onChange={(e) => setNuevoAdmin({...nuevoAdmin, nombre: e.target.value})}
-                                            required 
-                                            disabled={loadingAdmin}
-                                        />
-                                    </div>
-                                    <div className="col-12">
-                                        <label className="form-label fw-semibold">Email</label>
-                                        <input 
-                                            type="email" 
-                                            className="form-control" 
-                                            value={nuevoAdmin.email}
-                                            onChange={(e) => setNuevoAdmin({...nuevoAdmin, email: e.target.value})}
-                                            required 
-                                            disabled={loadingAdmin}
-                                        />
-                                    </div>
-                                    <div className="col-12">
-                                        <label className="form-label fw-semibold">Contraseña Temporal</label>
-                                        <input 
-                                            type="password" 
-                                            className="form-control" 
-                                            value={nuevoAdmin.password}
-                                            onChange={(e) => setNuevoAdmin({...nuevoAdmin, password: e.target.value})}
-                                            required 
-                                            disabled={loadingAdmin}
-                                        />
-                                    </div>
-                                    <div className="col-12 mt-4">
-                                        <button type="submit" className="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2" disabled={loadingAdmin}>
-                                            {loadingAdmin ? <Loader2 size={18} className="spinner-border spinner-border-sm" /> : <UserPlus size={18} />}
-                                            {loadingAdmin ? 'Creando...' : 'Crear Administrador'}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+                        <AdminsView onAdminCreado={fetchDashboardStats}  /> 
                     )}
 
                     {activeTab === 'emprendedores' && (

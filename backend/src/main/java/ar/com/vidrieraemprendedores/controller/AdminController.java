@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -34,7 +35,7 @@ public class AdminController {
         stats.setEmprendedoresActivos(0);
         stats.setEmprendedoresSuspendidos(0);
         stats.setEmprendedoresRechazados(0);
-        stats.setTotalAdmins(0);
+        stats.setTotalAdmins(emprendedorService.contarAdministradores());
         return ResponseEntity.ok(stats);
     }
 
@@ -122,4 +123,42 @@ public class AdminController {
     public ResponseEntity<Map<String, String>> marcarLeidas() {
         return ResponseEntity.ok(Map.of("message", "OK"));
     }
+
+    // 10. Listar administradores
+    @GetMapping("/listar-admins")
+    public ResponseEntity<List<Emprendedor>> listarAdministradores() {
+        List<Emprendedor> admins = emprendedorService.listarEmprendedores()
+                .stream()
+                .filter(e -> e.getRol() == Rol.ROLE_ADMIN || e.getRol() == Rol.ROLE_SUPER_ADMIN)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(admins);
+    }
+
+    // 11. Eliminar administrador
+    @DeleteMapping("/eliminar-admin/{id}")
+    public ResponseEntity<Map<String, String>> eliminarAdmin(@PathVariable Long id) {
+        try {
+            emprendedorService.eliminarEmprendedor(id);
+            return ResponseEntity.ok(Map.of("message", "Administrador eliminado"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // 12. Actualizar administrador
+    @PutMapping("/admins/{id}")
+    public ResponseEntity<Map<String, String>> actualizarAdmin(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> datos) {
+        try {
+            Emprendedor admin = emprendedorService.buscarPorId(id);
+            admin.setNombreCompleto(datos.get("nombreCompleto"));
+            admin.setEmail(datos.get("email"));
+            emprendedorService.guardarEmprendedor(admin);
+            return ResponseEntity.ok(Map.of("message", "Administrador actualizado"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
 }
