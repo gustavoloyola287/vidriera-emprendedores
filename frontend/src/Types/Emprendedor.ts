@@ -5,5 +5,5 @@ export interface Emprendedor {
     nombreEmprendimiento: string;
     email: string;
     telefono: string;
-    
+    rol: string;
 }

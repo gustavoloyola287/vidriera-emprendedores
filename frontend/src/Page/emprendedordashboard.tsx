@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 // Íconos (puedes usar lucide-react o los que prefieras)
-import { Home, Box, User, LogOut, MessagesSquare } from 'lucide-react';
+import { Home, Box, User, LogOut, MessagesSquare, Star } from 'lucide-react';
 
 // Importación de las vistas independientes (cada una maneja su propia lógica)
 import  {InicioDash } from './iniciodash';
 import { MisProductos } from './misproductos';
 import { MiPerfil } from './miperfil';
 import ChatInterno from '../components/ChatInterno';
+import OpinionesYCalificaciones from './opinionesycalificaciones';
 
 export const EmprendedorDashboard: React.FC = () => {
     // Estado para controlar qué sección del menú lateral está activa
-    const [activeTab, setActiveTab] = useState<'inicio' | 'productos' | 'perfil' | 'mensajes'>('inicio');
+    const [activeTab, setActiveTab] = useState<'inicio' | 'productos' | 'perfil' | 'mensajes' | 'opinionesycalificaciones'>('inicio');
     
     const emprendedor = false;
 
@@ -72,6 +73,20 @@ export const EmprendedorDashboard: React.FC = () => {
                             <span>Chat</span>
                         </button>
                     )}
+                    <button
+                            type="button"
+                            className={`btn w-100 d-flex align-items-center gap-2 py-2 px-3 border-0 fw-medium text-start ${
+                                activeTab === 'opinionesycalificaciones'
+                                ? 'btn-primary text-white shadow-sm' 
+                                : 'btn-light bg-transparent text-dark'
+                        }`}
+                        style={{ borderRadius: '8px' }}
+                        onClick={() => setActiveTab('opinionesycalificaciones')}
+                    >
+                        <Star size={18} />
+                        <span>Opiniones y Calificaciones</span>
+                        
+                    </button>
 
                     {/* Botón Mi Perfil */}
                     <button
@@ -88,6 +103,7 @@ export const EmprendedorDashboard: React.FC = () => {
                         <span>Mi Perfil</span>
                     </button>
                 </div>
+
 
                 {/* Sección Inferior: Cerrar Sesión */}
                 <div className="pt-3 border-top">
@@ -108,7 +124,7 @@ export const EmprendedorDashboard: React.FC = () => {
                     <InicioDash />
                 )}
 
-                
+                {activeTab === 'opinionesycalificaciones' && <OpinionesYCalificaciones />}
                 {activeTab === 'productos' && <MisProductos />}
                 {activeTab === 'perfil' && <MiPerfil />}
                 {activeTab === 'mensajes' && <ChatInterno />}
