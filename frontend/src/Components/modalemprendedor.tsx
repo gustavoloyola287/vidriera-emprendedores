@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Info, Loader2 } from 'lucide-react';
+import { Info, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export interface Usuario {
     id: number;
@@ -14,7 +14,7 @@ export interface Usuario {
 interface ModalNuevoEmprendedorProps {
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: () => void; // Cambiado para que solo recargue la lista
+    onSuccess: () => void;
 }
 
 const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
@@ -25,14 +25,15 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
     const [nombre, setNombre] = useState('');
     const [email, setEmail] = useState('');
     const [telefono, setTelefono] = useState('');
-    const [password, setPassword] = useState(''); // ✅ NUEVO: Campo contraseña
-    const [nombreEmprendimiento, setNombreEmprendimiento] = useState(''); // ✅ NUEVO: Nombre del emprendimiento
+    const [password, setPassword] = useState('');
+    const [nombreEmprendimiento, setNombreEmprendimiento] = useState('');
     const [rol, setRol] = useState<'ADMIN' | 'EMPRENDEDOR' | 'MODERADOR'>('EMPRENDEDOR');
     const [estado, setEstado] = useState<'ACTIVO' | 'SUSPENDIDO' | 'RECHAZADO' | 'PENDIENTE'>('ACTIVO');
     const [descripcion, setDescripcion] = useState('');
     const [imagen, setImagen] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
 
     if (!isOpen) return null;
 
@@ -42,20 +43,18 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
         setLoading(true);
 
         try {
-            // Preparar los datos para enviar al backend
             const datosEmprendedor = {
                 nombreCompleto: nombre,
                 nombreEmprendimiento: nombreEmprendimiento,
                 email: email,
                 telefono: telefono,
-                password: password, // ✅ Contraseña
+                password: password,
                 descripcion: descripcion,
                 estado: estado,
                 rol: rol === 'EMPRENDEDOR' ? 'ROLE_EMPRENDEDOR' : 
-                      rol === 'ADMIN' ? 'ROLE_ADMIN' : 'ROLE_MODERADOR'
+                    rol === 'ADMIN' ? 'ROLE_ADMIN' : 'ROLE_MODERADOR'
             };
 
-            // ✅ PETICIÓN AL BACKEND
             const response = await fetch('http://localhost:8080/api/admin/emprendedores', {
                 method: 'POST',
                 headers: {
@@ -66,21 +65,26 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al crear el emprendedor');
+                let mensajeError = 'Error al crear el emprendedor';
+                try {
+                    const errorData = await response.json();
+                    mensajeError = errorData.message || errorData.error || mensajeError;
+                } catch {
+                    mensajeError = `Error HTTP: ${response.status} - ${response.statusText}`;
+                }
+                throw new Error(mensajeError);
             }
 
             const data = await response.json();
-            console.log('✅ Emprendedor creado:', data);
+            console.log('✅ Emprendedor creado exitosamente:', data);
 
-            // Limpiar formulario y cerrar modal
             handleReset();
-            onSuccess(); // Recargar la lista
+            onSuccess();
             onClose();
 
         } catch (err: any) {
-            console.error('Error al crear emprendedor:', err);
-            setError(err.message || 'Error de conexión con el servidor');
+            console.error('❌ Error detallado al crear emprendedor (Dev Log):', err);
+            setError(err.message || 'Error de conexión con el servidor. Por favor, intenta más tarde.');
         } finally {
             setLoading(false);
         }
@@ -90,8 +94,8 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
         setNombre('');
         setEmail('');
         setTelefono('');
-        setPassword(''); // ✅ Resetear contraseña
-        setNombreEmprendimiento(''); // ✅ Resetear nombre emprendimiento
+        setPassword('');
+        setNombreEmprendimiento('');
         setRol('EMPRENDEDOR');
         setEstado('ACTIVO');
         setDescripcion('');
@@ -115,7 +119,7 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
         >
             <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '520px', width: '92%' }}>
                 <div className="modal-content border-0 shadow-lg rounded-3 p-2">
-                    {/* Cabecera compacta */}
+                    {/* Cabecera */}
                     <div className="modal-header border-0 pb-1 pt-2 px-3">
                         <h5 className="modal-title fw-bold">Nuevo Emprendedor</h5>
                         <button
@@ -126,10 +130,13 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
                         ></button>
                     </div>
 
-                    {/* Formulario compacto */}
+                    {/* Formulario */}
                     <form onSubmit={handleSubmit}>
-                        <div className="modal-body py-2 px-3">
-                            {/* Mensaje de error */}
+                        {/* 🔽 Aquí se agregó el scroll interno con max-height y overflow-y */}
+                        <div 
+                            className="modal-body py-2 px-3" 
+                            style={{ maxHeight: '70vh', overflowY: 'auto' }}
+                        >
                             {error && (
                                 <div className="alert alert-danger py-2 small mb-2" role="alert">
                                     {error}
@@ -181,23 +188,33 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
                                 </div>
                             </div>
 
-                            {/* ✅ NUEVO: Contraseña */}
+                            {/* Contraseña con Ojo */}
                             <div className="mb-2">
                                 <label className="form-label text-muted fw-semibold style-small mb-1">
                                     Contraseña <span className="text-danger">*</span>
                                 </label>
-                                <input
-                                    type="password"
-                                    className="form-control form-control-sm"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                    minLength={6}
-                                />
+                                <div className="input-group input-group-sm">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        className="form-control form-control-sm"
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                        minLength={6}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary btn-sm px-2"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        tabIndex={-1}
+                                    >
+                                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* ✅ NUEVO: Nombre del Emprendimiento */}
+                            {/* Nombre del Emprendimiento */}
                             <div className="mb-2">
                                 <label className="form-label text-muted fw-semibold style-small mb-1">
                                     Nombre del Emprendimiento <span className="text-danger">*</span>
@@ -219,7 +236,9 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
                                         Rol
                                     </label>
                                     <select
-                                    
+                                        className="form-select form-select-sm"
+                                        value={rol}
+                                        onChange={(e) => setRol(e.target.value as Usuario['rol'])}
                                     >
                                         <option value="EMPRENDEDOR">Emprendedor</option>
                                         <option value="ADMIN">Admin</option>
@@ -243,7 +262,7 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
                                 </div>
                             </div>
 
-                            {/* Descripción */}
+                            {/* Descripción del Emprendimiento */}
                             <div className="mb-2">
                                 <div className="d-flex justify-content-between mb-1">
                                     <label className="form-label text-muted fw-semibold style-small mb-0">
@@ -261,57 +280,6 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
                                     required
                                 ></textarea>
                             </div>
-                {/* Rol y Estado */}
-                <div className="row g-2 mb-2">
-                <div className="col-6">
-    <label className="form-label text-muted fw-semibold style-small mb-1">
-        Rol
-    </label>
-    <select
-        className="form-select form-select-sm"
-        value={rol}
-        onChange={(e) => setRol(e.target.value as Usuario['rol'])}
-        disabled={rol === 'EMPRENDEDOR'}
-    >
-        <option value="EMPRENDEDOR">Emprendedor</option>
-        <option value="ADMIN">Admin</option>
-        <option value="MODERADOR">Moderador</option>
-    </select>
-</div>
-                    <div className="col-6">
-                    <label className="form-label text-muted fw-semibold style-small mb-1">
-                        Estado Inicial
-                    </label>
-                    <select
-                        className="form-select form-select-sm"
-                        value={estado}
-                        onChange={(e) => setEstado(e.target.value as Usuario['estado'])}
-                    >
-                        <option value="ACTIVO">Activo</option>
-                        <option value="PENDIENTE">Pendiente</option>
-                        <option value="SUSPENDIDO">Suspendido</option>
-                        <option value="RECHAZADO">Rechazado</option>
-                    </select>
-                    </div>
-                </div>
-                {/* Descripción */}
-                <div className="mb-2">
-                    <div className="d-flex justify-content-between mb-1">
-                    <label className="form-label text-muted fw-semibold style-small mb-0">
-                        Descripción del Emprendimiento <span className="text-danger">*</span>
-                    </label>
-                    <span className="text-muted style-micro">{descripcion.length}/</span>
-                    </div>
-                    <textarea
-                    className="form-control form-control-sm"
-                    rows={2}
-                    maxLength={250}
-                    placeholder="Contanos qué hacés, tus productos estrella, tu historia..."
-                    value={descripcion}
-                    onChange={(e) => setDescripcion(e.target.value)}
-                    required
-                    ></textarea>
-                </div>
 
                             {/* Logo / Imagen */}
                             <div className="mb-2">
@@ -326,7 +294,7 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
                                 />
                             </div>
 
-                            {/* Info de Requisitos Compacta */}
+                            {/* Requisitos de la imagen */}
                             <div className="alert alert-info border-0 bg-light p-2 mb-1 rounded-2 style-small text-muted">
                                 <div className="d-flex gap-2 align-items-start">
                                     <Info size={16} className="text-primary flex-shrink-0 mt-1" />
@@ -342,7 +310,7 @@ const ModalNuevoEmprendedor: React.FC<ModalNuevoEmprendedorProps> = ({
                             </div>
                         </div>
 
-                        {/* Botones reducidos */}
+                        {/* Botones */}
                         <div className="modal-footer border-0 pt-1 pb-2 d-flex justify-content-center gap-2">
                             <button
                                 type="button"
