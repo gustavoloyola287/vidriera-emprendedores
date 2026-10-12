@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Edit, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Eye, Edit, Trash2, Image as ImageIcon, Loader2, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 
 export interface Producto {
     id: string | number;
@@ -41,6 +41,24 @@ export const MisProductos: React.FC = () => {
     const [imagenUrl, setImagenUrl] = useState('');
     const [errorImagen, setErrorImagen] = useState('');
 
+    // ✅ Estado para el sistema de Toasts multiestado
+    const [toastInfo, setToastInfo] = useState<{
+        visible: boolean;
+        mensaje: string;
+        tipo: 'success' | 'warning' | 'danger';
+    }>({
+        visible: false,
+        mensaje: '',
+        tipo: 'success'
+    });
+
+    const mostrarToast = (mensaje: string, tipo: 'success' | 'warning' | 'danger' = 'success') => {
+        setToastInfo({ visible: true, mensaje, tipo });
+        setTimeout(() => {
+            setToastInfo(prev => ({ ...prev, visible: false }));
+        }, 4000);
+    };
+
     // --- CONSUMO DE API (CRUD) ---
 
     // 1. Obtener todos los productos (GET)
@@ -53,7 +71,9 @@ export const MisProductos: React.FC = () => {
             const data = await response.json();
             setProductos(data);
         } catch (err: any) {
-            setErrorApi(err.message || 'Error de conexión con el servidor.');
+            const msg = err.message || 'Error de conexión con el servidor.';
+            setErrorApi(msg);
+            mostrarToast(msg, 'danger');
         } finally {
             setLoading(false);
         }
@@ -103,8 +123,17 @@ export const MisProductos: React.FC = () => {
             // Recargar la lista desde el servidor
             await fetchProductos();
             setShowModal(false);
+            
+            // ✅ Toast de éxito
+            mostrarToast(
+                productoEditar ? '¡Producto actualizado con éxito!' : '¡Producto publicado con éxito!', 
+                'success'
+            );
         } catch (err: any) {
-            setErrorApi(err.message || 'Error al guardar cambios.');
+            const msg = err.message || 'Error al guardar cambios.';
+            setErrorApi(msg);
+            // ✅ Toast de error
+            mostrarToast(msg, 'danger');
         } finally {
             setLoading(false);
         }
@@ -126,8 +155,14 @@ export const MisProductos: React.FC = () => {
             setProductoEliminarId(null);
             setShowDeleteModal(false);
             await fetchProductos();
+            
+            // ✅ Toast de éxito al eliminar
+            mostrarToast('El producto fue eliminado correctamente.', 'success');
         } catch (err: any) {
-            setErrorApi(err.message || 'Error al intentar eliminar.');
+            const msg = err.message || 'Error al intentar eliminar.';
+            setErrorApi(msg);
+            // ✅ Toast de error
+            mostrarToast(msg, 'danger');
         } finally {
             setLoading(false);
         }
@@ -164,13 +199,17 @@ export const MisProductos: React.FC = () => {
         if (!file) return;
 
         if (file.size > 2 * 1024 * 1024) {
-            setErrorImagen('El archivo excede el tamaño máximo permitido de 2MB.');
+            const msg = 'El archivo excede el tamaño máximo permitido de 2MB.';
+            setErrorImagen(msg);
+            mostrarToast(msg, 'warning');
             return;
         }
 
         const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!validTypes.includes(file.type)) {
-            setErrorImagen('Formato no válido. Utiliza JPG, PNG o WEBP.');
+            const msg = 'Formato no válido. Utiliza JPG, PNG o WEBP.';
+            setErrorImagen(msg);
+            mostrarToast(msg, 'warning');
             return;
         }
 
@@ -182,8 +221,49 @@ export const MisProductos: React.FC = () => {
         reader.readAsDataURL(file);
     };
 
+    const obtenerClaseToastBg = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return 'bg-success text-white';
+            case 'warning': return 'bg-warning text-dark';
+            case 'danger': return 'bg-danger text-white';
+            default: return 'bg-success text-white';
+        }
+    };
+
+    const renderIconoToast = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return <CheckCircle2 size={18} />;
+            case 'warning': return <AlertTriangle size={18} />;
+            case 'danger': return <XCircle size={18} />;
+            default: return <CheckCircle2 size={18} />;
+        }
+    };
+
     return (
-        <div className="container py-4">
+        <div className="container py-4 position-relative">
+            {/* ✅ TOAST EMERGENTE FLOTANTE MULTIESTADO */}
+            <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1080 }}>
+                <div 
+                    className={`toast align-items-center border-0 shadow-lg rounded-3 ${obtenerClaseToastBg(toastInfo.tipo)} ${toastInfo.visible ? 'show' : 'hide'}`} 
+                    role="alert" 
+                    aria-live="assertive" 
+                    aria-atomic="true"
+                >
+                    <div className="d-flex">
+                        <div className="toast-body d-flex align-items-center gap-2">
+                            {renderIconoToast(toastInfo.tipo)}
+                            <span className="fw-semibold">{toastInfo.mensaje}</span>
+                        </div>
+                        <button 
+                            type="button" 
+                            className={`btn-close me-2 m-auto ${toastInfo.tipo === 'warning' ? '' : 'btn-close-white'}`} 
+                            onClick={() => setToastInfo(prev => ({ ...prev, visible: false }))}
+                            aria-label="Close"
+                        ></button>
+                    </div>
+                </div>
+            </div>
+
             {/* Header del módulo */}
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h3 className="fw-bold text-dark mb-0">Gestión de Productos</h3>
@@ -415,7 +495,7 @@ export const MisProductos: React.FC = () => {
                                             {precioHabilitado ? (
                                                 <>
                                                     <label className="form-label fw-semibold text-dark mb-1">
-                                                        Precio ($)
+                                                        Precio (\$)
                                                     </label>
                                                     <input
                                                         type="number"
@@ -595,30 +675,22 @@ export const MisProductos: React.FC = () => {
                                         }}
                                     >
                                         <ImageIcon size={32} />
-                                        <span style={{ fontSize: '0.8rem' }}>Sin imagen</span>
                                     </div>
                                 )}
-                                <div className="mb-2">
-                                    <span className="badge bg-secondary me-2">
+                                <p className="text-muted small mb-2">{productoVer.descripcion}</p>
+                                <div className="d-flex justify-content-center gap-2">
+                                    <span className="badge bg-light text-dark border">
                                         {productoVer.tipoClasificacion}: {productoVer.clasificacionNombre}
                                     </span>
-                                    <span className="fw-bold text-success fs-5">
-                                        {productoVer.precioHabilitado && productoVer.precio !== undefined
-                                            ? `$${productoVer.precio}`
-                                            : 'Precio a consultar'}
+                                    <span className={`badge ${productoVer.estado === 'Activo' ? 'bg-success' : 'bg-secondary'}`}>
+                                        {productoVer.estado}
                                     </span>
                                 </div>
-                                <p
-                                    className="text-muted text-start border p-2 rounded bg-light mt-3 mb-0"
-                                    style={{ fontSize: '0.9rem' }}
-                                >
-                                    {productoVer.descripcion}
-                                </p>
                             </div>
                             <div className="modal-footer">
                                 <button
                                     type="button"
-                                    className="btn btn-secondary"
+                                    className="btn btn-secondary btn-sm"
                                     onClick={() => setShowViewModal(false)}
                                 >
                                     Cerrar
@@ -631,3 +703,5 @@ export const MisProductos: React.FC = () => {
         </div>
     );
 };
+
+export default MisProductos;

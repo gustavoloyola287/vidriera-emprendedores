@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Eye, MessageSquare, Plus, Pencil, Trash2 } from 'lucide-react';
-import emprendedorService from '../services/emprendedorService';
+import { Box, Eye, MessageSquare, CheckCircle2, AlertTriangle, XCircle, X } from 'lucide-react';
 
 // Interfaz para el modelo de Producto
 export interface Producto {
@@ -10,17 +9,14 @@ export interface Producto {
     precio: number;
     estado: string;
 }
-type TabTipo = "inicio" | "productos" | "perfil" | "mensajes";
+
 interface InicioDashProps {
-    setActiveTab?: (tab: string) => void; // El '?' hace que la prop sea opcional
+    setActiveTab?: (tab: string) => void;
 }
 
-export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
-    
+export const InicioDash: React.FC<InicioDashProps> = () => {
     // ESTADOS
-    // ------------------------------------------------------------------
-    // Estado de productos inicializado con los datos de la foto
-    const [productos, setProductos] = useState<Producto[]>([
+    const [productos] = useState<Producto[]>([
         {
             id: 1,
             nombre: 'Maceta Artesanal de Cerámica',
@@ -37,74 +33,91 @@ export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
         }
     ]);
 
-    // Estado para controlar el modal de Bootstrap y saber si editamos o creamos
-    const [showModal, setShowModal] = useState<boolean>(false);
-    const [productoEditar, setProductoEditar] = useState<Producto | null>(null);
-    // Estado para controlar la vista de detalle del producto
-    const [productoDetalle, setProductoDetalle] = useState<any | null>(null);
-    
+    // Estado para controlar la vista emergente (modal) del detalle del producto
+    const [productoDetalle, setProductoDetalle] = useState<Producto | null>(null);
 
-    // Formulario de edición / creación
-    const [formData, setFormData] = useState({
-        nombre: '',
-        categoria: '',
-        precio: '',
-        estado: 'Publicado'
+    // Estado para los mensajes Toast multiestado
+    const [toastInfo, setToastInfo] = useState<{
+        visible: boolean;
+        mensaje: string;
+        tipo: 'success' | 'warning' | 'danger';
+    }>({
+        visible: false,
+        mensaje: '',
+        tipo: 'success'
     });
 
-    // ------------------------------------------------------------------
-    // CONEXIÓN AL BACKEND / CONTROLLER (Efecto de Carga)
-    // ------------------------------------------------------------------
+    const mostrarToast = (mensaje: string, tipo: 'success' | 'warning' | 'danger' = 'success') => {
+        setToastInfo({ visible: true, mensaje, tipo });
+        setTimeout(() => {
+            setToastInfo(prev => ({ ...prev, visible: false }));
+        }, 4000);
+    };
+
     useEffect(() => {
-        // TODO: Reemplazar por la llamada a tu controller/servicio cuando esté listo
-        // productoService.obtenerProductos().then(data => setProductos(data));
+        // Carga inicial o llamada a API si fuera necesario
     }, []);
 
-    // ------------------------------------------------------------------
-    // HANDLERS CRUD
-    // ------------------------------------------------------------------
-    // Abrir Modal para crear
-    const handleNuevoProducto = () => {
-        if (setActiveTab) {
-            setActiveTab('productos'); 
-        } else {
-            console.warn('setActiveTab no fue provisto al componente InicioDash');
+    // Manejador para ver detalle en ventana emergente (Modal) en lugar de alert
+    const handleVerDetalle = (id: number) => {
+        const producto = productos.find((prod) => prod.id === id);
+        if (!producto) {
+            mostrarToast("No se encontró el producto seleccionado.", "warning");
+            return;
+        }
+        setProductoDetalle(producto);
+    };
+
+    const obtenerClaseToastBg = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return 'bg-success text-white';
+            case 'warning': return 'bg-warning text-dark';
+            case 'danger': return 'bg-danger text-white';
+            default: return 'bg-success text-white';
         }
     };
 
-    function handleVerDetalle(id: number): void {
-        const producto = productos.find((prod) => prod.id === id);
-
-        if (!producto) {
-            window.alert('No se encontró el producto seleccionado.');
-            return;
+    const renderIconoToast = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return <CheckCircle2 size={18} />;
+            case 'warning': return <AlertTriangle size={18} />;
+            case 'danger': return <XCircle size={18} />;
+            default: return <CheckCircle2 size={18} />;
         }
-
-        window.alert(
-            `Producto: ${producto.nombre}\nCategoría: ${producto.categoria}\nPrecio: $${producto.precio.toLocaleString('es-AR')}\nEstado: ${producto.estado}`
-        );
-    }
+    };
 
     return (
-        <div className="container-fluid p-0">
-            {/* 1. Header Superior */}
-            <div className="bg-white p-3 rounded-3 shadow-sm d-flex justify-content-between align-items-center mb-4">
-                <h4 className="fw-bold mb-0 text-dark">Mi Emprendimiento</h4>
-                <div className="d-flex align-items-center gap-2">
-                    <span className="badge bg-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }}>
-                        E
-                    </span>
-                    <span className="fw-semibold text-secondary">Emprendedor</span>
+        <div className="container-fluid p-0 position-relative">
+            {/* ✅ TOAST EMERGENTE FLOTANTE MULTIESTADO */}
+            <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1080 }}>
+                <div 
+                    className={`toast align-items-center border-0 shadow-lg rounded-3 ${obtenerClaseToastBg(toastInfo.tipo)} ${toastInfo.visible ? 'show' : 'hide'}`} 
+                    role="alert" 
+                    aria-live="assertive" 
+                    aria-atomic="true"
+                >
+                    <div className="d-flex">
+                        <div className="toast-body d-flex align-items-center gap-2">
+                            {renderIconoToast(toastInfo.tipo)}
+                            <span className="fw-semibold">{toastInfo.mensaje}</span>
+                        </div>
+                        <button 
+                            type="button" 
+                            className={`btn-close me-2 m-auto ${toastInfo.tipo === 'warning' ? '' : 'btn-close-white'}`} 
+                            onClick={() => setToastInfo(prev => ({ ...prev, visible: false }))}
+                            aria-label="Close"
+                        ></button>
+                    </div>
                 </div>
             </div>
 
-            {/* 2. Banner Verde de Bienvenida */}
+            {/* Banner Verde de Bienvenida */}
             <div className="alert border-0 rounded-3 p-4 mb-4" style={{ backgroundColor: '#d1e7dd', color: '#0f5132' }}>
                 <h5 className="fw-bold mb-1">¡Hola, emprendedor!</h5>
                 <p className="mb-0">Gestioná tus productos, mantené tu catálogo actualizado y revisá tus estadísticas.</p>
             </div>
 
-            {/* 3. Tarjetas de Métricas */}
+            {/* Tarjetas de Métricas */}
             <div className="row g-3 mb-4">
                 <div className="col-12 col-md-4">
                     <div className="bg-white p-3 rounded-3 shadow-sm border-0 d-flex justify-content-between align-items-start">
@@ -137,16 +150,11 @@ export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
                 </div>
             </div>
 
-            {/* 4. Tabla de Productos Publicados */}
+            {/* Tabla de Productos Publicados */}
             <div className="bg-white p-4 rounded-3 shadow-sm border-0">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                     <h5 className="fw-bold mb-0">Productos Publicados</h5>
-                    <button 
-                        className="btn btn-primary d-flex align-items-center gap-1 fw-medium"
-                        onClick={handleNuevoProducto}
-                    >
-                        <Plus size={18} /> Nuevo Producto
-                    </button>
+                    {/* Botón "Nuevo Producto" eliminado de aquí por solicitud */}
                 </div>
 
                 <div className="table-responsive">
@@ -172,7 +180,7 @@ export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
                                     <tr key={prod.id}>
                                         <td className="fw-bold text-dark">{prod.nombre}</td>
                                         <td className="text-secondary">{prod.categoria}</td>
-                                        <td className="fw-bold text-dark">${prod.precio.toLocaleString('es-AR')}</td>
+                                        <td className="fw-bold text-dark">\${prod.precio.toLocaleString('es-AR')}</td>
                                         <td>
                                             <span 
                                                 className="badge px-2 py-1 fw-semibold" 
@@ -201,7 +209,59 @@ export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
                     </table>
                 </div>
             </div>
+
+            {/* ✅ VISTA EMERGENTE (MODAL) PARA DETALLE DE PRODUCTO */}
+            {productoDetalle && (
+                <div 
+                    className="modal show d-block" 
+                    style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} 
+                    tabIndex={-1}
+                >
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content border-0 shadow-lg rounded-4 p-3">
+                            <div className="modal-header border-0 pb-0">
+                                <h5 className="modal-title fw-bold text-primary">Detalle del Producto</h5>
+                                <button 
+                                    type="button" 
+                                    className="btn-close" 
+                                    onClick={() => setProductoDetalle(null)}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                <div className="mb-3">
+                                    <span className="text-muted small d-block">Nombre del producto:</span>
+                                    <h6 className="fw-bold text-dark fs-5">{productoDetalle.nombre}</h6>
+                                </div>
+                                <div className="row mb-3">
+                                    <div className="col-6">
+                                        <span className="text-muted small d-block">Categoría:</span>
+                                        <span className="fw-semibold text-secondary">{productoDetalle.categoria}</span>
+                                    </div>
+                                    <div className="col-6">
+                                        <span className="text-muted small d-block">Precio:</span>
+                                        <span className="fw-bold text-success fs-6">\${productoDetalle.precio.toLocaleString('es-AR')}</span>
+                                    </div>
+                                </div>
+                                <div className="mb-2">
+                                    <span className="text-muted small d-block">Estado en la feria:</span>
+                                    <span className="badge bg-success px-2 py-1">{productoDetalle.estado}</span>
+                                </div>
+                            </div>
+                            <div className="modal-footer border-0 pt-0">
+                                <button 
+                                    type="button" 
+                                    className="btn btn-secondary btn-sm px-4" 
+                                    onClick={() => setProductoDetalle(null)}
+                                >
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
+export default InicioDash;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquare, Send, CheckCircle2, Clock, Shield, X, User, Plus } from 'lucide-react';
+import { MessageSquare, Send, CheckCircle2, Clock, Shield, X, User, Plus, AlertTriangle, XCircle } from 'lucide-react';
 
 interface Mensaje {
     id: string;
@@ -77,6 +77,24 @@ export const ChatInterno: React.FC<ChatInternoProps> = ({ esAdmin = true }) => {
     const [nuevaCategoria, setNuevaCategoria] = useState<'Soporte' | 'Aprobación' | 'Notificación' | 'General'>('General');
     const [nuevoTextoMensaje, setNuevoTextoMensaje] = useState('');
 
+    // ✅ Estado para el sistema de Toasts multiestado
+    const [toastInfo, setToastInfo] = useState<{
+        visible: boolean;
+        mensaje: string;
+        tipo: 'success' | 'warning' | 'danger';
+    }>({
+        visible: false,
+        mensaje: '',
+        tipo: 'success'
+    });
+
+    const mostrarToast = (mensaje: string, tipo: 'success' | 'warning' | 'danger' = 'success') => {
+        setToastInfo({ visible: true, mensaje, tipo });
+        setTimeout(() => {
+            setToastInfo(prev => ({ ...prev, visible: false }));
+        }, 4000);
+    };
+
     const abrirConversacion = (conv: MensajeInterno) => {
         const actualizadas = mensajesInternos.map((m) =>
             m.id === conv.id ? { ...m, leido: true } : m
@@ -87,7 +105,10 @@ export const ChatInterno: React.FC<ChatInternoProps> = ({ esAdmin = true }) => {
 
     const enviarRespuesta = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!respuestaTexto.trim() || !conversacionSeleccionada) return;
+        if (!respuestaTexto.trim() || !conversacionSeleccionada) {
+            mostrarToast("Escribe una respuesta antes de enviar.", "warning");
+            return;
+        }
 
         const nuevoMensaje: Mensaje = {
             id: Date.now().toString(),
@@ -107,11 +128,17 @@ export const ChatInterno: React.FC<ChatInternoProps> = ({ esAdmin = true }) => {
         );
         setConversacionSeleccionada(conversacionActualizada);
         setRespuestaTexto('');
+
+        // ✅ Toast verde de éxito
+        mostrarToast("¡Respuesta enviada con éxito!", "success");
     };
 
     const crearNuevoMensaje = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!nuevoAsunto.trim() || !nuevoTextoMensaje.trim()) return;
+        if (!nuevoAsunto.trim() || !nuevoTextoMensaje.trim()) {
+            mostrarToast("Completa los campos obligatorios.", "warning");
+            return;
+        }
 
         const nuevaConversacion: MensajeInterno = {
             id: Date.now().toString(),
@@ -140,10 +167,54 @@ export const ChatInterno: React.FC<ChatInternoProps> = ({ esAdmin = true }) => {
         setNuevoTextoMensaje('');
         setNuevaCategoria('General');
         setMostrarModalNuevo(false);
+
+        // ✅ Toast verde de éxito
+        mostrarToast("¡Mensaje o ticket creado correctamente!", "success");
+    };
+
+    const obtenerClaseToastBg = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return 'bg-success text-white';
+            case 'warning': return 'bg-warning text-dark';
+            case 'danger': return 'bg-danger text-white';
+            default: return 'bg-success text-white';
+        }
+    };
+
+    const renderIconoToast = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return <CheckCircle2 size={18} />;
+            case 'warning': return <AlertTriangle size={18} />;
+            case 'danger': return <XCircle size={18} />;
+            default: return <CheckCircle2 size={18} />;
+        }
     };
 
     return (
         <div className="container-fluid py-4 position-relative">
+            {/* ✅ TOAST EMERGENTE FLOTANTE MULTIESTADO */}
+            <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1080 }}>
+                <div 
+                    className={`toast align-items-center border-0 shadow-lg rounded-3 ${obtenerClaseToastBg(toastInfo.tipo)} ${toastInfo.visible ? 'show' : 'hide'}`} 
+                    role="alert" 
+                    aria-live="assertive" 
+                    aria-atomic="true"
+                >
+                    <div className="d-flex">
+                        <div className="toast-body d-flex align-items-center gap-2">
+                            {renderIconoToast(toastInfo.tipo)}
+                            <span className="fw-semibold">{toastInfo.mensaje}</span>
+                        </div>
+                        <button 
+                            type="button" 
+                            className={`btn-close me-2 m-auto ${toastInfo.tipo === 'warning' ? '' : 'btn-close-white'}`} 
+                            onClick={() => setToastInfo(prev => ({ ...prev, visible: false }))}
+                            aria-label="Close"
+                        ></button>
+                    </div>
+                </div>
+            </div>
+
             {/* Banner / Cabecera Informativa */}
             <div className="card border-0 shadow-sm p-4 mb-4 bg-white text-center rounded-3">
                 <div className="d-flex justify-content-center mb-2">
