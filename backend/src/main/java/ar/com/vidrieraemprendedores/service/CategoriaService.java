@@ -4,6 +4,7 @@ import ar.com.vidrieraemprendedores.models.Categoria;
 import ar.com.vidrieraemprendedores.repository.CategoriaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,8 +26,32 @@ public class CategoriaService implements ICategoriaService {
     }
 
     @Override
+    @Transactional
     public Categoria guardarCategoria(Categoria categoria) {
+        if (categoriaRepository.existsByNombreIgnoreCase(categoria.getNombre())) {
+            throw new RuntimeException("Ya existe una categoría con el nombre: " + categoria.getNombre());
+        }
+
         return categoriaRepository.save(categoria);
+    }
+
+    @Override
+    @Transactional
+    public Categoria actualizarCategoria(Long id, Categoria categoriaActualizada) {
+        Categoria categoriaExistente = categoriaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con el ID: " + id));
+
+        // Verificar si el nombre actualizado ya existe en otra categoría
+        if (!categoriaExistente.getNombre().equalsIgnoreCase(categoriaActualizada.getNombre()) &&
+                categoriaRepository.existsByNombreIgnoreCase(categoriaActualizada.getNombre())) {
+            throw new RuntimeException("Ya existe una categoría con el nombre: " + categoriaActualizada.getNombre());
+        }
+
+        // Actualizar los campos de la categoría existente
+        categoriaExistente.setNombre(categoriaActualizada.getNombre());
+        categoriaExistente.setDescripcion(categoriaActualizada.getDescripcion());
+
+        return categoriaRepository.save(categoriaExistente);
     }
 
     @Override
