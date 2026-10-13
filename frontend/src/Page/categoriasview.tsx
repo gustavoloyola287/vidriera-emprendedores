@@ -207,101 +207,98 @@ export const CategoriasView: React.FC = () => {
 
             <h4 className="fw-bold mb-4" style={{ color: '#002040' }}>Gestión de Categorías</h4>
 
-            <div className="row g-4 align-items-start">
-                <div className="col-12 col-md-5 col-lg-5 col-xl-4">
-                    <div className="bg-white rounded-3 shadow-sm p-4">
-                        <h6 className="fw-bold mb-3" style={{ color: '#002040' }}>
-                            {editandoId !== null ? 'Modificar Categoría' : 'Nueva Categoría'}
-                        </h6>
-                        <form onSubmit={handleGuardar}>
-                            <div className="mb-3">
-                                <label className="form-label small fw-semibold">Nombre</label>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    value={formData.nombre}
-                                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                                    placeholder="Ej. Gastronomía, Indumentaria..."
-                                    required
-                                />
-                            </div>
+            {/* FORMULARIO SUPERIOR HORIZONTAL */}
+            <div className="bg-white rounded-3 shadow-sm p-4 mb-4">
+                <h6 className="fw-bold mb-3" style={{ color: '#002040' }}>
+                    {editandoId !== null ? 'Modificar Categoría' : 'Nueva Categoría'}
+                </h6>
+                <form onSubmit={handleGuardar}>
+                    <div className="row g-3 align-items-end">
+                        <div className="col-12 col-md-4">
+                            <label className="form-label small fw-semibold">Nombre</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={formData.nombre}
+                                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                                placeholder="Ej. Gastronomía, Indumentaria..."
+                                required
+                            />
+                        </div>
 
-                            <div className="mb-3">
-                                <label className="form-label small fw-semibold">Descripción</label>
-                                <textarea
-                                    className="form-control"
-                                    rows={5}
-                                    style={{ minHeight: '130px', resize: 'vertical' }}
-                                    value={formData.descripcion}
-                                    onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                                    placeholder="Breve descripción opcional..."
-                                />
-                            </div>
+                        <div className="col-12 col-md-5">
+                            <label className="form-label small fw-semibold">Descripción</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={formData.descripcion}
+                                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                                placeholder="Breve descripción opcional..."
+                            />
+                        </div>
 
-                            <div className="d-flex flex-wrap gap-2 pt-2">
-                                <button type="submit" className="btn btn-primary btn-sm px-3 flex-fill d-flex align-items-center justify-content-center gap-1 py-2">
-                                    {editandoId !== null ? <Check size={16} /> : <Plus size={16} />}
-                                    {editandoId !== null ? 'Guardar' : 'Agregar'}
+                        <div className="col-12 col-md-3 d-flex gap-2">
+                            <button type="submit" className="btn btn-primary btn-sm px-3 flex-fill d-flex align-items-center justify-content-center gap-1 py-2">
+                                {editandoId !== null ? <Check size={16} /> : <Plus size={16} />}
+                                {editandoId !== null ? 'Guardar' : 'Agregar'}
+                            </button>
+                            {editandoId !== null && (
+                                <button type="button" className="btn btn-outline-secondary btn-sm px-3 flex-fill d-flex align-items-center justify-content-center gap-1 py-2" onClick={handleCancelar}>
+                                    <X size={16} /> Cancelar
                                 </button>
-                                {editandoId !== null && (
-                                    <button type="button" className="btn btn-outline-secondary btn-sm px-3 flex-fill d-flex align-items-center justify-content-center gap-1 py-2" onClick={handleCancelar}>
-                                        <X size={16} /> Cancelar
-                                    </button>
-                                )}
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <div className="col-12 col-md-7 col-lg-7 col-xl-8">
-                    <div className="bg-white rounded-3 shadow-sm p-4">
-                        <h6 className="fw-bold mb-3" style={{ color: '#002040' }}>Categorías Existentes</h6>
-                        <div className="table-responsive">
-                            <table className="table align-middle mb-0">
-                                <thead>
-                                    <tr className="border-bottom text-muted small">
-                                        <th style={{ width: '50px' }}>ID</th>
-                                        <th style={{ width: '30%' }}>Nombre</th>
-                                        <th>Descripción</th>
-                                        <th className="text-end" style={{ width: '90px' }}>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {loading ? (
-                                        <tr><td colSpan={4} className="text-center py-3">Cargando categorías...</td></tr>
-                                    ) : categorias.length === 0 ? (
-                                        <tr><td colSpan={4} className="text-center py-3 text-muted">No existen categorías creadas.</td></tr>
-                                    ) : (
-                                        categorias.map((cat) => (
-                                            <tr key={cat.id}>
-                                                <td className="fw-semibold text-muted">{cat.id}</td>
-                                                <td className="fw-bold" style={{ color: '#002040' }}>{cat.nombre}</td>
-                                                <td className="text-muted small">{cat.descripcion || '-'}</td>
-                                                <td className="text-end">
-                                                    <div className="d-flex justify-content-end gap-1">
-                                                        <button
-                                                            className="btn btn-outline-primary btn-sm p-1"
-                                                            onClick={() => handleEditar(cat)}
-                                                            title="Editar"
-                                                        >
-                                                            <Edit2 size={15} />
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-outline-danger btn-sm p-1"
-                                                            onClick={() => handleEliminar(cat.id)}
-                                                            title="Eliminar"
-                                                        >
-                                                            <Trash2 size={15} />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                            )}
                         </div>
                     </div>
+                </form>
+            </div>
+
+            {/* TABLA INFERIOR DE CATEGORÍAS EXISTENTES */}
+            <div className="bg-white rounded-3 shadow-sm p-4">
+                <h6 className="fw-bold mb-3" style={{ color: '#002040' }}>Categorías Existentes</h6>
+                <div className="table-responsive">
+                    <table className="table align-middle mb-0">
+                        <thead>
+                            <tr className="border-bottom text-muted small">
+                                <th style={{ width: '50px' }}>ID</th>
+                                <th style={{ width: '30%' }}>Nombre</th>
+                                <th>Descripción</th>
+                                <th className="text-end" style={{ width: '90px' }}>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr><td colSpan={4} className="text-center py-3">Cargando categorías...</td></tr>
+                            ) : categorias.length === 0 ? (
+                                <tr><td colSpan={4} className="text-center py-3 text-muted">No existen categorías creadas.</td></tr>
+                            ) : (
+                                categorias.map((cat) => (
+                                    <tr key={cat.id}>
+                                        <td className="fw-semibold text-muted">{cat.id}</td>
+                                        <td className="fw-bold" style={{ color: '#002040' }}>{cat.nombre}</td>
+                                        <td className="text-muted small">{cat.descripcion || '-'}</td>
+                                        <td className="text-end">
+                                            <div className="d-flex justify-content-end gap-1">
+                                                <button
+                                                    className="btn btn-outline-primary btn-sm p-1"
+                                                    onClick={() => handleEditar(cat)}
+                                                    title="Editar"
+                                                >
+                                                    <Edit2 size={15} />
+                                                </button>
+                                                <button
+                                                    className="btn btn-outline-danger btn-sm p-1"
+                                                    onClick={() => handleEliminar(cat.id)}
+                                                    title="Eliminar"
+                                                >
+                                                    <Trash2 size={15} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

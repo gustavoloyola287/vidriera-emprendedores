@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { productoService, type FotoProducto } from "../services/productoService";
 import { type Emprendedor } from "../types/Emprendedor";
 import type { Producto } from "../types/Producto";
-import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, XCircle, Camera, Globe, MessageCircle } from "lucide-react";
 
 export function DetalleEmprendedor() {
     const { id } = useParams<{ id: string }>();
@@ -142,7 +142,6 @@ export function DetalleEmprendedor() {
             return;
         }
 
-        // Aquí iría la llamada al servicio para guardar la reseña en Spring Boot
         mostrarToast("¡Gracias! Tu reseña fue publicada con éxito.", "success");
         setNuevoComentario("");
         setNuevaCalificacion(5);
@@ -224,6 +223,45 @@ export function DetalleEmprendedor() {
                                 </span>
                                 <span className="text-muted small">(24 valoraciones)</span>
                             </div>
+
+                            {/* SECCIÓN DE REDES SOCIALES (Preparada para consumir los campos validados del backend) */}
+                            <div className="d-flex align-items-center gap-3 mb-4 flex-wrap">
+                                <span className="text-muted small fw-semibold">Redes oficiales:</span>
+                                
+                                {/* Ejemplo condicional utilizando propiedades estándar de redes (ej: instagram, facebook, web) */}
+                                {(emprendedor as any).instagram && (
+                                    <a 
+                                        href={`https://instagram.com/${(emprendedor as any).instagram.replace('@', '')}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1"
+                                    >
+                                        <Camera size={16} /> Instagram
+                                    </a>
+                                )}
+
+                                {(emprendedor as any).facebook && (
+                                    <a 
+                                        href={(emprendedor as any).facebook} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+                                    >
+                                        <Globe size={16} /> Facebook
+                                    </a>
+                                )}
+
+                                {(emprendedor as any).web && (
+                                    <a 
+                                        href={(emprendedor as any).web} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
+                                    >
+                                        <Globe size={16} /> Sitio Web
+                                    </a>
+                                )}
+                            </div>
                             
                             {/* BOTÓN WHATSAPP GENERAL */}
                             <a
@@ -232,7 +270,7 @@ export function DetalleEmprendedor() {
                                 rel="noopener noreferrer"
                                 className="btn btn-success fw-bold d-inline-flex align-items-center gap-2"
                             >
-                                💬 Contactar por WhatsApp
+                                <MessageCircle size={18} /> Contactar por WhatsApp
                             </a>
                         </div>
                         <button className="btn btn-outline-secondary" type="button" onClick={() => navigate("/")}>

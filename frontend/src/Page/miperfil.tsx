@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2, Send, CheckCircle2, AlertTriangle, XCircle, Camera } from 'lucide-react';
+import { Loader2, Send, CheckCircle2, AlertTriangle, XCircle, Camera, AtSign, Share2, Globe } from 'lucide-react';
 
 export interface EmprendedorPerfil {
     id: number;
@@ -9,6 +9,9 @@ export interface EmprendedorPerfil {
     nombreEmprendimiento: string;
     email: string;
     telefono: string;
+    instagram: string;
+    facebook: string;
+    web: string;
 }
 
 export const MiPerfil: React.FC = () => {
@@ -20,7 +23,10 @@ export const MiPerfil: React.FC = () => {
         descripcion: "Elaboración artesanal de budines, tortas y panificados regionales sin TАС.",
         nombreEmprendimiento: "Delicias del Valle",
         email: "deliciasdelvalle@correo.com",
-        telefono: "3541123456"
+        telefono: "3541123456",
+        instagram: "@deliciasdelvalle",
+        facebook: "facebook.com/deliciasdelvalle",
+        web: "https://deliciasdelvalle.com"
     });
 
     const [previewImagen, setPreviewImagen] = useState<string | null>(null);
@@ -75,18 +81,10 @@ export const MiPerfil: React.FC = () => {
         setCargando(true);
 
         try {
-            // Aquí iría el fetch a Spring Boot enviando los datos (o FormData si incluye imagen)
-            // const response = await fetch('http://localhost:8080/api/emprendedor/perfil/actualizar', {
-            //     method: 'PUT',
-            //     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-            //     body: JSON.stringify(formData)
-            // });
-            // if (!response.ok) throw new Error("Error al enviar los cambios");
-
             await new Promise((resolve) => setTimeout(resolve, 800)); // Simula delay de red
 
             // Toast verde de éxito indicando que pasó a moderación
-            mostrarToast("¡Cambios enviados! Quedaron pendientes de aprobación por el municipio.", "success");
+            mostrarToast("¡Cambios y redes enviados! Quedaron pendientes de aprobación por el municipio.", "success");
 
         } catch (err: any) {
             console.error("Error al actualizar perfil:", err);
@@ -141,7 +139,7 @@ export const MiPerfil: React.FC = () => {
 
             <h2 className="fw-bold mb-1 text-dark">Mi Perfil Público</h2>
             <p className="text-muted small mb-4">
-                Modificá la información de tu emprendimiento. Tené en cuenta que cualquier cambio pasará por una breve revisión de moderación antes de actualizarse en la feria.
+                Modificá la información de tu emprendimiento y redes sociales. Tené en cuenta que cualquier cambio pasará por una breve revisión de moderación antes de actualizarse en la feria.
             </p>
 
             <div className="card border-0 shadow-sm p-4 rounded-4">
@@ -216,7 +214,7 @@ export const MiPerfil: React.FC = () => {
                                 className="form-control bg-light"
                                 name="email"
                                 value={formData.email}
-                                disabled // El email por seguridad suele no editarse libremente
+                                disabled
                             />
                         </div>
 
@@ -235,7 +233,7 @@ export const MiPerfil: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="mb-4 text-start">
+                    <div className="mb-3 text-start">
                         <div className="d-flex justify-content-between mb-1">
                             <label className="form-label fw-semibold text-secondary small mb-0">
                                 Descripción del Emprendimiento <span className="text-danger">*</span>
@@ -251,6 +249,57 @@ export const MiPerfil: React.FC = () => {
                             onChange={handleChange}
                             required
                         ></textarea>
+                    </div>
+
+                    {/* SECCIÓN DE REDES SOCIALES (Limitada a 3 enlaces) */}
+                    <hr className="my-4" />
+                    <h5 className="fw-bold text-dark mb-3 text-start fs-6">Redes Sociales y Enlaces Oficiales</h5>
+                    <p className="text-muted small mb-3 text-start">
+                        Estos enlaces se mostrarán en tu perfil público una vez que sean aprobados por la administración.
+                    </p>
+
+                    <div className="row g-3 mb-4">
+                        <div className="col-md-4 text-start">
+                            <label className="form-label fw-semibold text-secondary small d-flex align-items-center gap-1">
+                                <AtSign size={16} className="text-danger" /> Instagram
+                            </label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                name="instagram"
+                                placeholder="@tuemprendimiento"
+                                value={formData.instagram}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div className="col-md-4 text-start">
+                            <label className="form-label fw-semibold text-secondary small d-flex align-items-center gap-1">
+                                <Share2 size={16} className="text-primary" /> Facebook
+                            </label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                name="facebook"
+                                placeholder="facebook.com/tuemprendimiento"
+                                value={formData.facebook}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div className="col-md-4 text-start">
+                            <label className="form-label fw-semibold text-secondary small d-flex align-items-center gap-1">
+                                <Globe size={16} className="text-secondary" /> Sitio Web / Tienda
+                            </label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                name="web"
+                                placeholder="https://tusitio.com"
+                                value={formData.web}
+                                onChange={handleChange}
+                            />
+                        </div>
                     </div>
 
                     <div className="d-flex justify-content-end">
