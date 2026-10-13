@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Edit, Ban, Trash2, CheckCircle2, Plus, RefreshCw } from 'lucide-react';
+import { Search, Edit, Ban, Trash2, CheckCircle2, Plus, RefreshCw, AlertTriangle, XCircle } from 'lucide-react';
 import ModalNuevoEmprendedor from '../components/modalemprendedor';
 
 const API_URL = 'http://localhost:8080/api/emprendedores';
@@ -39,6 +39,24 @@ export const UsuariosView: React.FC = () => {
     const [usuarioAEditar, setUsuarioAEditar] = useState<Usuario | null>(null);
     const [isCrearModalOpen, setIsCrearModalOpen] = useState<boolean>(false);
 
+    // ✅ Estado para el sistema de Toasts multiestado
+    const [toastInfo, setToastInfo] = useState<{
+        visible: boolean;
+        mensaje: string;
+        tipo: 'success' | 'warning' | 'danger';
+    }>({
+        visible: false,
+        mensaje: '',
+        tipo: 'success'
+    });
+
+    const mostrarToast = (mensaje: string, tipo: 'success' | 'warning' | 'danger' = 'success') => {
+        setToastInfo({ visible: true, mensaje, tipo });
+        setTimeout(() => {
+            setToastInfo(prev => ({ ...prev, visible: false }));
+        }, 4000);
+    };
+
     const obtenerEmprendedores = async () => {
         setCargando(true);
         setErrorApi(null);
@@ -70,9 +88,11 @@ export const UsuariosView: React.FC = () => {
             });
 
             setUsuarios(usuariosMapeados);
+            mostrarToast("Lista de emprendedores actualizada", "success");
         } catch (err: any) {
             console.error("Error al conectar con EmprendedorController:", err);
             setErrorApi("No se pudo conectar con el servidor backend.");
+            mostrarToast("Error al conectar con el servidor", "danger");
         } finally {
             setCargando(false);
         }
@@ -82,7 +102,6 @@ export const UsuariosView: React.FC = () => {
         obtenerEmprendedores();
     }, []);
 
-    // ✅ CORREGIDO: Las métricas ahora calculan SOLO sobre los usuarios con rol EMPRENDEDOR
     useEffect(() => {
         const soloEmprendedores = usuarios.filter(u => u.rol === 'EMPRENDEDOR');
 
@@ -93,7 +112,7 @@ export const UsuariosView: React.FC = () => {
         setMetricas({
             activos,
             suspendidos,
-            admins: 0, // Mantenemos la propiedad pero en 0, ya que esta vista es solo para emprendedores
+            admins: 0,
             rechazados,
             total: soloEmprendedores.length
         });
@@ -108,12 +127,13 @@ export const UsuariosView: React.FC = () => {
             });
             if (response.ok || response.status === 204) {
                 setUsuarios(prev => prev.filter(u => u.id !== id));
+                mostrarToast("Emprendedor eliminado correctamente", "success");
             } else {
-                alert('No se pudo eliminar el registro en el servidor.');
+                mostrarToast("No se pudo eliminar el registro en el servidor.", "warning");
             }
         } catch (error) {
             console.error('Error al eliminar:', error);
-            alert('Error de conexión al intentar eliminar.');
+            mostrarToast("Error de conexión al intentar eliminar.", "danger");
         }
     };
 
@@ -121,6 +141,8 @@ export const UsuariosView: React.FC = () => {
         setUsuarios(prev => prev.map(u => {
             if (u.id === id) {
                 const nuevoEstado = u.estado === 'SUSPENDIDO' ? 'ACTIVO' : 'SUSPENDIDO';
+                const mensajeAccion = nuevoEstado === 'SUSPENDIDO' ? 'Emprendedor suspendido' : 'Emprendedor activado';
+                mostrarToast(mensajeAccion, 'success');
                 return { ...u, estado: nuevoEstado };
             }
             return u;
@@ -136,12 +158,11 @@ export const UsuariosView: React.FC = () => {
         if (!usuarioAEditar) return;
         setUsuarios(prev => prev.map(u => u.id === usuarioAEditar.id ? usuarioAEditar : u));
         setUsuarioAEditar(null);
+        mostrarToast("Cambios guardados con éxito", "success");
     };
 
-    // Filtrado estricto para OCULTAR Admins y Super Admins de esta vista
     const usuariosFiltrados = useMemo(() => {
         return usuarios.filter(u => {
-            // 1. REGLA DE ORO: Si es Admin, Super Admin o Moderador, NO lo mostramos en esta lista
             if (u.rol === 'ADMIN' || u.rol === 'SUPER_ADMIN' || u.rol === 'MODERADOR') {
                 return false; 
             }
@@ -188,8 +209,49 @@ export const UsuariosView: React.FC = () => {
         }
     };
 
+    const obtenerClaseToastBg = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return 'bg-success text-white';
+            case 'warning': return 'bg-warning text-dark';
+            case 'danger': return 'bg-danger text-white';
+            default: return 'bg-success text-white';
+        }
+    };
+
+    const renderIconoToast = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return <CheckCircle2 size={18} />;
+            case 'warning': return <AlertTriangle size={18} />;
+            case 'danger': return <XCircle size={18} />;
+            default: return <CheckCircle2 size={18} />;
+        }
+    };
+
     return (
-        <div className="container-fluid p-0">
+        <div className="container-fluid p-0 position-relative">
+            {/* ✅ TOAST EMERGENTE FLOTANTE MULTIESTADO */}
+            <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1080 }}>
+                <div 
+                    className={`toast align-items-center border-0 shadow-lg rounded-3 ${obtenerClaseToastBg(toastInfo.tipo)} ${toastInfo.visible ? 'show' : 'hide'}`} 
+                    role="alert" 
+                    aria-live="assertive" 
+                    aria-atomic="true"
+                >
+                    <div className="d-flex">
+                        <div className="toast-body d-flex align-items-center gap-2">
+                            {renderIconoToast(toastInfo.tipo)}
+                            <span className="fw-semibold">{toastInfo.mensaje}</span>
+                        </div>
+                        <button 
+                            type="button" 
+                            className={`btn-close me-2 m-auto ${toastInfo.tipo === 'warning' ? '' : 'btn-close-white'}`} 
+                            onClick={() => setToastInfo(prev => ({ ...prev, visible: false }))}
+                            aria-label="Close"
+                        ></button>
+                    </div>
+                </div>
+            </div>
+
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5 className="fw-bold m-0">Gestión de Emprendedores</h5>
                 <div className="d-flex gap-2">
@@ -307,7 +369,7 @@ export const UsuariosView: React.FC = () => {
 
                 <div className="card-footer bg-white d-flex justify-content-between align-items-center py-3">
                     <span className="small text-muted">
-                        {usuariosFiltrados.length > 0 ? `Mostrando ${((paginaActual - 1) * elementosPorPagina) + 1} - ${Math.min(paginaActual * elementosPorPagina, usuariosFiltrados.length)} de ${usuariosFiltrados.length} usuarios` : 'Sin resultados'}
+                        {usuariosFiltrados.length > 0 ? `Mostrando ${((paginaActual - 1) * elementosPorPagina) + 1} a ${Math.min(paginaActual * elementosPorPagina, usuariosFiltrados.length)} de ${usuariosFiltrados.length} usuarios` : 'Sin resultados'}
                     </span>
                     <ul className="pagination pagination-sm mb-0">
                         <li className={`page-item ${paginaActual === 1 ? 'disabled' : ''}`}>

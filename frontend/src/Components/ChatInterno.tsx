@@ -129,7 +129,6 @@ export const ChatInterno: React.FC<ChatInternoProps> = ({ esAdmin = true }) => {
         setConversacionSeleccionada(conversacionActualizada);
         setRespuestaTexto('');
 
-        // ✅ Toast verde de éxito
         mostrarToast("¡Respuesta enviada con éxito!", "success");
     };
 
@@ -168,7 +167,6 @@ export const ChatInterno: React.FC<ChatInternoProps> = ({ esAdmin = true }) => {
         setNuevaCategoria('General');
         setMostrarModalNuevo(false);
 
-        // ✅ Toast verde de éxito
         mostrarToast("¡Mensaje o ticket creado correctamente!", "success");
     };
 

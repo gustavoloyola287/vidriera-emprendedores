@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
     Users, ShieldCheck, Package, LogOut, Home, MessageSquare, 
-    Bell, Check, X, Tags, UserPlus, AlertTriangle, Loader2, Mail 
-
+    Bell, Check, X, Tags, UserPlus, AlertTriangle, Loader2, Mail, CheckCircle2, XCircle 
 } from 'lucide-react';
 import { UsuariosView } from './Emprendedoresview';
 import { ProductosView } from './Productosview';
@@ -49,9 +48,10 @@ interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    onShowToast: (mensaje: string, tipo?: 'success' | 'warning' | 'danger') => void;
 }
 
-export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, onSuccess, onShowToast }) => {
     const [formData, setFormData] = useState({
         nombre: '',
         email: '',
@@ -69,7 +69,6 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
         setModalError(null);
 
         try {
-            // ✅ URL CORREGIDA + TOKEN JWT
             const response = await fetch('/api/admin/emprendedores', {
                 method: 'POST',
                 headers: { 
@@ -88,12 +87,17 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
                 setFormData({ nombre: '', email: '', rubro: '', telefono: '' });
                 onSuccess();
                 onClose();
+                onShowToast('¡Emprendedor registrado con éxito!', 'success');
             } else {
                 const errorData = await response.json().catch(() => null);
-                setModalError(errorData?.message || 'No se pudo registrar el emprendedor.');
+                const msg = errorData?.message || 'No se pudo registrar el emprendedor.';
+                setModalError(msg);
+                onShowToast(msg, 'warning');
             }
         } catch (error) {
-            setModalError('Error de conexión con el servidor.');
+            const msg = 'Error de conexión con el servidor.';
+            setModalError(msg);
+            onShowToast(msg, 'danger');
         } finally {
             setLoadingSave(false);
         }
@@ -147,7 +151,6 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
     );
 };
 
-// ✅ AGREGADO: Interfaz para recibir la prop isSuperAdmin
 interface AdminDashboardProps {
     isSuperAdmin?: boolean;
 }
@@ -164,6 +167,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
     const [dashError, setDashError] = useState<string | null>(null);
     const [moderacionError, setModeracionError] = useState<string | null>(null);
 
+    // ✅ Estado para Toast multiestado en el Dashboard
+    const [toastInfo, setToastInfo] = useState<{
+        visible: boolean;
+        mensaje: string;
+        tipo: 'success' | 'warning' | 'danger';
+    }>({
+        visible: false,
+        mensaje: '',
+        tipo: 'success'
+    });
+
+    const mostrarToast = (mensaje: string, tipo: 'success' | 'warning' | 'danger' = 'success') => {
+        setToastInfo({ visible: true, mensaje, tipo });
+        setTimeout(() => {
+            setToastInfo(prev => ({ ...prev, visible: false }));
+        }, 4000);
+    };
+
     const [stats, setStats] = useState<AdminDashboardStatsDTO>({
         totalEmprendedores: 0, emprendedoresActivos: 0, emprendedoresSuspendidos: 0,
         totalAdmins: 0, emprendedoresRechazados: 0, totalProductos: 0, productosPendientes: 0
@@ -176,18 +197,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
     const [notificaciones, setNotificaciones] = useState<NotificacionItem[]>([]);
     const [itemsModeracion, setItemsModeracion] = useState<ModeracionItem[]>([]);
 
-    // ✅ NUEVO: Estados para crear Admin (Solo Super Admin)
     const [nuevoAdmin, setNuevoAdmin] = useState({ nombre: '', email: '', password: '' });
     const [mensajeAdmin, setMensajeAdmin] = useState<string | null>(null);
     const [loadingAdmin, setLoadingAdmin] = useState(false);
 
-    // ✅ HELPER: Función para obtener headers con token JWT
     const getAuthHeaders = () => ({
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token')}`
     });
 
-    // ✅ URL CORREGIDA: /api/admin/stats 
     const fetchDashboardStats = async () => {
         try {
             setLoadingStats(true);
@@ -210,7 +228,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
         try {
             setLoadingModeracion(true);
             setModeracionError(null);
-            // ✅ URL CORREGIDA (si no existe este endpoint en backend, lo ignoramos)
             const response = await fetch('/api/admin/moderacion/reciente', { headers: getAuthHeaders() });
             if (response.ok) {
                 const data = await response.json();
@@ -249,6 +266,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
             });
             if (response.ok) {
                 setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })));
+                mostrarToast('Notificaciones marcadas como leídas', 'success');
             }
         } catch (error) {
             console.warn('Error al marcar notificaciones como leídas:', error);
@@ -265,7 +283,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
 
     const noLeidasCount = notificaciones.filter(n => !n.leida).length;
 
-
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -275,7 +292,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
         fetchDashboardStats();
     };
 
-    // ✅ URL CORREGIDA: /api/admin/productos/{id}/estado
     const handleAprobar = async (id: number) => {
         try {
             setActionLoadingId(id);
@@ -287,12 +303,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
             if (response.ok) {
                 setItemsModeracion(prev => prev.map(item => item.id === id ? { ...item, estado: 'Aprobado' } : item));
                 fetchDashboardStats();
+                mostrarToast('Elemento aprobado correctamente', 'success');
             } else {
                 setModeracionError('No se pudo aprobar el elemento seleccionado.');
+                mostrarToast('No se pudo aprobar el elemento', 'warning');
             }
         } catch (error) {
             console.error('Error al aprobar item:', error);
             setModeracionError('Ocurrió un error al procesar la aprobación.');
+            mostrarToast('Error al procesar la aprobación', 'danger');
         } finally {
             setActionLoadingId(null);
         }
@@ -309,18 +328,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
             if (response.ok) {
                 setItemsModeracion(prev => prev.map(item => item.id === id ? { ...item, estado: 'Rechazado' } : item));
                 fetchDashboardStats();
+                mostrarToast('Elemento rechazado correctamente', 'success');
             } else {
                 setModeracionError('No se pudo rechazar el elemento seleccionado.');
+                mostrarToast('No se pudo rechazar el elemento', 'warning');
             }
         } catch (error) {
             console.error('Error al rechazar item:', error);
             setModeracionError('Ocurrió un error al procesar el rechazo.');
+            mostrarToast('Error al procesar el rechazo', 'danger');
         } finally {
             setActionLoadingId(null);
         }
     };
 
-    // ✅ NUEVO: Handler para crear administrador
     const handleCrearAdmin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoadingAdmin(true);
@@ -335,11 +356,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
             if (response.ok) {
                 setMensajeAdmin(`✅ ${data.message}`);
                 setNuevoAdmin({ nombre: '', email: '', password: '' });
+                mostrarToast('Administrador creado con éxito', 'success');
             } else {
-                setMensajeAdmin(`❌ Error: ${data.error || 'No se pudo crear el administrador'}`);
+                const msg = `Error: ${data.error || 'No se pudo crear el administrador'}`;
+                setMensajeAdmin(`❌ ${msg}`);
+                mostrarToast(msg, 'warning');
             }
         } catch (error) {
             setMensajeAdmin('❌ Error de conexión al crear el administrador.');
+            mostrarToast('Error de conexión al crear admin', 'danger');
         } finally {
             setLoadingAdmin(false);
         }
@@ -349,12 +374,52 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
         filtroEstado === 'Todos' ? true : item.tipo === filtroEstado
     );
 
-    // ✅ CORREGIDO: Mostrar "Super Administrador" si es Super Admin
     const nombreAdmin = isSuperAdmin ? 'Super Administrador' : 'Administrador';
     const inicialAdmin = nombreAdmin.charAt(0).toUpperCase();
 
+    const obtenerClaseToastBg = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return 'bg-success text-white';
+            case 'warning': return 'bg-warning text-dark';
+            case 'danger': return 'bg-danger text-white';
+            default: return 'bg-success text-white';
+        }
+    };
+
+    const renderIconoToast = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return <CheckCircle2 size={18} />;
+            case 'warning': return <AlertTriangle size={18} />;
+            case 'danger': return <XCircle size={18} />;
+            default: return <CheckCircle2 size={18} />;
+        }
+    };
+
     return (
-        <div className="d-flex flex-column vh-100 bg-light">
+        <div className="d-flex flex-column vh-100 bg-light position-relative">
+            {/* ✅ TOAST EMERGENTE FLOTANTE MULTIESTADO */}
+            <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1080 }}>
+                <div 
+                    className={`toast align-items-center border-0 shadow-lg rounded-3 ${obtenerClaseToastBg(toastInfo.tipo)} ${toastInfo.visible ? 'show' : 'hide'}`} 
+                    role="alert" 
+                    aria-live="assertive" 
+                    aria-atomic="true"
+                >
+                    <div className="d-flex">
+                        <div className="toast-body d-flex align-items-center gap-2">
+                            {renderIconoToast(toastInfo.tipo)}
+                            <span className="fw-semibold">{toastInfo.mensaje}</span>
+                        </div>
+                        <button 
+                            type="button" 
+                            className={`btn-close me-2 m-auto ${toastInfo.tipo === 'warning' ? '' : 'btn-close-white'}`} 
+                            onClick={() => setToastInfo(prev => ({ ...prev, visible: false }))}
+                            aria-label="Close"
+                        ></button>
+                    </div>
+                </div>
+            </div>
+
             {/* Top Header */}
             <header className="navbar navbar-expand navbar-dark px-3 shadow-sm" style={{ backgroundColor: '#0f2b48' }}>
                 <div className="d-flex align-items-center gap-2">
@@ -483,7 +548,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
                             </button>
                         </li>
                         
-                        {/* ✅ NUEVO: Pestaña exclusiva para Super Admin */}
                         {isSuperAdmin && (
                             <li className="nav-item">
                                 <button 
@@ -569,172 +633,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
                                     </div>
                                 </div>
                             </div>
-
-                            <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
-                                Emprendedores totales: 
-                                {loadingStats ? <span className="spinner-border spinner-border-sm text-secondary" role="status"></span> : stats.totalEmprendedores}
-                            </h6>
-                            <div className="row g-3 mb-4">
-                                <div className="col-6 col-md-3">
-                                    <div className="card border-0 shadow-sm">
-                                        <div className="card-body p-3">
-                                            <span className="text-muted text-uppercase fw-semibold small">ACTIVOS</span>
-                                            <h3 className="fw-bold my-1">
-                                                {loadingStats ? <div className="spinner-border spinner-border-sm text-primary" /> : stats.emprendedoresActivos}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-6 col-md-3">
-                                    <div className="card border-0 shadow-sm">
-                                        <div className="card-body p-3">
-                                            <span className="text-muted text-uppercase fw-semibold small">SUSPENDIDOS</span>
-                                            <h3 className="fw-bold my-1">
-                                                {loadingStats ? <div className="spinner-border spinner-border-sm text-primary" /> : stats.emprendedoresSuspendidos}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-6 col-md-3">
-                                    <div className="card border-0 shadow-sm">
-                                        <div className="card-body p-3">
-                                            <span className="text-muted text-uppercase fw-semibold small">ADMINS</span>
-                                            <h3 className="fw-bold my-1">
-                                                {loadingStats ? <div className="spinner-border spinner-border-sm text-primary" /> : stats.totalAdmins}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-6 col-md-3">
-                                    <div className="card border-0 shadow-sm">
-                                        <div className="card-body p-3">
-                                            <span className="text-muted text-uppercase fw-semibold small">RECHAZADOS</span>
-                                            <h3 className="fw-bold my-1">
-                                                {loadingStats ? <div className="spinner-border spinner-border-sm text-primary" /> : stats.emprendedoresRechazados}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="card border-0 shadow-sm">
-                                <div className="card-body p-3">
-                                    <div className="d-flex justify-content-between align-items-center mb-3">
-                                        <h6 className="fw-bold mb-0">Moderación Reciente</h6>
-                                        <select 
-                                            className="form-select form-select-sm w-auto"
-                                            value={filtroEstado}
-                                            onChange={(e) => setFiltroEstado(e.target.value as 'Todos' | 'contenido' | 'usuarios')}
-                                        >
-                                            <option value="Todos">Todos los tipos</option>
-                                            <option value="contenido">Contenido</option>
-                                            <option value="usuarios">Usuarios</option>
-                                        </select>
-                                    </div>
-
-                                    {moderacionError && (
-                                        <div className="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-3" role="alert">
-                                            <AlertTriangle size={16} />
-                                            <span>{moderacionError}</span>
-                                        </div>
-                                    )}
-
-                                    <div className="table-responsive">
-                                        <table className="table align-middle mb-0">
-                                            <thead className="table-light">
-                                                <tr>
-                                                    <th>Usuario</th>
-                                                    <th>Detalle</th>
-                                                    <th>Tipo</th>
-                                                    <th>Estado</th>
-                                                    <th className="text-end">Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {loadingModeracion ? (
-                                                    <tr>
-                                                        <td colSpan={5} className="text-center py-4">
-                                                            <div className="spinner-border spinner-border-sm text-primary me-2" /> Cargando lista...
-                                                        </td>
-                                                    </tr>
-                                                ) : itemsFiltrados.length === 0 ? (
-                                                    <tr>
-                                                        <td colSpan={5} className="text-center py-4 text-muted">
-                                                            No hay elementos para moderar.
-                                                        </td>
-                                                    </tr>
-                                                ) : (
-                                                    itemsFiltrados.map((item) => (
-                                                        <tr key={item.id}>
-                                                            <td>{item.usuario}</td>
-                                                            <td>{item.contenido}</td>
-                                                            <td>
-                                                                <span className={`badge ${item.tipo === 'contenido' ? 'bg-info' : 'bg-warning'} text-dark`}>
-                                                                    {item.tipo}
-                                                                </span>
-                                                            </td>
-                                                            <td>
-                                                                <span className={`badge ${
-                                                                    item.estado === 'Aprobado' ? 'bg-success' : 
-                                                                    item.estado === 'Rechazado' ? 'bg-danger' : 'bg-secondary'
-                                                                }`}>
-                                                                    {item.estado}
-                                                                </span>
-                                                            </td>
-                                                            <td className="text-end">
-                                                                <div className="btn-group btn-group-sm">
-                                                                    <button
-                                                                        className="btn btn-outline-success p-1"
-                                                                        onClick={() => handleAprobar(item.id)}
-                                                                        disabled={actionLoadingId === item.id || item.estado !== 'Pendiente'}
-                                                                        title="Aprobar"
-                                                                    >
-                                                                        {actionLoadingId === item.id ? <Loader2 size={14} className="spinner-border spinner-border-sm" /> : <Check size={14} />}
-                                                                    </button>
-                                                                    <button
-                                                                        className="btn btn-outline-danger p-1"
-                                                                        onClick={() => handleRechazar(item.id)}
-                                                                        disabled={actionLoadingId === item.id || item.estado !== 'Pendiente'}
-                                                                        title="Rechazar"
-                                                                    >
-                                                                        {actionLoadingId === item.id ? <Loader2 size={14} className="spinner-border spinner-border-sm" /> : <X size={14} />}
-                                                                    </button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    ))
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
-                    )}
-
-                    {/* ✅ NUEVO: Vista para crear Administradores (Solo Super Admin) */}
-                    {activeTab === 'admins' && isSuperAdmin && (
-                        <AdminsView onAdminCreado={fetchDashboardStats}  /> 
                     )}
 
                     {activeTab === 'emprendedores' && (
                         <UsuariosViewWithActions 
                             onEmprendedorCreado={handleEmprendedorCreado} 
-                            onOpenModal={() => setIsModalOpen(true)}
+                            onOpenModal={() => setIsModalOpen(true)} 
                         />
                     )}
                     {activeTab === 'productos' && <ProductosView />}
                     {activeTab === 'moderacion' && <ModeracionView />}
                     {activeTab === 'categorias' && <CategoriasView />}
                     {activeTab === 'mensajes' && <ChatInterno />}
+                    {activeTab === 'admins' && <AdminsView />}
                 </main>
             </div>
 
+            {/* Modal */}
             <ModalNuevoEmprendedor 
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
                 onSuccess={handleEmprendedorCreado}
+                onShowToast={mostrarToast}
             />
         </div>
     );
 };
+
+export default AdminDashboard;

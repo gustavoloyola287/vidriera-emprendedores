@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Check, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, X, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 
 interface Categoria {
     id: number;
@@ -21,6 +21,23 @@ export const CategoriasView: React.FC = () => {
     const [editandoId, setEditandoId] = useState<number | null>(null);
     const [formData, setFormData] = useState<{ nombre: string; descripcion: string }>({ nombre: '', descripcion: '' });
 
+    // ✅ Estado para el sistema de Toasts multiestado
+    const [toastInfo, setToastInfo] = useState<{
+        visible: boolean;
+        mensaje: string;
+        tipo: 'success' | 'warning' | 'danger';
+    }>({
+        visible: false,
+        mensaje: '',
+        tipo: 'success'
+    });
+
+    const mostrarToast = (mensaje: string, tipo: 'success' | 'warning' | 'danger' = 'success') => {
+        setToastInfo({ visible: true, mensaje, tipo });
+        setTimeout(() => {
+            setToastInfo(prev => ({ ...prev, visible: false }));
+        }, 4000);
+    };
     
     const getAuthHeaders = () => {
         const token = localStorage.getItem('token');
@@ -28,7 +45,6 @@ export const CategoriasView: React.FC = () => {
             'Content-Type': 'application/json'
         };
 
-    
         if (
             token && 
             token !== 'null' && 
@@ -81,18 +97,16 @@ export const CategoriasView: React.FC = () => {
             });
 
             if (res.ok) {
-                
                 await fetchCategorias();
+                mostrarToast(isEditing ? 'Categoría actualizada con éxito' : 'Categoría creada con éxito', 'success');
             } else {
-                
                 const errorText = await res.text();
                 throw new Error(`Error ${res.status}: ${errorText || 'No autorizado o error de servidor'}`);
             }
         } catch (error) {
             console.error('Error al impactar en el servidor:', error);
-            alert('No se pudo guardar en la base de datos. Verificá que hayas iniciado sesión o la conexión con el servidor.');
+            mostrarToast('No se pudo guardar en la base de datos (modo local activado).', 'warning');
 
-            
             if (isEditing) {
                 setCategorias((prev) =>
                     prev.map((cat) =>
@@ -132,12 +146,14 @@ export const CategoriasView: React.FC = () => {
 
             if (res.ok) {
                 await fetchCategorias();
+                mostrarToast('Categoría eliminada correctamente', 'success');
             } else {
                 throw new Error(`Error al eliminar del backend (${res.status})`);
             }
         } catch (error) {
             console.error('Error al eliminar en el servidor:', error);
             setCategorias((prev) => prev.filter((cat) => cat.id !== id));
+            mostrarToast('Categoría eliminada localmente', 'warning');
         }
     };
 
@@ -146,8 +162,49 @@ export const CategoriasView: React.FC = () => {
         setFormData({ nombre: '', descripcion: '' });
     };
 
+    const obtenerClaseToastBg = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return 'bg-success text-white';
+            case 'warning': return 'bg-warning text-dark';
+            case 'danger': return 'bg-danger text-white';
+            default: return 'bg-success text-white';
+        }
+    };
+
+    const renderIconoToast = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return <CheckCircle2 size={18} />;
+            case 'warning': return <AlertTriangle size={18} />;
+            case 'danger': return <XCircle size={18} />;
+            default: return <CheckCircle2 size={18} />;
+        }
+    };
+
     return (
-        <div className="w-100 p-4">
+        <div className="w-100 p-4 position-relative">
+            {/* ✅ TOAST EMERGENTE FLOTANTE MULTIESTADO */}
+            <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1080 }}>
+                <div 
+                    className={`toast align-items-center border-0 shadow-lg rounded-3 ${obtenerClaseToastBg(toastInfo.tipo)} ${toastInfo.visible ? 'show' : 'hide'}`} 
+                    role="alert" 
+                    aria-live="assertive" 
+                    aria-atomic="true"
+                >
+                    <div className="d-flex">
+                        <div className="toast-body d-flex align-items-center gap-2">
+                            {renderIconoToast(toastInfo.tipo)}
+                            <span className="fw-semibold">{toastInfo.mensaje}</span>
+                        </div>
+                        <button 
+                            type="button" 
+                            className={`btn-close me-2 m-auto ${toastInfo.tipo === 'warning' ? '' : 'btn-close-white'}`} 
+                            onClick={() => setToastInfo(prev => ({ ...prev, visible: false }))}
+                            aria-label="Close"
+                        ></button>
+                    </div>
+                </div>
+            </div>
+
             <h4 className="fw-bold mb-4" style={{ color: '#002040' }}>Gestión de Categorías</h4>
 
             <div className="row g-4 align-items-start">
@@ -250,3 +307,5 @@ export const CategoriasView: React.FC = () => {
         </div>
     );
 };
+
+export default CategoriasView;
