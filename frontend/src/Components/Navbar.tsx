@@ -99,23 +99,24 @@ export const Navbar: React.FC = () => {
           <div 
             className="position-absolute"
             style={{
-              
               transform: 'rotate(180deg)',
-              top: '-20px', /* Posiciona el medio círculo sobre el borde inferior */
-              width: '44px',
-              height: '22px',
+              top: '-25px', /* Posiciona el medio círculo sobre el borde inferior */
+              width: '54px',
+              height: '27px',
               overflow: 'hidden',
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'flex-end'
             }}
           >
+            <div style={{ width: '58px', height: '58px', borderRadius: '50%', backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             {/* Arco exterior Amarillo */}
             <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: '#f7e167', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               {/* Arco intermedio Negro */}
               <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#1a1a1a', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {/* Centro Rojo */}
                 <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#d9383a' }}></div>
+                </div>
               </div>
             </div>
           </div>

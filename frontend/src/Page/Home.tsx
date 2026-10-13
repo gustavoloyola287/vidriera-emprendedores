@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ProductosDestacados } from "../Components/productosdestacados";
+import { ProductosDestacados } from "../components/productosdestacados";
 import { useNavigate } from "react-router-dom";
 
 export interface ProductoDTO {
