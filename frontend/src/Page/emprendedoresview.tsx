@@ -7,6 +7,7 @@ const API_URL = 'http://localhost:8080/api/emprendedores';
 export interface Usuario {
     id: number;
     nombre: string;
+    nombreEmprendimiento?: string;
     email: string;
     telefono?: string;
     rol: 'ADMIN' | 'EMPRENDEDOR' | 'MODERADOR' | 'SUPER_ADMIN';
@@ -61,7 +62,9 @@ export const UsuariosView: React.FC = () => {
 
                 return {
                     id: emp.id,
-                    nombre: emp.nombre_completo || emp.nombre || 'Sin nombre',
+                    // ✅ CORREGIDO: Busca en todos los posibles nombres de campo que pueda enviar el backend
+                    nombre: emp.nombreCompleto || emp.nombre_completo || emp.nombre || 'Sin nombre',
+                    nombreEmprendimiento: emp.nombreEmprendimiento || emp.nombre_emprendimiento || '',
                     email: emp.email || 'Sin email',
                     telefono: emp.telefono || '',
                     rol: rolNormalizado,
@@ -82,7 +85,6 @@ export const UsuariosView: React.FC = () => {
         obtenerEmprendedores();
     }, []);
 
-    // ✅ CORREGIDO: Las métricas ahora calculan SOLO sobre los usuarios con rol EMPRENDEDOR
     useEffect(() => {
         const soloEmprendedores = usuarios.filter(u => u.rol === 'EMPRENDEDOR');
 
@@ -93,7 +95,7 @@ export const UsuariosView: React.FC = () => {
         setMetricas({
             activos,
             suspendidos,
-            admins: 0, // Mantenemos la propiedad pero en 0, ya que esta vista es solo para emprendedores
+            admins: 0,
             rechazados,
             total: soloEmprendedores.length
         });
@@ -118,13 +120,34 @@ export const UsuariosView: React.FC = () => {
     };
 
     const handleToggleSuspender = async (id: number) => {
-        setUsuarios(prev => prev.map(u => {
-            if (u.id === id) {
-                const nuevoEstado = u.estado === 'SUSPENDIDO' ? 'ACTIVO' : 'SUSPENDIDO';
-                return { ...u, estado: nuevoEstado };
+        try {
+            // 1. Encontrar el estado actual del usuario
+            const usuarioActual = usuarios.find(u => u.id === id);
+            if (!usuarioActual) return;
+
+            // 2. Definir el nuevo estado (si está suspendido, pasa a activo, y viceversa)
+            const nuevoEstado = usuarioActual.estado === 'SUSPENDIDO' ? 'ACTIVO' : 'SUSPENDIDO';
+
+            // 3. ✅ LLAMADA REAL AL BACKEND PARA PERSISTIR EL CAMBIO
+            const response = await fetch(`http://localhost:8080/api/admin/emprendedores/${id}/estado?nuevoEstado=${nuevoEstado}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            // 4. Si el backend confirma, actualizamos el estado local
+            if (response.ok) {
+                setUsuarios(prev => prev.map(u => 
+                    u.id === id ? { ...u, estado: nuevoEstado } : u
+                ));
+            } else {
+                alert('No se pudo cambiar el estado en el servidor.');
             }
-            return u;
-        }));
+        } catch (error) {
+            console.error('Error al cambiar estado:', error);
+            alert('Error de conexión al intentar cambiar el estado.');
+        }
     };
 
     const handleAbrirEdicion = (usuario: Usuario) => {
@@ -138,17 +161,16 @@ export const UsuariosView: React.FC = () => {
         setUsuarioAEditar(null);
     };
 
-    // Filtrado estricto para OCULTAR Admins y Super Admins de esta vista
     const usuariosFiltrados = useMemo(() => {
         return usuarios.filter(u => {
-            // 1. REGLA DE ORO: Si es Admin, Super Admin o Moderador, NO lo mostramos en esta lista
             if (u.rol === 'ADMIN' || u.rol === 'SUPER_ADMIN' || u.rol === 'MODERADOR') {
                 return false; 
             }
 
             const coincideBusqueda = 
                 u.nombre.toLowerCase().includes(busquedaAplicada.toLowerCase()) ||
-                u.email.toLowerCase().includes(busquedaAplicada.toLowerCase());
+                u.email.toLowerCase().includes(busquedaAplicada.toLowerCase()) ||
+                (u.nombreEmprendimiento && u.nombreEmprendimiento.toLowerCase().includes(busquedaAplicada.toLowerCase()));
 
             const coincideRol = filtroRolSelect === 'TODOS' || u.rol === filtroRolSelect;
 
@@ -206,7 +228,6 @@ export const UsuariosView: React.FC = () => {
                 <div className="alert alert-danger py-2 small" role="alert">{errorApi}</div>
             )}
 
-            {/* CARDS SUPERIORES */}
             <div className="row g-3 mb-4">
                 <div className="col-md-4">
                     <div className={`card border-0 shadow-sm border-start border-success border-4 ${filtroEstadoCard === 'ACTIVO' ? 'bg-success-subtle' : ''}`} style={{ cursor: 'pointer' }} onClick={() => handleCardClick('ACTIVO')}>
@@ -234,7 +255,6 @@ export const UsuariosView: React.FC = () => {
                 </div>
             </div>
 
-            {/* BARRA DE BÚSQUEDA Y FILTROS */}
             <div className="card border-0 shadow-sm mb-4">
                 <div className="card-body p-3">
                     <div className="row g-2">
@@ -243,7 +263,7 @@ export const UsuariosView: React.FC = () => {
                             <input 
                                 type="text" 
                                 className="form-control ps-5" 
-                                placeholder="Buscar por nombre o email..." 
+                                placeholder="Buscar por nombre, emprendimiento o email..." 
                                 value={busquedaInput}
                                 onChange={(e) => setBusquedaInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
@@ -262,14 +282,13 @@ export const UsuariosView: React.FC = () => {
                 </div>
             </div>
 
-            {/* TABLA Y PAGINACIÓN */}
             <div className="card border-0 shadow-sm">
                 <div className="card-body p-0">
                     <div className="table-responsive">
                         <table className="table align-middle mb-0">
                             <thead className="table-light">
                                 <tr>
-                                    <th>Nombre</th>
+                                    <th>Nombre / Emprendimiento</th>
                                     <th>Email</th>
                                     <th>Rol</th>
                                     <th>Estado</th>
@@ -282,7 +301,15 @@ export const UsuariosView: React.FC = () => {
                                 ) : usuariosPaginados.length > 0 ? (
                                     usuariosPaginados.map((usuario) => (
                                         <tr key={usuario.id}>
-                                            <td className="fw-semibold">{usuario.nombre}</td>
+                                            <td className="fw-semibold">
+                                                {usuario.nombre}
+                                                {/* ✅ Muestra el nombre del emprendimiento debajo si existe */}
+                                                {usuario.nombreEmprendimiento && (
+                                                    <div className="text-muted small fw-normal mt-1">
+                                                        🏪 {usuario.nombreEmprendimiento}
+                                                    </div>
+                                                )}
+                                            </td>
                                             <td>{usuario.email}</td>
                                             <td className="text-capitalize">{usuario.rol.toLowerCase().replace('role_', '')}</td>
                                             <td>{renderBadgeEstado(usuario.estado)}</td>
@@ -325,7 +352,6 @@ export const UsuariosView: React.FC = () => {
                 </div>
             </div>
 
-            {/* MODAL DE EDICIÓN */}
             {usuarioAEditar && (
                 <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
                     <div className="modal-dialog modal-dialog-centered">

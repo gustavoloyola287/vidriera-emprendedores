@@ -30,6 +30,18 @@ public class EmprendedorService implements IEmprendedorService {
 
     @Override
     public Emprendedor guardarEmprendedor(Emprendedor emprendedor) {
+         if (emprendedor.getPassword() != null && !emprendedor.getPassword().isEmpty()) {
+            emprendedor.setPassword(passwordEncoder.encode(emprendedor.getPassword()));
+        } else {
+            // Si no viene contraseña, poner una por defecto o lanzar error
+            throw new RuntimeException("La contraseña es obligatoria");
+        }
+        
+        // Asegurar que tenga un estado por defecto
+        if (emprendedor.getEstado() == null || emprendedor.getEstado().isEmpty()) {
+            emprendedor.setEstado("ACTIVO");
+        }
+        
         return emprendedorRepository.save(emprendedor);
     }
 

@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { 
     Users, ShieldCheck, Package, LogOut, Home, MessageSquare, 
     Bell, Check, X, Tags, UserPlus, AlertTriangle, Loader2, Mail 
-
 } from 'lucide-react';
 import { UsuariosView } from './Emprendedoresview';
 import { ProductosView } from './Productosview';
@@ -69,7 +68,6 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
         setModalError(null);
 
         try {
-            // ✅ URL CORREGIDA + TOKEN JWT
             const response = await fetch('/api/admin/emprendedores', {
                 method: 'POST',
                 headers: { 
@@ -147,7 +145,6 @@ export const ModalNuevoEmprendedor: React.FC<ModalProps> = ({ isOpen, onClose, o
     );
 };
 
-// ✅ AGREGADO: Interfaz para recibir la prop isSuperAdmin
 interface AdminDashboardProps {
     isSuperAdmin?: boolean;
 }
@@ -155,6 +152,9 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = false }) => {
     const navigate = useNavigate();
     const { logout } = useAuth();
+
+    // ✅ NUEVO: Obtener el nombre real del usuario logueado desde el localStorage
+    const nombreUsuario = localStorage.getItem('nombreEmprendedor') || 'Administrador';
 
     const [activeTab, setActiveTab] = useState<'inicio' | 'emprendedores' | 'productos' | 'moderacion' | 'categorias' | 'mensajes' | 'usuarios' | 'admins'>('inicio');
     const [filtroEstado, setFiltroEstado] = useState<'Todos' | 'contenido' | 'usuarios'>('Todos');
@@ -176,18 +176,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
     const [notificaciones, setNotificaciones] = useState<NotificacionItem[]>([]);
     const [itemsModeracion, setItemsModeracion] = useState<ModeracionItem[]>([]);
 
-    // ✅ NUEVO: Estados para crear Admin (Solo Super Admin)
     const [nuevoAdmin, setNuevoAdmin] = useState({ nombre: '', email: '', password: '' });
     const [mensajeAdmin, setMensajeAdmin] = useState<string | null>(null);
     const [loadingAdmin, setLoadingAdmin] = useState(false);
 
-    // ✅ HELPER: Función para obtener headers con token JWT
     const getAuthHeaders = () => ({
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token')}`
     });
 
-    // ✅ URL CORREGIDA: /api/admin/stats 
     const fetchDashboardStats = async () => {
         try {
             setLoadingStats(true);
@@ -210,7 +207,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
         try {
             setLoadingModeracion(true);
             setModeracionError(null);
-            // ✅ URL CORREGIDA (si no existe este endpoint en backend, lo ignoramos)
             const response = await fetch('/api/admin/moderacion/reciente', { headers: getAuthHeaders() });
             if (response.ok) {
                 const data = await response.json();
@@ -265,7 +261,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
 
     const noLeidasCount = notificaciones.filter(n => !n.leida).length;
 
-
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -275,7 +270,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
         fetchDashboardStats();
     };
 
-    // ✅ URL CORREGIDA: /api/admin/productos/{id}/estado
     const handleAprobar = async (id: number) => {
         try {
             setActionLoadingId(id);
@@ -320,7 +314,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
         }
     };
 
-    // ✅ NUEVO: Handler para crear administrador
     const handleCrearAdmin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoadingAdmin(true);
@@ -349,13 +342,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
         filtroEstado === 'Todos' ? true : item.tipo === filtroEstado
     );
 
-    // ✅ CORREGIDO: Mostrar "Super Administrador" si es Super Admin
     const nombreAdmin = isSuperAdmin ? 'Super Administrador' : 'Administrador';
     const inicialAdmin = nombreAdmin.charAt(0).toUpperCase();
 
     return (
         <div className="d-flex flex-column vh-100 bg-light">
-            {/* Top Header */}
             <header className="navbar navbar-expand navbar-dark px-3 shadow-sm" style={{ backgroundColor: '#0f2b48' }}>
                 <div className="d-flex align-items-center gap-2">
                     <button className="btn btn-dark d-md-none p-1">
@@ -425,13 +416,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
                         <div className="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
                             <span className="fw-bold fs-7">{inicialAdmin}</span>
                         </div>
-                        <span className="small fw-semibold d-none d-sm-inline">{nombreAdmin}</span>
+                        {/* ✅ OPCIONAL: También puedes mostrar el nombre real aquí arriba a la derecha si quieres */}
+                        <span className="small fw-semibold d-none d-sm-inline">{nombreUsuario}</span>
                     </div>
                 </div>
             </header>
 
             <div className="d-flex flex-grow-1 overflow-hidden">
-                {/* Sidebar */}
                 <aside className="bg-white border-end d-flex flex-column justify-content-between p-3" style={{ width: '240px' }}>
                     <ul className="nav nav-pills flex-column gap-1">
                         <li className="nav-item">
@@ -483,7 +474,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
                             </button>
                         </li>
                         
-                        {/* ✅ NUEVO: Pestaña exclusiva para Super Admin */}
                         {isSuperAdmin && (
                             <li className="nav-item">
                                 <button 
@@ -504,7 +494,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
                     </button>
                 </aside>
 
-                {/* Dynamic Content */}
                 <main className="flex-grow-1 p-4 overflow-auto">
                     {activeTab === 'inicio' && (
                         <div className="container-fluid p-0">
@@ -518,8 +507,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
                                 </div>
                             )}
 
+                            {/* ✅ CORREGIDO: Ahora muestra el nombre real del usuario */}
                             <div className="alert alert-success border-0 shadow-sm mb-4" role="alert">
-                                <h5 className="alert-heading fw-bold mb-1 fs-6">Bienvenido {nombreAdmin.toLowerCase()}: {nombreAdmin}</h5>
+                                <h5 className="alert-heading fw-bold mb-1 fs-6">
+                                    Bienvenido {nombreAdmin.toLowerCase()}: {nombreUsuario}
+                                </h5>
                                 <p className="mb-0 small">Aquí podrás Administrar Emprendedores, Moderar Contenidos y Gestionar Productos.</p>
                             </div>
 
@@ -712,9 +704,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isSuperAdmin = f
                         </div>
                     )}
 
-                    {/* ✅ NUEVO: Vista para crear Administradores (Solo Super Admin) */}
                     {activeTab === 'admins' && isSuperAdmin && (
-                        <AdminsView onAdminCreado={fetchDashboardStats}  /> 
+                        <AdminsView onAdminCreado={fetchDashboardStats} /> 
                     )}
 
                     {activeTab === 'emprendedores' && (

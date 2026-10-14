@@ -13,6 +13,9 @@ public interface ICategoriaService {
     // Guardar o actualizar una categoría
     Categoria guardarCategoria(Categoria categoria);
 
+    // Actualizar una categoría existente
+    Categoria actualizarCategoria(Long id, Categoria categoriaActualizada);
+
     // Eliminar una categoría por ID
     void eliminarCategoria(Long id);
 }

@@ -34,27 +34,30 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // Endpoints de autenticación y productos totalmente libres para POST/GET
-                .requestMatchers(
-                    "/auth/**",
-                    "/api/auth/**",
-                    "/api/productos", "/api/productos/**",
-                    "/api/fotos", "/api/fotos/**",
-                    "/api/categorias", "/api/categorias/**",
-                    "/api/admin/moderacion/**", "/api/admin/stats",    
-                    "/api/admin/notificaciones/**"
+                // ✅ PRIMERO: Endpoints públicos de autenticación (DEBE IR ANTES QUE CUALQUIER OTRO)
+                .requestMatchers("/auth/**", "/api/auth/**").permitAll()
+                
+                // Endpoints públicos de lectura
+                .requestMatchers(HttpMethod.GET, 
+                    "/api/productos/**", 
+                    "/api/fotos/**",
+                    "/api/categorias/**",
+                    "/api/emprendedores/**"
                 ).permitAll()
+                
+                // Endpoints públicos para estadísticas del admin dashboard
+                .requestMatchers("/api/admin/stats").permitAll()
+                
+                // Moderación y notificaciones (pueden ser públicas o protegidas según necesites)
+                .requestMatchers("/api/admin/moderacion/**", "/api/admin/notificaciones/**").permitAll()
 
-                // Lectura pública para el resto de recursos (GET)
-                .requestMatchers(HttpMethod.GET,
-                    "/api/emprendedores/**", "/api/emprendedores"
-                ).permitAll()
-
-                // Endpoints exclusivos para el ADMINISTRADOR y s
+                // ✅ Endpoints exclusivos para ADMINISTRADOR
                 .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
-                // Endpoints exclusivos para el EMPRENDEDOR (gestión de sus productos y panel)
+                // ✅ Endpoints exclusivos para EMPRENDEDOR
                 .requestMatchers("/api/emprendedor/**").hasRole("EMPRENDEDOR")
+                
+                // ✅ Cualquier otra petición requiere autenticación
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -69,8 +72,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setAllowedHeaders(List.of("*")); // ✅ Permitir todos los headers
+        configuration.setExposedHeaders(List.of("Authorization")); // ✅ Exponer Authorization
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L); // ✅ Cachear preflight por 1 hora
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
