@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Edit, Ban, Trash2, CheckCircle2, Plus, RefreshCw, UserPlus, Loader2 } from 'lucide-react';
+import { Search, Edit, Ban, Trash2, CheckCircle2, Plus, RefreshCw, UserPlus, Loader2, AlertTriangle, XCircle } from 'lucide-react';
 
 export interface AdminUsuario {
     id: number;
@@ -30,9 +30,26 @@ export const AdminsView: React.FC<AdminsViewProps> = ({ onAdminCreado }) => {
     const [adminAEditar, setAdminAEditar] = useState<AdminUsuario | null>(null);
     const [isCrearModalOpen, setIsCrearModalOpen] = useState<boolean>(false);
     const [nuevoAdmin, setNuevoAdmin] = useState({ nombre: '', email: '', password: '' });
-    const [mensajeAdmin, setMensajeAdmin] = useState<string | null>(null);
     const [loadingAdmin, setLoadingAdmin] = useState(false);
     const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+
+    // ✅ Estado para el sistema de Toasts multiestado
+    const [toastInfo, setToastInfo] = useState<{
+        visible: boolean;
+        mensaje: string;
+        tipo: 'success' | 'warning' | 'danger';
+    }>({
+        visible: false,
+        mensaje: '',
+        tipo: 'success'
+    });
+
+    const mostrarToast = (mensaje: string, tipo: 'success' | 'warning' | 'danger' = 'success') => {
+        setToastInfo({ visible: true, mensaje, tipo });
+        setTimeout(() => {
+            setToastInfo(prev => ({ ...prev, visible: false }));
+        }, 4000);
+    };
 
     const getAuthHeaders = () => ({
         'Content-Type': 'application/json',
@@ -64,9 +81,11 @@ export const AdminsView: React.FC<AdminsViewProps> = ({ onAdminCreado }) => {
             });
 
             setAdmins(adminsMapeados);
+            mostrarToast("Lista de administradores actualizada", "success");
         } catch (err: any) {
             console.error("Error al cargar administradores:", err);
             setErrorApi("No se pudo conectar con el servidor.");
+            mostrarToast("No se pudo conectar con el servidor", "danger");
         } finally {
             setCargando(false);
         }
@@ -85,7 +104,6 @@ export const AdminsView: React.FC<AdminsViewProps> = ({ onAdminCreado }) => {
     const handleCrearAdmin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoadingAdmin(true);
-        setMensajeAdmin(null);
         try {
             const response = await fetch('/api/admin/crear-admin', {
                 method: 'POST',
@@ -94,16 +112,17 @@ export const AdminsView: React.FC<AdminsViewProps> = ({ onAdminCreado }) => {
             });
             const data = await response.json();
             if (response.ok) {
-                setMensajeAdmin(`✅ ${data.message}`);
                 setNuevoAdmin({ nombre: '', email: '', password: '' });
                 setIsCrearModalOpen(false);
                 obtenerAdmins();
                 onAdminCreado();
+                mostrarToast(data.message || 'Administrador creado con éxito', 'success');
             } else {
-                setMensajeAdmin(` Error: ${data.error || 'No se pudo crear el administrador'}`);
+                const msg = data.error || 'No se pudo crear el administrador';
+                mostrarToast(msg, 'warning');
             }
         } catch (error) {
-            setMensajeAdmin('❌ Error de conexión al crear el administrador.');
+            mostrarToast('Error de conexión al crear el administrador.', 'danger');
         } finally {
             setLoadingAdmin(false);
         }
@@ -118,12 +137,13 @@ export const AdminsView: React.FC<AdminsViewProps> = ({ onAdminCreado }) => {
             });
             if (response.ok) {
                 setAdmins(prev => prev.filter(u => u.id !== id));
+                mostrarToast('Administrador eliminado correctamente', 'success');
             } else {
-                alert('No se pudo eliminar el administrador.');
+                mostrarToast('No se pudo eliminar el administrador.', 'warning');
             }
         } catch (error) {
             console.error('Error al eliminar:', error);
-            alert('Error de conexión al intentar eliminar.');
+            mostrarToast('Error de conexión al intentar eliminar.', 'danger');
         }
     };
 
@@ -140,12 +160,13 @@ export const AdminsView: React.FC<AdminsViewProps> = ({ onAdminCreado }) => {
             });
             if (response.ok) {
                 setAdmins(prev => prev.map(u => u.id === id ? { ...u, estado: nuevoEstado } : u));
+                mostrarToast(`Administrador ${nuevoEstado === 'SUSPENDIDO' ? 'suspendido' : 'activado'}`, 'success');
             } else {
-                alert('No se pudo cambiar el estado.');
+                mostrarToast('No se pudo cambiar el estado.', 'warning');
             }
         } catch (error) {
             console.error('Error al cambiar estado:', error);
-            alert('Error de conexión.');
+            mostrarToast('Error de conexión.', 'danger');
         } finally {
             setActionLoadingId(null);
         }
@@ -170,12 +191,13 @@ export const AdminsView: React.FC<AdminsViewProps> = ({ onAdminCreado }) => {
             if (response.ok) {
                 setAdmins(prev => prev.map(u => u.id === adminAEditar.id ? adminAEditar : u));
                 setAdminAEditar(null);
+                mostrarToast('Administrador actualizado con éxito', 'success');
             } else {
-                alert('No se pudo actualizar el administrador.');
+                mostrarToast('No se pudo actualizar el administrador.', 'warning');
             }
         } catch (error) {
             console.error('Error al editar:', error);
-            alert('Error de conexión.');
+            mostrarToast('Error de conexión.', 'danger');
         }
     };
 
@@ -214,8 +236,49 @@ export const AdminsView: React.FC<AdminsViewProps> = ({ onAdminCreado }) => {
         }
     };
 
+    const obtenerClaseToastBg = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return 'bg-success text-white';
+            case 'warning': return 'bg-warning text-dark';
+            case 'danger': return 'bg-danger text-white';
+            default: return 'bg-success text-white';
+        }
+    };
+
+    const renderIconoToast = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return <CheckCircle2 size={18} />;
+            case 'warning': return <AlertTriangle size={18} />;
+            case 'danger': return <XCircle size={18} />;
+            default: return <CheckCircle2 size={18} />;
+        }
+    };
+
     return (
-        <div className="container-fluid p-0">
+        <div className="container-fluid p-0 position-relative">
+            {/* ✅ TOAST EMERGENTE FLOTANTE MULTIESTADO */}
+            <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1080 }}>
+                <div 
+                    className={`toast align-items-center border-0 shadow-lg rounded-3 ${obtenerClaseToastBg(toastInfo.tipo)} ${toastInfo.visible ? 'show' : 'hide'}`} 
+                    role="alert" 
+                    aria-live="assertive" 
+                    aria-atomic="true"
+                >
+                    <div className="d-flex">
+                        <div className="toast-body d-flex align-items-center gap-2">
+                            {renderIconoToast(toastInfo.tipo)}
+                            <span className="fw-semibold">{toastInfo.mensaje}</span>
+                        </div>
+                        <button 
+                            type="button" 
+                            className={`btn-close me-2 m-auto ${toastInfo.tipo === 'warning' ? '' : 'btn-close-white'}`} 
+                            onClick={() => setToastInfo(prev => ({ ...prev, visible: false }))}
+                            aria-label="Close"
+                        ></button>
+                    </div>
+                </div>
+            </div>
+
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5 className="fw-bold m-0">Gestión de Administradores</h5>
                 <div className="d-flex gap-2">
@@ -230,13 +293,6 @@ export const AdminsView: React.FC<AdminsViewProps> = ({ onAdminCreado }) => {
 
             {errorApi && (
                 <div className="alert alert-danger py-2 small" role="alert">{errorApi}</div>
-            )}
-
-            {mensajeAdmin && (
-                <div className={`alert ${mensajeAdmin.includes('✅') ? 'alert-success' : 'alert-danger'} py-2 small d-flex align-items-center gap-2`} role="alert">
-                    {mensajeAdmin.includes('✅') ? <CheckCircle2 size={16} /> : <Ban size={16} />}
-                    <span>{mensajeAdmin}</span>
-                </div>
             )}
 
             {/* CARDS SUPERIORES */}
@@ -352,7 +408,7 @@ export const AdminsView: React.FC<AdminsViewProps> = ({ onAdminCreado }) => {
 
                 <div className="card-footer bg-white d-flex justify-content-between align-items-center py-3">
                     <span className="small text-muted">
-                        {adminsFiltrados.length > 0 ? `Mostrando ${((paginaActual - 1) * elementosPorPagina) + 1} - ${Math.min(paginaActual * elementosPorPagina, adminsFiltrados.length)} de ${adminsFiltrados.length} administradores` : 'Sin resultados'}
+                        {adminsFiltrados.length > 0 ? `Mostrando ${((paginaActual - 1) * elementosPorPagina) + 1} a ${Math.min(paginaActual * elementosPorPagina, adminsFiltrados.length)} de ${adminsFiltrados.length} administradores` : 'Sin resultados'}
                     </span>
                     <ul className="pagination pagination-sm mb-0">
                         <li className={`page-item ${paginaActual === 1 ? 'disabled' : ''}`}>

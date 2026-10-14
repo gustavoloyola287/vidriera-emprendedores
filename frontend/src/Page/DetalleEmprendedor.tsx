@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { productoService, type FotoProducto } from "../services/productoService";
 import { type Emprendedor } from "../types/Emprendedor";
 import type { Producto } from "../types/Producto";
+import { CheckCircle2, AlertTriangle, XCircle, Camera, Globe, MessageCircle } from "lucide-react";
 
 export function DetalleEmprendedor() {
     const { id } = useParams<{ id: string }>();
@@ -21,6 +22,24 @@ export function DetalleEmprendedor() {
     // Estados para el formulario de nuevas valoraciones
     const [nuevaCalificacion, setNuevaCalificacion] = useState(5);
     const [nuevoComentario, setNuevoComentario] = useState("");
+
+    // ✅ Estado para el sistema de Toasts multiestado
+    const [toastInfo, setToastInfo] = useState<{
+        visible: boolean;
+        mensaje: string;
+        tipo: 'success' | 'warning' | 'danger';
+    }>({
+        visible: false,
+        mensaje: '',
+        tipo: 'success'
+    });
+
+    const mostrarToast = (mensaje: string, tipo: 'success' | 'warning' | 'danger' = 'success') => {
+        setToastInfo({ visible: true, mensaje, tipo });
+        setTimeout(() => {
+            setToastInfo(prev => ({ ...prev, visible: false }));
+        }, 4000);
+    };
 
     useEffect(() => {
         if (!id) return;
@@ -62,6 +81,7 @@ export function DetalleEmprendedor() {
             } catch (err) {
                 console.error(err);
                 setError("No se pudo cargar el perfil del emprendedor o sus productos");
+                mostrarToast("Error al conectar con el servidor", "danger");
             } finally {
                 setCargando(false);
             }
@@ -94,6 +114,7 @@ export function DetalleEmprendedor() {
             }
         } catch (err) {
             console.error("Error al obtener fotos de la galería:", err);
+            mostrarToast("No se pudieron cargar las imágenes adicionales", "warning");
         } finally {
             setCargandoGaleria(false);
         }
@@ -114,6 +135,36 @@ export function DetalleEmprendedor() {
         return "https://via.placeholder.com/200";
     };
 
+    const handleEnviarReseña = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!nuevoComentario.trim()) {
+            mostrarToast("Por favor escribe un comentario antes de enviar.", "warning");
+            return;
+        }
+
+        mostrarToast("¡Gracias! Tu reseña fue publicada con éxito.", "success");
+        setNuevoComentario("");
+        setNuevaCalificacion(5);
+    };
+
+    const obtenerClaseToastBg = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return 'bg-success text-white';
+            case 'warning': return 'bg-warning text-dark';
+            case 'danger': return 'bg-danger text-white';
+            default: return 'bg-success text-white';
+        }
+    };
+
+    const renderIconoToast = (tipo: 'success' | 'warning' | 'danger') => {
+        switch (tipo) {
+            case 'success': return <CheckCircle2 size={18} />;
+            case 'warning': return <AlertTriangle size={18} />;
+            case 'danger': return <XCircle size={18} />;
+            default: return <CheckCircle2 size={18} />;
+        }
+    };
+
     if (cargando) {
         return <div className="text-center py-5">Cargando perfil y catálogo de productos...</div>;
     }
@@ -127,7 +178,30 @@ export function DetalleEmprendedor() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-5">
+        <div className="min-h-screen bg-gray-50 py-5 position-relative">
+            {/* ✅ TOAST EMERGENTE FLOTANTE MULTIESTADO */}
+            <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1080 }}>
+                <div 
+                    className={`toast align-items-center border-0 shadow-lg rounded-3 ${obtenerClaseToastBg(toastInfo.tipo)} ${toastInfo.visible ? 'show' : 'hide'}`} 
+                    role="alert" 
+                    aria-live="assertive" 
+                    aria-atomic="true"
+                >
+                    <div className="d-flex">
+                        <div className="toast-body d-flex align-items-center gap-2">
+                            {renderIconoToast(toastInfo.tipo)}
+                            <span className="fw-semibold">{toastInfo.mensaje}</span>
+                        </div>
+                        <button 
+                            type="button" 
+                            className={`btn-close me-2 m-auto ${toastInfo.tipo === 'warning' ? '' : 'btn-close-white'}`} 
+                            onClick={() => setToastInfo(prev => ({ ...prev, visible: false }))}
+                            aria-label="Close"
+                        ></button>
+                    </div>
+                </div>
+            </div>
+
             <div className="container">
                 {/* 1. CABECERA DEL EMPRENDIMIENTO */}
                 <div className="bg-white rounded shadow-sm p-4 mb-4">
@@ -149,6 +223,45 @@ export function DetalleEmprendedor() {
                                 </span>
                                 <span className="text-muted small">(24 valoraciones)</span>
                             </div>
+
+                            {/* SECCIÓN DE REDES SOCIALES (Preparada para consumir los campos validados del backend) */}
+                            <div className="d-flex align-items-center gap-3 mb-4 flex-wrap">
+                                <span className="text-muted small fw-semibold">Redes oficiales:</span>
+                                
+                                {/* Ejemplo condicional utilizando propiedades estándar de redes (ej: instagram, facebook, web) */}
+                                {(emprendedor as any).instagram && (
+                                    <a 
+                                        href={`https://instagram.com/${(emprendedor as any).instagram.replace('@', '')}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1"
+                                    >
+                                        <Camera size={16} /> Instagram
+                                    </a>
+                                )}
+
+                                {(emprendedor as any).facebook && (
+                                    <a 
+                                        href={(emprendedor as any).facebook} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+                                    >
+                                        <Globe size={16} /> Facebook
+                                    </a>
+                                )}
+
+                                {(emprendedor as any).web && (
+                                    <a 
+                                        href={(emprendedor as any).web} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
+                                    >
+                                        <Globe size={16} /> Sitio Web
+                                    </a>
+                                )}
+                            </div>
                             
                             {/* BOTÓN WHATSAPP GENERAL */}
                             <a
@@ -157,7 +270,7 @@ export function DetalleEmprendedor() {
                                 rel="noopener noreferrer"
                                 className="btn btn-success fw-bold d-inline-flex align-items-center gap-2"
                             >
-                                💬 Contactar por WhatsApp
+                                <MessageCircle size={18} /> Contactar por WhatsApp
                             </a>
                         </div>
                         <button className="btn btn-outline-secondary" type="button" onClick={() => navigate("/")}>
@@ -247,7 +360,7 @@ export function DetalleEmprendedor() {
                     {/* B) Formulario para dejar una nueva reseña */}
                     <div className="bg-white rounded shadow-sm p-4 mb-4 border">
                         <h3 className="h5 font-bold text-dark mb-3">¿Compraste en este emprendimiento? Deja tu opinión</h3>
-                        <form onSubmit={(e) => { e.preventDefault(); alert("Reseña enviada correctamente"); }}>
+                        <form onSubmit={handleEnviarReseña}>
                             <div className="mb-3">
                                 <label className="form-label text-muted small d-block">Selecciona tu calificación:</label>
                                 <select 
@@ -279,7 +392,6 @@ export function DetalleEmprendedor() {
 
                     {/* C) Listado de Comentarios con Respuestas */}
                     <div className="d-flex flex-column gap-3">
-                        {/* Comentario Ejemplo 1 */}
                         <div className="bg-white rounded shadow-sm p-4 border">
                             <div className="d-flex justify-content-between align-items-center mb-2">
                                 <strong className="text-dark">Mariana Gómez</strong>
@@ -290,14 +402,12 @@ export function DetalleEmprendedor() {
                                 "Excelente atención por WhatsApp. El producto llegó super rápido y la calidad superó mis expectativas."
                             </p>
 
-                            {/* Respuesta del Emprendedor */}
                             <div className="bg-light p-3 rounded border-start border-4 border-primary ms-3 mt-2">
                                 <strong className="text-primary small d-block mb-1">Respuesta de {emprendedor.nombreEmprendimiento}:</strong>
                                 <p className="text-dark small mb-0">¡Muchas gracias Mariana por tu compra! Nos alegra un montón que hayas quedado conforme.</p>
                             </div>
                         </div>
 
-                        {/* Comentario Ejemplo 2 */}
                         <div className="bg-white rounded shadow-sm p-4 border">
                             <div className="d-flex justify-content-between align-items-center mb-2">
                                 <strong className="text-dark">Carlos Rodríguez</strong>
