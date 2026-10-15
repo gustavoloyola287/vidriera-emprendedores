@@ -80,7 +80,6 @@ export const UsuariosView: React.FC = () => {
 
                 return {
                     id: emp.id,
-                    // ✅ CORREGIDO: Busca en todos los posibles nombres de campo que pueda enviar el backend
                     nombre: emp.nombreCompleto || emp.nombre_completo || emp.nombre || 'Sin nombre',
                     nombreEmprendimiento: emp.nombreEmprendimiento || emp.nombre_emprendimiento || '',
                     email: emp.email || 'Sin email',
@@ -140,17 +139,14 @@ export const UsuariosView: React.FC = () => {
         }
     };
 
+    // ✅ FUNCIÓN RESUELTA: Combina la llamada al backend con los Toasts bonitos
     const handleToggleSuspender = async (id: number) => {
-<<<<<<< HEAD
         try {
-            // 1. Encontrar el estado actual del usuario
             const usuarioActual = usuarios.find(u => u.id === id);
             if (!usuarioActual) return;
 
-            // 2. Definir el nuevo estado (si está suspendido, pasa a activo, y viceversa)
             const nuevoEstado = usuarioActual.estado === 'SUSPENDIDO' ? 'ACTIVO' : 'SUSPENDIDO';
 
-            // 3. ✅ LLAMADA REAL AL BACKEND PARA PERSISTIR EL CAMBIO
             const response = await fetch(`http://localhost:8080/api/admin/emprendedores/${id}/estado?nuevoEstado=${nuevoEstado}`, {
                 method: 'PUT',
                 headers: {
@@ -158,25 +154,18 @@ export const UsuariosView: React.FC = () => {
                 }
             });
 
-            // 4. Si el backend confirma, actualizamos el estado local
             if (response.ok) {
                 setUsuarios(prev => prev.map(u => 
                     u.id === id ? { ...u, estado: nuevoEstado } : u
                 ));
-            } else {
-                alert('No se pudo cambiar el estado en el servidor.');
-=======
-        setUsuarios(prev => prev.map(u => {
-            if (u.id === id) {
-                const nuevoEstado = u.estado === 'SUSPENDIDO' ? 'ACTIVO' : 'SUSPENDIDO';
-                const mensajeAccion = nuevoEstado === 'SUSPENDIDO' ? 'Emprendedor suspendido' : 'Emprendedor activado';
+                const mensajeAccion = nuevoEstado === 'SUSPENDIDO' ? 'Emprendedor suspendido correctamente' : 'Emprendedor activado correctamente';
                 mostrarToast(mensajeAccion, 'success');
-                return { ...u, estado: nuevoEstado };
->>>>>>> c551b8476c7d47c0bacba77d71c56cc4a8720a98
+            } else {
+                mostrarToast('No se pudo cambiar el estado en el servidor.', 'warning');
             }
         } catch (error) {
             console.error('Error al cambiar estado:', error);
-            alert('Error de conexión al intentar cambiar el estado.');
+            mostrarToast('Error de conexión al intentar cambiar el estado.', 'danger');
         }
     };
 
@@ -375,7 +364,6 @@ export const UsuariosView: React.FC = () => {
                                         <tr key={usuario.id}>
                                             <td className="fw-semibold">
                                                 {usuario.nombre}
-                                                {/* ✅ Muestra el nombre del emprendimiento debajo si existe */}
                                                 {usuario.nombreEmprendimiento && (
                                                     <div className="text-muted small fw-normal mt-1">
                                                         🏪 {usuario.nombreEmprendimiento}
