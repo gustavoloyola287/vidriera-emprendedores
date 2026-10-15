@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Filter, Check, X, 
-    Eye, Star, Trash2, 
+    Eye, Star, 
     Package, AlertCircle,
     ExternalLink, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 
@@ -100,7 +100,10 @@ import { Search, Filter, Check, X,
         setProductos(prev =>
         prev.map(p => p.id === id ? { ...p, estado: nuevoEstado } : p)
         );
-        mostrarToast(nuevoEstado === 'Aprobado' ? 'Producto aprobado correctamente' : 'Producto rechazado', nuevoEstado === 'Aprobado' ? 'success' : 'warning');
+        mostrarToast(
+            nuevoEstado === 'Aprobado' ? 'Producto aprobado correctamente' : 'Producto marcado como rechazado', 
+            nuevoEstado === 'Aprobado' ? 'success' : 'warning'
+        );
     };
 
     const handleToggleDestacado = (id: number) => {
@@ -115,13 +118,6 @@ import { Search, Filter, Check, X,
         })
         );
         mostrarToast(estadoDestacado ? 'Producto marcado como destacado' : 'Producto quitado de destacados', 'success');
-    };
-
-    const handleEliminarProducto = (id: number) => {
-        if (window.confirm('¿Está seguro de que desea eliminar este producto?')) {
-        setProductos(prev => prev.filter(p => p.id !== id));
-        mostrarToast('Producto eliminado permanentemente', 'danger');
-        }
     };
 
     // Filtrado reactivo
@@ -348,7 +344,7 @@ import { Search, Filter, Check, X,
                                                         <Check size={14} />
                                                     </button>
 
-                                                    {/* Rechazar */}
+                                                    {/* Rechazar (Sustituye a la eliminación definitiva) */}
                                                     <button
                                                         className="btn btn-outline-danger"
                                                         onClick={() => handleCambiarEstado(prod.id, 'Rechazado')}
@@ -356,15 +352,6 @@ import { Search, Filter, Check, X,
                                                         title="Rechazar Producto"
                                                     >
                                                         <X size={14} />
-                                                    </button>
-
-                                                    {/* Eliminar */}
-                                                    <button
-                                                        className="btn btn-outline-dark"
-                                                        onClick={() => handleEliminarProducto(prod.id)}
-                                                        title="Eliminar definitivo"
-                                                    >
-                                                        <Trash2 size={14} />
                                                     </button>
                                                 </div>
                                             </td>
