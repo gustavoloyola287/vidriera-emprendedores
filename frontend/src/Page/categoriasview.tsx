@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Check, X, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, X, CheckCircle2, AlertTriangle, XCircle, AlertCircle } from 'lucide-react';
 
 interface Categoria {
     id: number;
@@ -20,6 +20,9 @@ export const CategoriasView: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [editandoId, setEditandoId] = useState<number | null>(null);
     const [formData, setFormData] = useState<{ nombre: string; descripcion: string }>({ nombre: '', descripcion: '' });
+
+    // ✅ Estado para controlar qué categoría se quiere eliminar (reemplaza a window.confirm)
+    const [categoriaAEliminar, setCategoriaAEliminar] = useState<Categoria | null>(null);
 
     // ✅ Estado para el sistema de Toasts multiestado
     const [toastInfo, setToastInfo] = useState<{
@@ -135,8 +138,10 @@ export const CategoriasView: React.FC = () => {
         setFormData({ nombre: cat.nombre, descripcion: cat.descripcion || '' });
     };
 
-    const handleEliminar = async (id: number) => {
-        if (!window.confirm('¿Seguro que deseas eliminar esta categoría?')) return;
+    // ✅ Lógica ejecutada al confirmar la eliminación en el modal emergente
+    const confirmarEliminar = async () => {
+        if (!categoriaAEliminar) return;
+        const id = categoriaAEliminar.id;
 
         try {
             const res = await fetch(`${API_URL}/${id}`, {
@@ -154,6 +159,8 @@ export const CategoriasView: React.FC = () => {
             console.error('Error al eliminar en el servidor:', error);
             setCategorias((prev) => prev.filter((cat) => cat.id !== id));
             mostrarToast('Categoría eliminada localmente', 'warning');
+        } finally {
+            setCategoriaAEliminar(null);
         }
     };
 
@@ -204,6 +211,41 @@ export const CategoriasView: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* ✅ MODAL DE CONFIRMACIÓN DE ELIMINACIÓN (Reemplaza al alert nativo) */}
+            {categoriaAEliminar && (
+                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content border-0 shadow-lg rounded-3">
+                            <div className="modal-body text-center p-4">
+                                <div className="text-danger mb-3">
+                                    <AlertCircle size={48} />
+                                </div>
+                                <h5 className="fw-bold mb-2">¿Eliminar categoría?</h5>
+                                <p className="text-muted small mb-4">
+                                    Estás a punto de eliminar la categoría <span className="fw-semibold text-dark">"{categoriaAEliminar.nombre}"</span>. Esta acción no se puede deshacer.
+                                </p>
+                                <div className="d-flex justify-content-center gap-2">
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-outline-secondary btn-sm px-4" 
+                                        onClick={() => setCategoriaAEliminar(null)}
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-danger btn-sm px-4" 
+                                        onClick={confirmarEliminar}
+                                    >
+                                        Sí, eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <h4 className="fw-bold mb-4" style={{ color: '#002040' }}>Gestión de Categorías</h4>
 
@@ -287,7 +329,7 @@ export const CategoriasView: React.FC = () => {
                                                 </button>
                                                 <button
                                                     className="btn btn-outline-danger btn-sm p-1"
-                                                    onClick={() => handleEliminar(cat.id)}
+                                                    onClick={() => setCategoriaAEliminar(cat)}
                                                     title="Eliminar"
                                                 >
                                                     <Trash2 size={15} />
