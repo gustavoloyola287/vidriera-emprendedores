@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Eye, MessageSquare, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 
-// Interfaz para el modelo de Producto
+// ✅ Interfaz actualizada: 'categoria' puede ser un string o un objeto completo
 export interface Producto {
     id: number;
     nombre: string;
-    categoria: string;
-    precio: number;
+    categoria: string | { id: number; nombre: string; descripcion?: string };
+    precio: number | null;
     estado: string;
 }
 
@@ -14,16 +14,21 @@ interface InicioDashProps {
     setActiveTab?: (tab: string) => void;
 }
 
+// ✅ Función auxiliar para obtener el nombre de la categoría de forma segura
+const obtenerNombreCategoria = (categoria: any): string => {
+    if (!categoria) return 'Sin categoría';
+    if (typeof categoria === 'string') return categoria;
+    if (typeof categoria === 'object' && categoria.nombre) return categoria.nombre;
+    return 'Sin categoría';
+};
+
 export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
-    // ✅ ESTADOS CON DATOS REALES DEL BACKEND
     const [productos, setProductos] = useState<Producto[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [errorApi, setErrorApi] = useState<string | null>(null);
 
-    // Estado para controlar la vista emergente (modal) del detalle del producto
     const [productoDetalle, setProductoDetalle] = useState<Producto | null>(null);
 
-    // Estado para los mensajes Toast multiestado
     const [toastInfo, setToastInfo] = useState<{
         visible: boolean;
         mensaje: string;
@@ -41,7 +46,6 @@ export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
         }, 4000);
     };
 
-    // ✅ Obtener productos del emprendedor logueado
     useEffect(() => {
         const fetchProductos = async () => {
             setLoading(true);
@@ -80,7 +84,6 @@ export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
         fetchProductos();
     }, []);
 
-    // Manejador para ver detalle en ventana emergente (Modal) en lugar de alert
     const handleVerDetalle = (id: number) => {
         const producto = productos.find((prod) => prod.id === id);
         if (!producto) {
@@ -110,7 +113,7 @@ export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
 
     return (
         <div className="container-fluid p-0 position-relative">
-            {/* ✅ TOAST EMERGENTE FLOTANTE MULTIESTADO */}
+            {/* TOAST */}
             <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1080 }}>
                 <div 
                     className={`toast align-items-center border-0 shadow-lg rounded-3 ${obtenerClaseToastBg(toastInfo.tipo)} ${toastInfo.visible ? 'show' : 'hide'}`} 
@@ -228,10 +231,14 @@ export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
                                 productos.slice(0, 5).map((prod) => (
                                     <tr key={prod.id}>
                                         <td className="fw-bold text-dark">{prod.nombre}</td>
-                                        <td className="text-secondary">{prod.categoria}</td>
-                                        <td className="fw-bold text-dark">{prod.precio ? `$${prod.precio.toLocaleString('es-AR')}` : 'Consultar'}</td>
+                                        
+                                        {/* ✅ CORREGIDO: Manejo seguro de categoría (objeto o string) */}
+                                        <td className="text-secondary">{obtenerNombreCategoria(prod.categoria)}</td>
+                                        
+                                        <td className="fw-bold text-dark">
+                                            {prod.precio ? `$${Number(prod.precio).toLocaleString('es-AR')}` : 'Consultar'}
+                                        </td>
                                         <td>
-                                            
                                             <span 
                                                 className="badge px-2 py-1 fw-semibold" 
                                                 style={{ backgroundColor: prod.estado === 'Activo' ? '#0d9c50' : '#6c757d', borderRadius: '4px' }}
@@ -260,7 +267,7 @@ export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
                 </div>
             </div>
 
-            {/* ✅ VISTA EMERGENTE (MODAL) PARA DETALLE DE PRODUCTO */}
+            {/* VISTA EMERGENTE (MODAL) PARA DETALLE DE PRODUCTO */}
             {productoDetalle && (
                 <div 
                     className="modal show d-block" 
@@ -285,11 +292,14 @@ export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
                                 <div className="row mb-3">
                                     <div className="col-6">
                                         <span className="text-muted small d-block">Categoría:</span>
-                                        <span className="fw-semibold text-secondary">{productoDetalle.categoria}</span>
+                                        {/* ✅ CORREGIDO: Manejo seguro de categoría en el modal */}
+                                        <span className="fw-semibold text-secondary">{obtenerNombreCategoria(productoDetalle.categoria)}</span>
                                     </div>
                                     <div className="col-6">
                                         <span className="text-muted small d-block">Precio:</span>
-                                        <span className="fw-bold text-success fs-6">{productoDetalle.precio ? `$${productoDetalle.precio.toLocaleString('es-AR')}` : 'Consultar'}</span>
+                                        <span className="fw-bold text-success fs-6">
+                                            {productoDetalle.precio ? `$${Number(productoDetalle.precio).toLocaleString('es-AR')}` : 'Consultar'}
+                                        </span>
                                     </div>
                                 </div>
                                 <div className="mb-2">
