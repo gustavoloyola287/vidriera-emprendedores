@@ -13,7 +13,6 @@ export interface ProductoDTO {
     fotoPrincipal?: {
         imagenBase64?: string;
     };
-    
 }
 
 export interface Categoria {
@@ -62,9 +61,10 @@ function Home() {
         cargarDatosIniciales();
     }, []);
 
+    // ✅ CORREGIDO: Ahora usa la ruta en plural "/emprendedores" para coincidir con App.tsx
     const verPerfil = (idEmprendedor?: number) => {
         if (idEmprendedor) {
-            navigate(`/emprendedor/${idEmprendedor}`);
+            navigate(`/emprendedores/${idEmprendedor}`);
         }
     };
 
@@ -103,7 +103,8 @@ function Home() {
                 <h1>Vidriera Virtual VCP</h1>
                 <p>Explorá los productos y emprendimientos locales de Villa Carlos Paz.</p>
             </div>
-            <ProductosDestacados  />
+            
+            <ProductosDestacados />
 
             <div className="filtros-container" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                 <input
@@ -111,7 +112,7 @@ function Home() {
                     placeholder="Buscar por producto, categoría o emprendedor..."
                     value={busqueda}
                     onChange={(e) => setBusqueda(e.target.value)}
-                    style={{ flex: 1, minWidth: '250px' }}
+                    style={{ flex: 1, minWidth: '250px', padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid #ccc' }}
                 />
 
                 <select
@@ -128,33 +129,38 @@ function Home() {
                 </select>
             </div>
 
-            {error && <p className="error">{error}</p>}
+            {error && <p className="error" style={{ color: 'red' }}>{error}</p>}
 
             {cargando ? (
                 <p>Cargando catálogo...</p>
             ) : productosFiltrados.length === 0 ? (
                 <p style={{ marginTop: '2rem' }}>No se encontraron productos que coincidan con la búsqueda.</p>
             ) : (
-                <div className="cards-container">
+                <div className="cards-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
                     {productosFiltrados.map((prod) => {
                         const srcImg = obtenerImagenSrc(prod);
                         return (
-                            <div className="card-emprendedor" key={prod.id}>
-                                {srcImg && (
+                            <div className="card-emprendedor" key={prod.id} style={{ border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                                {srcImg ? (
                                     <img 
                                         src={srcImg} 
                                         alt={prod.nombre} 
+                                        style={{ width: '100%', height: '200px', objectFit: 'cover' }}
                                     />
+                                ) : (
+                                    <div style={{ width: '100%', height: '200px', backgroundColor: '#f4f6f8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
+                                        Sin imagen
+                                    </div>
                                 )}
                                 
-                                <div className="card-contenido">
-                                    <h2>{prod.nombre}</h2>
+                                <div className="card-contenido" style={{ padding: '1rem' }}>
+                                    <h2 style={{ fontSize: '1.2rem', margin: '0 0 0.5rem 0' }}>{prod.nombre}</h2>
 
                                     {prod.nombreCategoria && (
                                         <span style={{
                                             display: 'inline-block',
-                                            backgroundColor: 'var(--azul-claro)',
-                                            color: 'var(--azul-marino)',
+                                            backgroundColor: '#E3F2FD',
+                                            color: '#1565C0',
                                             padding: '2px 8px',
                                             borderRadius: '4px',
                                             fontSize: '0.8rem',
@@ -165,15 +171,28 @@ function Home() {
                                         </span>
                                     )}
 
-                                    <p>{prod.descripcion}</p>
+                                    <p style={{ fontSize: '0.9rem', color: '#555', marginBottom: '1rem' }}>{prod.descripcion}</p>
 
                                     {prod.nombreEmprendedor && (
-                                        <p style={{ fontSize: '0.85rem', color: 'var(--gris-texto)', marginBottom: '1rem' }}>
+                                        <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>
                                             Emprendimiento: <strong>{prod.nombreEmprendedor}</strong>
                                         </p>
                                     )}
 
-                                    <button onClick={() => verPerfil(prod.idEmprendedor)}>
+                                    <button 
+                                        onClick={() => verPerfil(prod.idEmprendedor)}
+                                        disabled={!prod.idEmprendedor}
+                                        style={{ 
+                                            width: '100%', 
+                                            padding: '0.6rem', 
+                                            backgroundColor: prod.idEmprendedor ? '#0051a8' : '#ccc', 
+                                            color: 'white', 
+                                            border: 'none', 
+                                            borderRadius: '6px', 
+                                            cursor: prod.idEmprendedor ? 'pointer' : 'not-allowed',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
                                         Ver Perfil
                                     </button>
                                 </div>
