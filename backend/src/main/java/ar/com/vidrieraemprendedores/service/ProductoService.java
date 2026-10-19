@@ -1,5 +1,6 @@
 package ar.com.vidrieraemprendedores.service;
 
+import ar.com.vidrieraemprendedores.dto.CrearProductoDTO; // ✅ NUEVO IMPORT AGREGADO
 import ar.com.vidrieraemprendedores.dto.ProductoDTO;
 import ar.com.vidrieraemprendedores.models.Categoria;
 import ar.com.vidrieraemprendedores.models.Emprendedor;
@@ -116,7 +117,6 @@ public class ProductoService implements IProductoService {
 
     @Override
     public long contarPendientes() {
-        // Asegúrate de definir el método countByEstado("PENDIENTE") en ProductoRepository si manejas el estado allí
         return productoRepository.countByEstado("PENDIENTE");
     }
 
@@ -152,7 +152,7 @@ public class ProductoService implements IProductoService {
         Producto producto = new Producto();
         producto.setNombre(productoDTO.getNombre());
         producto.setDescripcion(productoDTO.getDescripcion());
-        producto.setEstado("PENDIENTE"); // Estado por defecto para revisión
+        producto.setEstado("PENDIENTE");
 
         if (productoDTO.getIdCategoria() != null) {
             Categoria cat = categoriaRepository.findById(productoDTO.getIdCategoria())
@@ -185,6 +185,32 @@ public class ProductoService implements IProductoService {
         return convertirADTO(actualizado);
     }
 
+    // ✅ NUEVO MÉTODO AGREGADO: Crear producto desde DTO
+    @Override
+    @Transactional
+    public Producto crearProductoDesdeDTO(CrearProductoDTO dto) {
+        // 1. Buscar la categoría por su ID
+        Categoria categoria = categoriaRepository.findById(dto.getCategoriaId())
+                .orElseThrow(() -> new RuntimeException("No se encontró la categoría con ID: " + dto.getCategoriaId()));
+
+        // 2. Buscar el emprendedor por su ID
+        Emprendedor emprendedor = emprendedorRepository.findById(dto.getEmprendedorId())
+                .orElseThrow(() -> new RuntimeException("No se encontró el emprendedor con ID: " + dto.getEmprendedorId()));
+
+        // 3. Crear y configurar la entidad Producto
+        Producto producto = new Producto();
+        producto.setNombre(dto.getNombre());
+        producto.setDescripcion(dto.getDescripcion());
+        producto.setPrecio(dto.getPrecio());
+        producto.setUrlImagen(dto.getImagenUrl()); // Guarda el Base64 o URL de la imagen
+        producto.setCategoria(categoria);
+        producto.setEmprendedor(emprendedor);
+        // El estado "DISPONIBLE" se asigna automáticamente gracias a @PrePersist en la entidad Producto
+
+        // 4. Guardar en la base de datos
+        return productoRepository.save(producto);
+    }
+
     // Helper privado para mapear entidad a DTO incluyendo MongoDB de forma segura
     private ProductoDTO convertirADTO(Producto producto) {
         ProductoDTO dto = new ProductoDTO();
@@ -214,13 +240,10 @@ public class ProductoService implements IProductoService {
             System.err.println("Advertencia: No se pudieron cargar las fotos desde MongoDB para el producto " 
                     + producto.getId() + ". Causa: " + e.getMessage());
             
-            // Asigna lista vacía para no romper la respuesta JSON
             dto.setFotos(List.of());
             dto.setFotoPrincipal(null);
         }
 
         return dto;
-
-       
     }
 }

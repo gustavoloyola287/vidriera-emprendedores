@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Eye, MessageSquare, CheckCircle2, AlertTriangle, XCircle, X } from 'lucide-react';
+import { Box, Eye, MessageSquare, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 
 // Interfaz para el modelo de Producto
 export interface Producto {
@@ -14,24 +14,11 @@ interface InicioDashProps {
     setActiveTab?: (tab: string) => void;
 }
 
-export const InicioDash: React.FC<InicioDashProps> = () => {
-    // ESTADOS
-    const [productos] = useState<Producto[]>([
-        {
-            id: 1,
-            nombre: 'Maceta Artesanal de Cerámica',
-            categoria: 'Hogar y Decoración',
-            precio: 4500,
-            estado: 'Publicado'
-        },
-        {
-            id: 2,
-            nombre: 'Set de Mates Grabados',
-            categoria: 'Regalería',
-            precio: 8200,
-            estado: 'Publicado'
-        }
-    ]);
+export const InicioDash: React.FC<InicioDashProps> = ({ setActiveTab }) => {
+    // ✅ ESTADOS CON DATOS REALES DEL BACKEND
+    const [productos, setProductos] = useState<Producto[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [errorApi, setErrorApi] = useState<string | null>(null);
 
     // Estado para controlar la vista emergente (modal) del detalle del producto
     const [productoDetalle, setProductoDetalle] = useState<Producto | null>(null);
@@ -54,8 +41,43 @@ export const InicioDash: React.FC<InicioDashProps> = () => {
         }, 4000);
     };
 
+    // ✅ Obtener productos del emprendedor logueado
     useEffect(() => {
-        // Carga inicial o llamada a API si fuera necesario
+        const fetchProductos = async () => {
+            setLoading(true);
+            setErrorApi(null);
+            
+            const token = localStorage.getItem('token');
+            const emprendedorId = localStorage.getItem('emprendedorId');
+
+            if (!token || !emprendedorId) {
+                setErrorApi('No se encontró la sesión del emprendedor.');
+                mostrarToast('Error de autenticación', 'danger');
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/productos/emprendedor/${emprendedorId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Error al cargar productos');
+                
+                const data = await response.json();
+                setProductos(data);
+            } catch (err: any) {
+                console.error('Error al cargar productos:', err);
+                setErrorApi('No se pudieron cargar los productos.');
+                mostrarToast('Error al cargar datos', 'danger');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProductos();
     }, []);
 
     // Manejador para ver detalle en ventana emergente (Modal) en lugar de alert
@@ -123,7 +145,9 @@ export const InicioDash: React.FC<InicioDashProps> = () => {
                     <div className="bg-white p-3 rounded-3 shadow-sm border-0 d-flex justify-content-between align-items-start">
                         <div>
                             <span className="text-secondary fw-semibold">Mis Productos</span>
-                            <h2 className="fw-bold mt-2 mb-0">{productos.length}</h2>
+                            <h2 className="fw-bold mt-2 mb-0">
+                                {loading ? <span className="spinner-border spinner-border-sm text-primary" /> : productos.length}
+                            </h2>
                         </div>
                         <Box className="text-primary" size={24} />
                     </div>
@@ -133,7 +157,9 @@ export const InicioDash: React.FC<InicioDashProps> = () => {
                     <div className="bg-white p-3 rounded-3 shadow-sm border-0 d-flex justify-content-between align-items-start">
                         <div>
                             <span className="text-secondary fw-semibold">Visitas a la Vidriera</span>
-                            <h2 className="fw-bold mt-2 mb-0">340</h2>
+                            <h2 className="fw-bold mt-2 mb-0">
+                                {loading ? <span className="spinner-border spinner-border-sm text-primary" /> : 'Próximamente'}
+                            </h2>
                         </div>
                         <Eye className="text-info" size={24} />
                     </div>
@@ -143,7 +169,9 @@ export const InicioDash: React.FC<InicioDashProps> = () => {
                     <div className="bg-white p-3 rounded-3 shadow-sm border-0 d-flex justify-content-between align-items-start">
                         <div>
                             <span className="text-secondary fw-semibold">Consultas Recibidas</span>
-                            <h2 className="fw-bold mt-2 mb-0">8</h2>
+                            <h2 className="fw-bold mt-2 mb-0">
+                                {loading ? <span className="spinner-border spinner-border-sm text-primary" /> : 'Próximamente'}
+                            </h2>
                         </div>
                         <MessageSquare className="text-warning" size={24} />
                     </div>
@@ -154,8 +182,21 @@ export const InicioDash: React.FC<InicioDashProps> = () => {
             <div className="bg-white p-4 rounded-3 shadow-sm border-0">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                     <h5 className="fw-bold mb-0">Productos Publicados</h5>
-                    {/* Botón "Nuevo Producto" eliminado de aquí por solicitud */}
+                    {productos.length > 0 && setActiveTab && (
+                        <button 
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={() => setActiveTab('productos')}
+                        >
+                            Ver todos
+                        </button>
+                    )}
                 </div>
+
+                {errorApi && (
+                    <div className="alert alert-danger py-2 small mb-3" role="alert">
+                        {errorApi}
+                    </div>
+                )}
 
                 <div className="table-responsive">
                     <table className="table table-hover align-middle mb-0">
@@ -169,22 +210,31 @@ export const InicioDash: React.FC<InicioDashProps> = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {productos.length === 0 ? (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} className="text-center py-4">
+                                        <div className="spinner-border text-primary" role="status">
+                                            <span className="visually-hidden">Cargando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : productos.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="text-center text-muted py-4">
-                                        No hay productos cargados en el sistema.
+                                        No tenés productos publicados. ¡Comenzá a cargar el primero!
                                     </td>
                                 </tr>
                             ) : (
-                                productos.map((prod) => (
+                                productos.slice(0, 5).map((prod) => (
                                     <tr key={prod.id}>
                                         <td className="fw-bold text-dark">{prod.nombre}</td>
                                         <td className="text-secondary">{prod.categoria}</td>
-                                        <td className="fw-bold text-dark">\${prod.precio.toLocaleString('es-AR')}</td>
+                                        <td className="fw-bold text-dark">{prod.precio ? `$${prod.precio.toLocaleString('es-AR')}` : 'Consultar'}</td>
                                         <td>
+                                            
                                             <span 
                                                 className="badge px-2 py-1 fw-semibold" 
-                                                style={{ backgroundColor: '#0d9c50', borderRadius: '4px' }}
+                                                style={{ backgroundColor: prod.estado === 'Activo' ? '#0d9c50' : '#6c757d', borderRadius: '4px' }}
                                             >
                                                 {prod.estado}
                                             </span>
@@ -239,7 +289,7 @@ export const InicioDash: React.FC<InicioDashProps> = () => {
                                     </div>
                                     <div className="col-6">
                                         <span className="text-muted small d-block">Precio:</span>
-                                        <span className="fw-bold text-success fs-6">\${productoDetalle.precio.toLocaleString('es-AR')}</span>
+                                        <span className="fw-bold text-success fs-6">{productoDetalle.precio ? `$${productoDetalle.precio.toLocaleString('es-AR')}` : 'Consultar'}</span>
                                     </div>
                                 </div>
                                 <div className="mb-2">

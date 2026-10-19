@@ -4,7 +4,7 @@ import { Home, Box, User, LogOut, MessagesSquare, Star, Store, Bell, CheckCircle
 
 // Importación de las vistas independientes
 import { InicioDash } from './iniciodash';
-import { MisProductos } from './misproductos';
+import MisProductos from './misproductos';
 import { MiPerfil } from './miperfil';
 import ChatInterno from '../components/ChatInterno';
 import OpinionesYCalificaciones from './opinionesycalificaciones';

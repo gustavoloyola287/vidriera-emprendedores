@@ -1,4 +1,4 @@
-    import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Star, Loader2, MessageSquare, AlertCircle, Send, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 
 interface Calificacion {

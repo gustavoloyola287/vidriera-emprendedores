@@ -20,7 +20,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Emprendedor implements UserDetails {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,13 +34,13 @@ public class Emprendedor implements UserDetails {
     private String telefono;
 
     @Column(nullable = false)
-    private String password = "defaultPassword"; // Valor por defecto
+    private String password;
 
     @Enumerated(EnumType.STRING)
     private Rol rol;
 
-    @Column (name = "estado", nullable = false, length = 50)
-    private String estado = "PENDIENTE"; // Pendiente, Activo, Suspendido
+    @Column(name = "estado", nullable = false, length = 50)
+    private String estado;
 
     // Recuperacion de contraseña
     @Column(name = "reset_password_token")
@@ -59,24 +58,27 @@ public class Emprendedor implements UserDetails {
     @PrePersist
     protected void onCreate() {
         this.fechaCreacion = LocalDateTime.now();
+        
+        // ✅ Inicializaciones movidas aquí para evitar conflictos con Java 21
         if (this.estado == null) {
             this.estado = "PENDIENTE";
         }
         
         if (this.rol == null) {
-            this.rol = Rol.ROLE_EMPRENDEDOR; // Asigna el rol por defecto si no se proporciona      
+            this.rol = Rol.ROLE_EMPRENDEDOR;
+        }
+        
+        if (this.password == null || this.password.isEmpty()) {
+            this.password = "defaultPassword";
         }
     }
-      
 
     @OneToOne 
     @JoinColumn(name = "usuario_id")
     private Usuario usuario; 
 
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Asigna la autoridad según el enum guardado (ROLE_SUPER_ADMIN, ROLE_ADMIN o ROLE_EMPRENDEDOR)
         String rolNombre = (this.rol != null) ? this.rol.name() : Rol.ROLE_EMPRENDEDOR.name();
         return List.of(new SimpleGrantedAuthority(rolNombre));
     }
@@ -108,10 +110,6 @@ public class Emprendedor implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        // Opcional: si queres que solo los usuarios activos puedan iniciar sesión, podes cambiar esto a:
-        // return "ACTIVO".equalsIgnoreCase(this.estado);
         return true;
     }
-
-
 }

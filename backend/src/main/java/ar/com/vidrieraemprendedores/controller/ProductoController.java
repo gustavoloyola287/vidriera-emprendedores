@@ -1,9 +1,11 @@
 package ar.com.vidrieraemprendedores.controller;
 
+import ar.com.vidrieraemprendedores.dto.CrearProductoDTO; 
 import ar.com.vidrieraemprendedores.dto.ProductoDTO;
 import ar.com.vidrieraemprendedores.models.Categoria;
 import ar.com.vidrieraemprendedores.models.Producto;
 import ar.com.vidrieraemprendedores.service.IProductoService;
+import jakarta.validation.Valid; 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,9 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/productos") // URL base para los productos del catálogo
+@RequestMapping("/api/productos")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173") // Evita problemas de CORS con la app de React
+@CrossOrigin(origins = "http://localhost:5173")
 public class ProductoController {
 
     private final IProductoService productoService;
@@ -27,28 +29,32 @@ public class ProductoController {
         return ResponseEntity.ok(lista);
     }
 
-    //  LISTAR TODOS LOS PRODUCTOS DE LA VIDRIERA (Devuelve DTO con fotos de Mongo)
     @GetMapping
     public ResponseEntity<List<ProductoDTO>> listarTodos() {
         List<ProductoDTO> lista = productoService.obtenerCatalogoPublico();
         return ResponseEntity.ok(lista);
     }
 
-    //  BUSCAR UN PRODUCTO POR ID
     @GetMapping("/{id}")
     public ResponseEntity<Producto> buscarPorId(@PathVariable Long id) {
         Producto producto = productoService.buscarPorId(id);
         return ResponseEntity.ok(producto);
     }
 
-    //  CREAR UN NUEVO PRODUCTO ASOCIADO A EMPRENDEDOR Y CATEGORÍA (JSON plano)
+    // ✅ MODIFICADO: Ahora recibe el DTO y valida los datos
     @PostMapping
-    public ResponseEntity<Producto> crear(@RequestBody Producto producto) {
-        Producto nuevo = productoService.guardarProducto(producto);
-        return new ResponseEntity<>(nuevo, HttpStatus.CREATED);
+    public ResponseEntity<?> crear(@RequestBody @Valid CrearProductoDTO dto) {
+        try {
+            Producto nuevo = productoService.crearProductoDesdeDTO(dto);
+            return new ResponseEntity<>(nuevo, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            // Esto devolverá un error 400 con el mensaje exacto (ej: "Categoría no encontrada")
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado al crear el producto: " + e.getMessage());
+        }
     }
 
-    //  CREAR UN NUEVO PRODUCTO CON FOTO (Multipart Form-Data)
     @PostMapping(value = "/con-foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> crearConFoto(
             @RequestParam("nombre") String nombre,
@@ -65,21 +71,18 @@ public class ProductoController {
         }
     }
 
-    //  ELIMINAR UN PRODUCTO DEL CATÁLOGO
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         productoService.eliminarProducto(id);
         return ResponseEntity.noContent().build();
     }
 
-    // Obtener todas las categorías de productos
     @GetMapping("/categorias")
     public ResponseEntity<List<Categoria>> listarCategorias() {
         List<Categoria> categorias = productoService.listarCategorias();
         return ResponseEntity.ok(categorias);
     }
 
-    // Listar productos de un emprendedor específico
     @GetMapping("/emprendedor/{emprendedorId}")
     public ResponseEntity<List<Producto>> listarPorEmprendedor(@PathVariable Long emprendedorId) {
         List<Producto> productos = productoService.listarPorEmprendedor(emprendedorId);
