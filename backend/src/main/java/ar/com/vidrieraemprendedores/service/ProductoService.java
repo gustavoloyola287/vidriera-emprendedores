@@ -1,6 +1,6 @@
 package ar.com.vidrieraemprendedores.service;
 
-import ar.com.vidrieraemprendedores.dto.CrearProductoDTO; // ✅ NUEVO IMPORT AGREGADO
+import ar.com.vidrieraemprendedores.dto.CrearProductoDTO; 
 import ar.com.vidrieraemprendedores.dto.ProductoDTO;
 import ar.com.vidrieraemprendedores.models.Categoria;
 import ar.com.vidrieraemprendedores.models.Emprendedor;
@@ -217,6 +217,7 @@ public class ProductoService implements IProductoService {
         dto.setId(producto.getId());
         dto.setNombre(producto.getNombre());
         dto.setDescripcion(producto.getDescripcion());
+        dto.setPrecio(producto.getPrecio());
 
         if (producto.getEmprendedor() != null) {
             dto.setIdEmprendedor(producto.getEmprendedor().getId());

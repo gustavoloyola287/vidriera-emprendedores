@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { ProductosDestacados } from "../components/productosdestacados";
 import { useNavigate } from "react-router-dom";
 
+// ✅ 1. AGREGADO: Campo 'precio' a la interfaz
 export interface ProductoDTO {
     id: number;
     nombre: string;
     descripcion: string;
+    precio?: number; // <-- ¡Aquí estaba el problema!
     idEmprendedor?: number;
     nombreEmprendedor?: string;
     idCategoria?: number;
@@ -33,7 +35,6 @@ function Home() {
     useEffect(() => {
         const cargarDatosIniciales = async () => {
             try {
-                // Cargamos productos y categorías en paralelo
                 const [respProductos, respCategorias] = await Promise.all([
                     fetch("http://localhost:8080/api/productos"),
                     fetch("http://localhost:8080/api/categorias")
@@ -61,14 +62,12 @@ function Home() {
         cargarDatosIniciales();
     }, []);
 
-    // ✅ CORREGIDO: Ahora usa la ruta en plural "/emprendedores" para coincidir con App.tsx
     const verPerfil = (idEmprendedor?: number) => {
         if (idEmprendedor) {
             navigate(`/emprendedores/${idEmprendedor}`);
         }
     };
 
-    // Filtro combinado: por texto y por dropdown de categoría
     const productosFiltrados = productos.filter((prod) => {
         const termino = busqueda.toLowerCase();
         const coincideTexto =
@@ -140,7 +139,7 @@ function Home() {
                     {productosFiltrados.map((prod) => {
                         const srcImg = obtenerImagenSrc(prod);
                         return (
-                            <div className="card-emprendedor" key={prod.id} style={{ border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                            <div className="card-emprendedor" key={prod.id} style={{ border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column' }}>
                                 {srcImg ? (
                                     <img 
                                         src={srcImg} 
@@ -153,7 +152,7 @@ function Home() {
                                     </div>
                                 )}
                                 
-                                <div className="card-contenido" style={{ padding: '1rem' }}>
+                                <div className="card-contenido" style={{ padding: '1rem', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                                     <h2 style={{ fontSize: '1.2rem', margin: '0 0 0.5rem 0' }}>{prod.nombre}</h2>
 
                                     {prod.nombreCategoria && (
@@ -165,13 +164,25 @@ function Home() {
                                             borderRadius: '4px',
                                             fontSize: '0.8rem',
                                             fontWeight: 600,
-                                            marginBottom: '0.5rem'
+                                            marginBottom: '0.5rem',
+                                            alignSelf: 'flex-start'
                                         }}>
                                             {prod.nombreCategoria}
                                         </span>
                                     )}
 
-                                    <p style={{ fontSize: '0.9rem', color: '#555', marginBottom: '1rem' }}>{prod.descripcion}</p>
+                                    <p style={{ fontSize: '0.9rem', color: '#555', marginBottom: '1rem', flexGrow: 1 }}>{prod.descripcion}</p>
+
+                                    {/* ✅ 2. AGREGADO: Bloque para mostrar el precio */}
+                                    {prod.precio !== undefined && prod.precio !== null ? (
+                                        <p style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#0078a8', margin: '0 0 1rem 0' }}>
+                                            ${prod.precio.toLocaleString('es-AR')}
+                                        </p>
+                                    ) : (
+                                        <p style={{ fontSize: '1rem', fontWeight: 'bold', color: '#666', margin: '0 0 1rem 0', fontStyle: 'italic' }}>
+                                            Consultar precio
+                                        </p>
+                                    )}
 
                                     {prod.nombreEmprendedor && (
                                         <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>
@@ -190,7 +201,8 @@ function Home() {
                                             border: 'none', 
                                             borderRadius: '6px', 
                                             cursor: prod.idEmprendedor ? 'pointer' : 'not-allowed',
-                                            fontWeight: 'bold'
+                                            fontWeight: 'bold',
+                                            marginTop: 'auto' // Empuja el botón al fondo
                                         }}
                                     >
                                         Ver Perfil
