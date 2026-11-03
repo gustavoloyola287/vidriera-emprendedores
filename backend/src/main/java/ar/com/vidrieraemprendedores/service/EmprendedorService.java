@@ -19,7 +19,10 @@ public class EmprendedorService implements IEmprendedorService {
 
     @Override
     public List<Emprendedor> listarEmprendedores() {
-        return emprendedorRepository.findAll();
+        // Los Super Administradores no aparecen en ningún listado (ni público ni de administración)
+        return emprendedorRepository.findAll().stream()
+                .filter(e -> e.getRol() != Rol.ROLE_SUPER_ADMIN)
+                .toList();
     }
 
     @Override
