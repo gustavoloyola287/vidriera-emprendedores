@@ -19,7 +19,10 @@ public class EmprendedorService implements IEmprendedorService {
 
     @Override
     public List<Emprendedor> listarEmprendedores() {
-        return emprendedorRepository.findAll();
+        //Los administradores no aparecen en ningun listado
+        return emprendedorRepository.findAll().stream()
+                .filter(e -> e.getRol() == Rol.ROLE_EMPRENDEDOR)
+                .toList();
     }
 
     @Override
@@ -45,10 +48,37 @@ public class EmprendedorService implements IEmprendedorService {
         return emprendedorRepository.save(emprendedor);
     }
 
+    //Actualiza solo el nombre y email. No pasa por guardadrEmprendedor para no re-encriptar 
+    //la contraseña
+    @Override
+    @Transactional
+    public Emprendedor actualizarDatosAdministrador(Long id, String nombreCompleto, String email) {
+        Emprendedor admin = emprendedorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Emprendedor no encontrado con el ID: " + id));
+
+        if (nombreCompleto == null || nombreCompleto.isBlank() || email == null || email.isBlank()) {
+            throw new RuntimeException("El nombre y el email son obligatorios");
+        }
+
+        String emailNormalizado = email.trim().toLowerCase();
+        emprendedorRepository.findByEmail(emailNormalizado).ifPresent(otro -> {
+            if (!otro.getId().equals(id)) {
+                throw new RuntimeException("Ya existe un usuario registrado con el email: " + emailNormalizado);
+            }
+        });
+
+        admin.setNombreCompleto(nombreCompleto.trim());
+        admin.setEmail(emailNormalizado);
+        return emprendedorRepository.save(admin);
+    }
+
     @Override
     public void eliminarEmprendedor(Long id) {
-        if (!emprendedorRepository.existsById(id)) {
-            throw new RuntimeException("No se puede eliminar. Emprendedor no encontrado con el ID: " + id);
+        Emprendedor emprendedor = emprendedorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("No se puede eliminar. Emprendedor no encontrado con el ID: " + id));
+
+        if (emprendedor.getRol() == Rol.ROLE_SUPER_ADMIN) {
+            throw new RuntimeException("No se puede eliminar al Super Administrador");
         }
         emprendedorRepository.deleteById(id);
     }

@@ -15,6 +15,9 @@ public interface IEmprendedorService {
     // Guardar o crear un nuevo emprendedor
     Emprendedor guardarEmprendedor(Emprendedor emprendedor);
 
+    // Actualizar solo el nombre y email de un administrador
+    Emprendedor actualizarDatosAdministrador(Long id, String nombreCompleto, String email);
+
     // Eliminar un emprendedor por su ID
     void eliminarEmprendedor(Long id);
 

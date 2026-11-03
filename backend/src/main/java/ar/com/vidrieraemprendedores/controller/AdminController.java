@@ -150,15 +150,12 @@ public class AdminController {
     public ResponseEntity<Map<String, String>> actualizarAdmin(
             @PathVariable Long id,
             @RequestBody Map<String, String> datos) {
-        try {
-            Emprendedor admin = emprendedorService.buscarPorId(id);
-            admin.setNombreCompleto(datos.get("nombreCompleto"));
-            admin.setEmail(datos.get("email"));
-            emprendedorService.guardarEmprendedor(admin);
+        try { 
+          emprendedorService.actualizarDatosAdministrador(id, datos.get("nombreCompleto"), datos.get("email"));
             return ResponseEntity.ok(Map.of("message", "Administrador actualizado"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
-    }
-
+    }  
+      
 }
