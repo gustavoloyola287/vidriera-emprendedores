@@ -89,6 +89,13 @@ public class EmprendedorService implements IEmprendedorService {
         return emprendedorRepository.countByRol(Rol.ROLE_EMPRENDEDOR);
     }
 
+       // ✅ NUEVO MÉTODO: Listar administradores
+    public List<Emprendedor> listarAdministradores() {
+        return emprendedorRepository.findAll().stream()
+                .filter(e -> e.getRol() == Rol.ROLE_ADMIN || e.getRol() == Rol.ROLE_SUPER_ADMIN)
+                .toList();
+    }
+
     @Override
     @Transactional
     public void cambiarEstado(Long id, String nuevoEstado) {

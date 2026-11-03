@@ -94,6 +94,10 @@ export const Login: React.FC = () => {
             } else {
                 mostrarToast('Ocurrió un error inesperado al iniciar la sesión', 'danger');
             }
+
+            setEmail('');
+            setPassword('');
+
         } finally {
             setLoading(false);
         }

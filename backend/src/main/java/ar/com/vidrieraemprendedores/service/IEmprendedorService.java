@@ -28,4 +28,7 @@ public interface IEmprendedorService {
     long contarEmprendedores();
 
     long contarAdministradores();
+
+    //Listar administradores
+    List<Emprendedor> listarAdministradores();
 }

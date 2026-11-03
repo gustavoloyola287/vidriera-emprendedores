@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+
 
 @RestController
 @RequestMapping("/api/admin")
@@ -55,6 +55,17 @@ public class AdminController {
             @RequestParam String nuevoEstado) {
         productoService.cambiarEstadoProducto(id, nuevoEstado);
         return ResponseEntity.ok(Map.of("message", "Estado actualizado correctamente"));
+    }
+
+        // 3.5 Eliminar emprendedor
+    @DeleteMapping("/emprendedores/{id}")
+    public ResponseEntity<Map<String, String>> eliminarEmprendedor(@PathVariable Long id) {
+        try {
+            emprendedorService.eliminarEmprendedor(id);
+            return ResponseEntity.ok(Map.of("message", "Emprendedor eliminado correctamente"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     // 4. Crear emprendedor
@@ -127,10 +138,7 @@ public class AdminController {
     // 10. Listar administradores
     @GetMapping("/listar-admins")
     public ResponseEntity<List<Emprendedor>> listarAdministradores() {
-        List<Emprendedor> admins = emprendedorService.listarEmprendedores()
-                .stream()
-                .filter(e -> e.getRol() == Rol.ROLE_ADMIN || e.getRol() == Rol.ROLE_SUPER_ADMIN)
-                .collect(Collectors.toList());
+        List<Emprendedor> admins = emprendedorService.listarAdministradores();
         return ResponseEntity.ok(admins);
     }
 
