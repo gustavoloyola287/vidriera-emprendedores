@@ -17,12 +17,32 @@ public class EmprendedorService implements IEmprendedorService {
     private final EmprendedorRepository emprendedorRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // ✅ 1. PARA LA VISTA PÚBLICA: Solo emprendedores ACTIVOS
     @Override
-    public List<Emprendedor> listarEmprendedores() {
-        //Los administradores no aparecen en ningun listado
+    public List<Emprendedor> listarEmprendedoresActivos() {
+        return emprendedorRepository.findAll().stream()
+                .filter(e -> e.getRol() == Rol.ROLE_EMPRENDEDOR && "ACTIVO".equalsIgnoreCase(e.getEstado()))
+                .toList();
+    }
+
+    // ✅ 2. PARA EL PANEL DE ADMIN: Todos los emprendedores (para poder reactivarlos)
+    @Override
+    public List<Emprendedor> listarTodosLosEmprendedores() {
         return emprendedorRepository.findAll().stream()
                 .filter(e -> e.getRol() == Rol.ROLE_EMPRENDEDOR)
                 .toList();
+    }
+
+    // ✅ 3. SEGURIDAD EN EL PERFIL PÚBLICO: Bloquear acceso a perfiles suspendidos
+    @Override
+    public Emprendedor obtenerPerfilPublico(Long id) {
+        Emprendedor emp = emprendedorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Emprendedor no encontrado"));
+        
+        if (!"ACTIVO".equalsIgnoreCase(emp.getEstado())) {
+            throw new RuntimeException("Este emprendimiento se encuentra temporalmente suspendido o inactivo.");
+        }
+        return emp;
     }
 
     @Override
@@ -96,7 +116,8 @@ public class EmprendedorService implements IEmprendedorService {
         return emprendedorRepository.countByRol(Rol.ROLE_EMPRENDEDOR);
     }
 
-       // ✅ NUEVO MÉTODO: Listar administradores
+    // ✅ NUEVO MÉTODO: Listar administradores
+    @Override
     public List<Emprendedor> listarAdministradores() {
         return emprendedorRepository.findAll().stream()
                 .filter(e -> e.getRol() == Rol.ROLE_ADMIN || e.getRol() == Rol.ROLE_SUPER_ADMIN)
@@ -135,4 +156,6 @@ public class EmprendedorService implements IEmprendedorService {
     public long contarAdministradores() {
         return emprendedorRepository.countByRol(Rol.ROLE_ADMIN);
     }
+
+    
 }

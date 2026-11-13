@@ -17,18 +17,17 @@ public class EmprendedorController {
 
     private final IEmprendedorService emprendedorService;
 
-    // 1. OBTENER TODOS LOS EMPRENDEDORES
+    // 1. OBTENER TODOS LOS EMPRENDEDORES ACTIVOS (para la vidriera pública)
     @GetMapping
-    public ResponseEntity<List<Emprendedor>> listarTodos() {
-        List<Emprendedor> lista = emprendedorService.listarEmprendedores();
-        return ResponseEntity.ok(lista); // Devuelve status 200 OK con la lista
+    public ResponseEntity<List<Emprendedor>> listarEmprendedoresPublicos() {
+        // Solo devuelve los ACTIVOS
+        return ResponseEntity.ok(emprendedorService.listarEmprendedoresActivos());
     }
 
-    // 2. OBTENER UN EMPRENDEDOR POR ID
     @GetMapping("/{id}")
-    public ResponseEntity<Emprendedor> buscarPorId(@PathVariable Long id) {
-        Emprendedor emprendedor = emprendedorService.buscarPorId(id);
-        return ResponseEntity.ok(emprendedor);
+    public ResponseEntity<Emprendedor> verPerfilPublico(@PathVariable Long id) {
+        // Lanza excepción si está suspendido
+        return ResponseEntity.ok(emprendedorService.obtenerPerfilPublico(id));
     }
 
     // 3. CREAR UN NUEVO EMPRENDEDOR (Alta)

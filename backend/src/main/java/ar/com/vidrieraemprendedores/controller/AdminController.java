@@ -183,4 +183,10 @@ public class AdminController {
     public ResponseEntity<Map<String, String>> marcarLeidas() {
         return ResponseEntity.ok(Map.of("message", "OK"));
     }
+
+    // Endpoint para que el admin vea TODOS (incluyendo suspendidos)
+    @GetMapping("/emprendedores/todos")
+    public ResponseEntity<List<Emprendedor>> listarTodosParaAdmin() {
+        return ResponseEntity.ok(emprendedorService.listarTodosLosEmprendedores());
+    }
 }

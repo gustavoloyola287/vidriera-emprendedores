@@ -4,36 +4,23 @@ import ar.com.vidrieraemprendedores.models.Emprendedor;
 import java.util.List;
 
 public interface IEmprendedorService {
-    // Traer todos los emprendedores
-    List<Emprendedor> listarEmprendedores();
+    
+    // ✅ 1. Métodos nuevos para separar lógica pública y de administración
+    List<Emprendedor> listarEmprendedoresActivos();
+    List<Emprendedor> listarTodosLosEmprendedores();
+    Emprendedor obtenerPerfilPublico(Long id);
 
-    //Listar administradores
-    List<Emprendedor> listarAdministradores();
-
-    // Buscar uno solo por su ID
+    // ✅ 2. Métodos originales de gestión
     Emprendedor buscarPorId(Long id);
-
-    Emprendedor crearAdministrador(String nombre, String email, String passwordPlano);
-
-    // Guardar o crear un nuevo emprendedor
     Emprendedor guardarEmprendedor(Emprendedor emprendedor);
-
-    // Guardar emprendedor sin reencriptar la contraseña (para actualizar datos)
     Emprendedor guardarEmprendedorSinReencriptar(Emprendedor emprendedor);
-
-    // Actualizar solo el nombre y email de un administrador
     Emprendedor actualizarDatosAdministrador(Long id, String nombreCompleto, String email);
-
-    // Eliminar un emprendedor por su ID
     void eliminarEmprendedor(Long id);
-
-
     void cambiarEstado(Long id, String nuevoEstado);
-
-       // Contar la cantidad de emprendedores  
+    
+    // ✅ 3. Métricas y listados específicos
     long contarEmprendedores();
-
     long contarAdministradores();
-
-  
+    List<Emprendedor> listarAdministradores();
+    Emprendedor crearAdministrador(String nombre, String email, String passwordPlano);
 }
