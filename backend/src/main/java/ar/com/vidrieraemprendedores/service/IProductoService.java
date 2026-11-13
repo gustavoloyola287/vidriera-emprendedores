@@ -28,4 +28,7 @@ public interface IProductoService {
 
     // ✅ NUEVO MÉTODO AGREGADO
     Producto crearProductoDesdeDTO(CrearProductoDTO dto);
+
+    List<ProductoDTO> listarTodosLosProductos();
+
 }

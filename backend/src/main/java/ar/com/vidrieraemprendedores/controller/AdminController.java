@@ -2,6 +2,7 @@ package ar.com.vidrieraemprendedores.controller;
 
 import ar.com.vidrieraemprendedores.dto.AdminDashboardStatsDTO;
 import ar.com.vidrieraemprendedores.dto.CrearAdminDTO;
+import ar.com.vidrieraemprendedores.dto.ProductoDTO;
 import ar.com.vidrieraemprendedores.models.Emprendedor;
 import ar.com.vidrieraemprendedores.models.Rol;
 import ar.com.vidrieraemprendedores.service.IEmprendedorService;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.Collections;
 import java.util.List;
@@ -182,5 +184,11 @@ public class AdminController {
     @GetMapping("/emprendedores/todos")
     public ResponseEntity<List<Emprendedor>> listarTodosParaAdmin() {
         return ResponseEntity.ok(emprendedorService.listarTodosLosEmprendedores());
+    }
+
+    //Listar todos los productos para moderacion
+    @GetMapping("/productos")
+    public ResponseEntity<List<ProductoDTO>> listarProductosParaModeracion() {
+        return ResponseEntity.ok(productoService.listarTodosLosProductos());
     }
 }

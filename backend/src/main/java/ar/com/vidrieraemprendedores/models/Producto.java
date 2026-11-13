@@ -39,7 +39,7 @@ public class Producto {
     protected void onCreate() {
         this.fechaCreacion = LocalDateTime.now();
         if (this.estado == null) {
-            this.estado = "DISPONIBLE"; // Asigna el estado por defecto si no se proporciona
+            this.estado = "PENDIENTE"; // Asigna el estado por defecto si no se proporciona
         }
     }
 

@@ -38,9 +38,18 @@ public class ProductoService implements IProductoService {
     @Transactional(readOnly = true)
     public List<ProductoDTO> obtenerCatalogoPublico() {
         return productoRepository.findAll().stream()
-        .filter(p -> p.getEmprendedor() != null && "ACTIVO".equalsIgnoreCase(p.getEmprendedor().getEstado()))
-        .map(this::convertirADTO)
-        .collect(Collectors.toList());
+            .filter(p -> p.getEmprendedor() != null 
+                 && "ACTIVO".equalsIgnoreCase(p.getEmprendedor().getEstado())
+                 && "APROBADO".equalsIgnoreCase(p.getEstado()))
+            .map(this::convertirADTO)
+            .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductoDTO> listarTodosLosProductos() {
+        return productoRepository.findAll().stream()
+            .map(this::convertirADTO)
+            .collect(Collectors.toList());
     }
 
     @Override
