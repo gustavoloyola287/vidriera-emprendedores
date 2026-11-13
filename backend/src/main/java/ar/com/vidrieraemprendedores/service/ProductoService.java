@@ -135,7 +135,7 @@ public class ProductoService implements IProductoService {
     @Transactional
     public void cambiarEstadoProducto(Long productoId, String nuevoEstado) {
         Producto producto = buscarPorId(productoId);
-        producto.setEstado(nuevoEstado);
+        producto.setEstado(nuevoEstado.toUpperCase());
         productoRepository.save(producto);
     }
 

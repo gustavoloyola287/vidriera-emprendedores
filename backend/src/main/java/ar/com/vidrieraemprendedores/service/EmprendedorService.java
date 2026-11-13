@@ -1,6 +1,7 @@
 package ar.com.vidrieraemprendedores.service;
 
 import ar.com.vidrieraemprendedores.models.Emprendedor;
+import ar.com.vidrieraemprendedores.models.Producto;
 import ar.com.vidrieraemprendedores.models.Rol;
 import ar.com.vidrieraemprendedores.repository.EmprendedorRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,9 @@ public class EmprendedorService implements IEmprendedorService {
 
     private final EmprendedorRepository emprendedorRepository;
     private final PasswordEncoder passwordEncoder;
+    
+    // ✅ Inyectamos el servicio de productos para manejar el borrado en cascada
+    private final IProductoService productoService;
 
     // ✅ 1. PARA LA VISTA PÚBLICA: Solo emprendedores ACTIVOS
     @Override
@@ -56,11 +60,9 @@ public class EmprendedorService implements IEmprendedorService {
          if (emprendedor.getPassword() != null && !emprendedor.getPassword().isEmpty()) {
             emprendedor.setPassword(passwordEncoder.encode(emprendedor.getPassword()));
         } else {
-            // Si no viene contraseña, poner una por defecto o lanzar error
             throw new RuntimeException("La contraseña es obligatoria");
         }
         
-        // Asegurar que tenga un estado por defecto
         if (emprendedor.getEstado() == null || emprendedor.getEstado().isEmpty()) {
             emprendedor.setEstado("ACTIVO");
         }
@@ -75,8 +77,7 @@ public class EmprendedorService implements IEmprendedorService {
         return emprendedorRepository.save(emprendedor);
     }
 
-    //Actualiza solo el nombre y email. No pasa por guardadrEmprendedor para no re-encriptar 
-    //la contraseña
+    // Actualiza solo el nombre y email. No pasa por guardarEmprendedor para no re-encriptar la contraseña
     @Override
     @Transactional
     public Emprendedor actualizarDatosAdministrador(Long id, String nombreCompleto, String email) {
@@ -99,7 +100,9 @@ public class EmprendedorService implements IEmprendedorService {
         return emprendedorRepository.save(admin);
     }
 
+    // ✅ CORREGIDO: Borrado en cascada para evitar productos huérfanos
     @Override
+    @Transactional
     public void eliminarEmprendedor(Long id) {
         Emprendedor emprendedor = emprendedorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("No se puede eliminar. Emprendedor no encontrado con el ID: " + id));
@@ -107,6 +110,15 @@ public class EmprendedorService implements IEmprendedorService {
         if (emprendedor.getRol() == Rol.ROLE_SUPER_ADMIN) {
             throw new RuntimeException("No se puede eliminar al Super Administrador");
         }
+
+        // ✅ 1. PRIMERO: Eliminar todos los productos de este emprendedor 
+        // (Esto también ejecuta la lógica que borra las fotos asociadas en MongoDB)
+        List<Producto> productos = productoService.listarPorEmprendedor(id);
+        for (Producto p : productos) {
+            productoService.eliminarProducto(p.getId());
+        }
+
+        // ✅ 2. DESPUÉS: Eliminar al emprendedor
         emprendedorRepository.deleteById(id);
     }
 
@@ -156,6 +168,4 @@ public class EmprendedorService implements IEmprendedorService {
     public long contarAdministradores() {
         return emprendedorRepository.countByRol(Rol.ROLE_ADMIN);
     }
-
-    
 }
