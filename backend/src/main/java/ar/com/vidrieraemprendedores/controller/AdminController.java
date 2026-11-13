@@ -2,7 +2,7 @@ package ar.com.vidrieraemprendedores.controller;
 
 import ar.com.vidrieraemprendedores.dto.AdminDashboardStatsDTO;
 import ar.com.vidrieraemprendedores.dto.CrearAdminDTO;
-import ar.com.vidrieraemprendedores.models.Emprendedor; 
+import ar.com.vidrieraemprendedores.models.Emprendedor;
 import ar.com.vidrieraemprendedores.models.Rol;
 import ar.com.vidrieraemprendedores.service.IEmprendedorService;
 import ar.com.vidrieraemprendedores.service.IProductoService;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
 
 @RestController
 @RequestMapping("/api/admin")
@@ -31,7 +30,7 @@ public class AdminController {
         AdminDashboardStatsDTO stats = new AdminDashboardStatsDTO();
         stats.setTotalEmprendedores(emprendedorService.contarEmprendedores());
         stats.setTotalProductos(productoService.contarProductos());
-        stats.setProductosPendientes(0); // Cambiá esto si tenés el método
+        stats.setProductosPendientes(0);
         stats.setEmprendedoresActivos(0);
         stats.setEmprendedoresSuspendidos(0);
         stats.setEmprendedoresRechazados(0);
@@ -39,7 +38,7 @@ public class AdminController {
         return ResponseEntity.ok(stats);
     }
 
-    // 2. Cambio de estado de Emprendedor
+    // 2. Cambio de estado de Emprendedor (suspender / activar)
     @PutMapping("/emprendedores/{id}/estado")
     public ResponseEntity<Map<String, String>> cambiarEstadoEmprendedor(
             @PathVariable Long id,
@@ -48,7 +47,41 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Estado actualizado correctamente"));
     }
 
-    // 3. Moderación de Productos
+    // 3. Eliminar emprendedor
+    @DeleteMapping("/emprendedores/{id}")
+    public ResponseEntity<Map<String, String>> eliminarEmprendedor(@PathVariable Long id) {
+        try {
+            emprendedorService.eliminarEmprendedor(id);
+            return ResponseEntity.ok(Map.of("message", "Emprendedor eliminado correctamente"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    // 4. Actualizar datos de un emprendedor desde el panel de administración
+    @PutMapping("/emprendedores/{id}")
+    public ResponseEntity<Map<String, String>> actualizarEmprendedor(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> datos) {
+        try {
+            Emprendedor emprendedor = emprendedorService.buscarPorId(id);
+            if (datos.get("nombreCompleto") != null && !datos.get("nombreCompleto").isBlank()) {
+                emprendedor.setNombreCompleto(datos.get("nombreCompleto").trim());
+            }
+            if (datos.get("email") != null && !datos.get("email").isBlank()) {
+                emprendedor.setEmail(datos.get("email").trim().toLowerCase());
+            }
+            if (datos.get("telefono") != null) {
+                emprendedor.setTelefono(datos.get("telefono"));
+            }
+            emprendedorService.guardarEmprendedorSinReencriptar(emprendedor);
+            return ResponseEntity.ok(Map.of("message", "Emprendedor actualizado correctamente"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    // 5. Moderación de Productos (aprobar / rechazar)
     @PutMapping("/productos/{id}/estado")
     public ResponseEntity<Map<String, String>> cambiarEstadoProducto(
             @PathVariable Long id,
@@ -57,18 +90,7 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Estado actualizado correctamente"));
     }
 
-        // 3.5 Eliminar emprendedor
-    @DeleteMapping("/emprendedores/{id}")
-    public ResponseEntity<Map<String, String>> eliminarEmprendedor(@PathVariable Long id) {
-        try {
-            emprendedorService.eliminarEmprendedor(id);
-            return ResponseEntity.ok(Map.of("message", "Emprendedor eliminado correctamente"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    // 4. Crear emprendedor
+    // 6. Crear emprendedor
     @PostMapping("/emprendedores")
     public ResponseEntity<?> crearEmprendedor(@RequestBody Emprendedor emprendedor) {
         try {
@@ -86,7 +108,7 @@ public class AdminController {
         }
     }
 
-    // 5. Crear administrador
+    // 7. Crear administrador
     @PostMapping("/crear-admin")
     public ResponseEntity<?> crearAdministrador(@RequestBody CrearAdminDTO crearAdminDTO) {
         try {
@@ -104,7 +126,7 @@ public class AdminController {
         }
     }
 
-    // 6. Cambiar estado de admin
+    // 8. Cambiar estado de admin
     @PutMapping("/admins/{id}/estado")
     public ResponseEntity<Map<String, String>> cambiarEstadoAdmin(
             @PathVariable Long id,
@@ -113,36 +135,14 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Estado del administrador actualizado"));
     }
 
-    // ==========================================
-    // ✅ ENDPOINTS NUEVOS (Para evitar errores)
-    // ==========================================
-
-    // 7. Moderación reciente (devuelve lista vacía)
-    @GetMapping("/moderacion/reciente")
-    public ResponseEntity<List<?>> getModeracionReciente() {
-        return ResponseEntity.ok(Collections.emptyList());
-    }
-
-    // 8. Notificaciones (devuelve lista vacía)
-    @GetMapping("/notificaciones")
-    public ResponseEntity<List<?>> getNotificaciones() {
-        return ResponseEntity.ok(Collections.emptyList());
-    }
-
-    // 9. Marcar notificaciones como leídas
-    @PutMapping("/notificaciones/marcar-leidas")
-    public ResponseEntity<Map<String, String>> marcarLeidas() {
-        return ResponseEntity.ok(Map.of("message", "OK"));
-    }
-
-    // 10. Listar administradores
+    // 9. Listar administradores
     @GetMapping("/listar-admins")
     public ResponseEntity<List<Emprendedor>> listarAdministradores() {
         List<Emprendedor> admins = emprendedorService.listarAdministradores();
         return ResponseEntity.ok(admins);
     }
 
-    // 11. Eliminar administrador
+    // 10. Eliminar administrador
     @DeleteMapping("/eliminar-admin/{id}")
     public ResponseEntity<Map<String, String>> eliminarAdmin(@PathVariable Long id) {
         try {
@@ -153,17 +153,34 @@ public class AdminController {
         }
     }
 
-    // 12. Actualizar administrador
+    // 11. Actualizar administrador
     @PutMapping("/admins/{id}")
     public ResponseEntity<Map<String, String>> actualizarAdmin(
             @PathVariable Long id,
             @RequestBody Map<String, String> datos) {
-        try { 
-          emprendedorService.actualizarDatosAdministrador(id, datos.get("nombreCompleto"), datos.get("email"));
+        try {
+            emprendedorService.actualizarDatosAdministrador(id, datos.get("nombreCompleto"), datos.get("email"));
             return ResponseEntity.ok(Map.of("message", "Administrador actualizado"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
-    }  
-      
+    }
+
+    // 12. Moderación reciente (placeholder)
+    @GetMapping("/moderacion/reciente")
+    public ResponseEntity<List<?>> getModeracionReciente() {
+        return ResponseEntity.ok(Collections.emptyList());
+    }
+
+    // 13. Notificaciones (placeholder)
+    @GetMapping("/notificaciones")
+    public ResponseEntity<List<?>> getNotificaciones() {
+        return ResponseEntity.ok(Collections.emptyList());
+    }
+
+    // 14. Marcar notificaciones como leídas (placeholder)
+    @PutMapping("/notificaciones/marcar-leidas")
+    public ResponseEntity<Map<String, String>> marcarLeidas() {
+        return ResponseEntity.ok(Map.of("message", "OK"));
+    }
 }

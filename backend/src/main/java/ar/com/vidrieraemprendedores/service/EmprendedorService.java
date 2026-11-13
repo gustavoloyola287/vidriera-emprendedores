@@ -48,6 +48,13 @@ public class EmprendedorService implements IEmprendedorService {
         return emprendedorRepository.save(emprendedor);
     }
 
+    // Guardar emprendedor sin reencriptar la contraseña (para actualizar datos)
+    @Override
+    @Transactional
+    public Emprendedor guardarEmprendedorSinReencriptar(Emprendedor emprendedor) {
+        return emprendedorRepository.save(emprendedor);
+    }
+
     //Actualiza solo el nombre y email. No pasa por guardadrEmprendedor para no re-encriptar 
     //la contraseña
     @Override

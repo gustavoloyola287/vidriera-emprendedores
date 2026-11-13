@@ -7,6 +7,9 @@ public interface IEmprendedorService {
     // Traer todos los emprendedores
     List<Emprendedor> listarEmprendedores();
 
+    //Listar administradores
+    List<Emprendedor> listarAdministradores();
+
     // Buscar uno solo por su ID
     Emprendedor buscarPorId(Long id);
 
@@ -14,6 +17,9 @@ public interface IEmprendedorService {
 
     // Guardar o crear un nuevo emprendedor
     Emprendedor guardarEmprendedor(Emprendedor emprendedor);
+
+    // Guardar emprendedor sin reencriptar la contraseña (para actualizar datos)
+    Emprendedor guardarEmprendedorSinReencriptar(Emprendedor emprendedor);
 
     // Actualizar solo el nombre y email de un administrador
     Emprendedor actualizarDatosAdministrador(Long id, String nombreCompleto, String email);
@@ -29,6 +35,5 @@ public interface IEmprendedorService {
 
     long contarAdministradores();
 
-    //Listar administradores
-    List<Emprendedor> listarAdministradores();
+  
 }

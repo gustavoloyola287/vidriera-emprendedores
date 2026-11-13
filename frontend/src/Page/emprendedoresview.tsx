@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Edit, Ban, Trash2, CheckCircle2, Plus, RefreshCw, AlertTriangle, XCircle } from 'lucide-react';
 import ModalNuevoEmprendedor from '../components/modalemprendedor';
 
+// ✅ Rutas separadas: lectura pública vs. administración
 const API_URL = 'http://localhost:8080/api/emprendedores';
+const API_URL_ADMIN = 'http://localhost:8080/api/admin/emprendedores';
 
 export interface Usuario {
     id: number;
@@ -39,8 +41,8 @@ export const UsuariosView: React.FC = () => {
 
     const [usuarioAEditar, setUsuarioAEditar] = useState<Usuario | null>(null);
     const [isCrearModalOpen, setIsCrearModalOpen] = useState<boolean>(false);
+    const [guardandoEdicion, setGuardandoEdicion] = useState<boolean>(false);
 
-    // ✅ Estado para el sistema de Toasts multiestado
     const [toastInfo, setToastInfo] = useState<{
         visible: boolean;
         mensaje: string;
@@ -58,14 +60,17 @@ export const UsuariosView: React.FC = () => {
         }, 4000);
     };
 
+    const getAuthHeaders = () => ({
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+    });
+
     const obtenerEmprendedores = async () => {
         setCargando(true);
         setErrorApi(null);
         try {
             const response = await fetch(API_URL, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
             
@@ -80,18 +85,16 @@ export const UsuariosView: React.FC = () => {
 
                 return {
                     id: emp.id,
-                    // ✅ CORREGIDO: Busca en todos los posibles nombres de campo que pueda enviar el backend
                     nombre: emp.nombreCompleto || emp.nombre_completo || emp.nombre || 'Sin nombre',
                     nombreEmprendimiento: emp.nombreEmprendimiento || emp.nombre_emprendimiento || '',
                     email: emp.email || 'Sin email',
                     telefono: emp.telefono || '',
                     rol: rolNormalizado,
-                    estado: emp.estado || 'ACTIVO'
+                    estado: (emp.estado || 'ACTIVO').toUpperCase()
                 };
             });
 
             setUsuarios(usuariosMapeados);
-            mostrarToast("Lista de emprendedores actualizada", "success");
         } catch (err: any) {
             console.error("Error al conectar con EmprendedorController:", err);
             setErrorApi("No se pudo conectar con el servidor backend.");
@@ -107,32 +110,29 @@ export const UsuariosView: React.FC = () => {
 
     useEffect(() => {
         const soloEmprendedores = usuarios.filter(u => u.rol === 'EMPRENDEDOR');
-
-        const activos = soloEmprendedores.filter(u => u.estado === 'ACTIVO').length;
-        const suspendidos = soloEmprendedores.filter(u => u.estado === 'SUSPENDIDO').length;
-        const rechazados = soloEmprendedores.filter(u => u.estado === 'RECHAZADO').length;
-
         setMetricas({
-            activos,
-            suspendidos,
+            activos: soloEmprendedores.filter(u => u.estado === 'ACTIVO').length,
+            suspendidos: soloEmprendedores.filter(u => u.estado === 'SUSPENDIDO').length,
+            rechazados: soloEmprendedores.filter(u => u.estado === 'RECHAZADO').length,
             admins: 0,
-            rechazados,
             total: soloEmprendedores.length
         });
     }, [usuarios]);
 
+    // ✅ FIX 1: Eliminar apuntando al endpoint de administración
     const handleEliminar = async (id: number) => {
         if (!confirm('¿Estás seguro de eliminar este emprendedor permanentemente?')) return;
         try {
-            const response = await fetch(`${API_URL}/${id}`, {
+            const response = await fetch(`${API_URL_ADMIN}/${id}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                headers: getAuthHeaders()
             });
-            if (response.ok || response.status === 204) {
+            if (response.ok) {
                 setUsuarios(prev => prev.filter(u => u.id !== id));
                 mostrarToast("Emprendedor eliminado correctamente", "success");
             } else {
-                mostrarToast("No se pudo eliminar el registro en el servidor.", "warning");
+                const data = await response.json().catch(() => null);
+                mostrarToast(data?.message || "No se pudo eliminar el registro en el servidor.", "warning");
             }
         } catch (error) {
             console.error('Error al eliminar:', error);
@@ -140,31 +140,70 @@ export const UsuariosView: React.FC = () => {
         }
     };
 
-    const handleToggleSuspender = async (id: number) => {
-        setUsuarios(prev => prev.map(u => {
-    if (u.id === id) {
-        const nuevoEstado = u.estado === 'SUSPENDIDO' ? 'ACTIVO' : 'SUSPENDIDO';
-        const mensajeAccion = nuevoEstado === 'SUSPENDIDO' ? 'Emprendedor suspendido' : 'Emprendedor activado';
-        
-        // Llamada al toast con estilo dinámico (ej: 'success' al activar, 'warning' o 'info' al suspender)
-        mostrarToast(mensajeAccion, nuevoEstado === 'SUSPENDIDO' ? 'warning' : 'success');
-        
-        return { ...u, estado: nuevoEstado };
-    }
-    return u; // Muy importante: retornar el usuario sin cambios si no coincide el ID
-}));
+    // ✅ FIX 2: Suspender/Activar ahora SÍ persiste en la base de datos
+    const handleToggleSuspender = async (usuario: Usuario) => {
+        const nuevoEstado = usuario.estado === 'SUSPENDIDO' ? 'ACTIVO' : 'SUSPENDIDO';
+        try {
+            const response = await fetch(
+                `${API_URL_ADMIN}/${usuario.id}/estado?nuevoEstado=${nuevoEstado}`,
+                {
+                    method: 'PUT',
+                    headers: getAuthHeaders()
+                }
+            );
+            if (response.ok) {
+                setUsuarios(prev => prev.map(u => 
+                    u.id === usuario.id ? { ...u, estado: nuevoEstado as Usuario['estado'] } : u
+                ));
+                mostrarToast(
+                    nuevoEstado === 'SUSPENDIDO' ? 'Emprendedor suspendido' : 'Emprendedor activado',
+                    nuevoEstado === 'SUSPENDIDO' ? 'warning' : 'success'
+                );
+            } else {
+                const data = await response.json().catch(() => null);
+                mostrarToast(data?.message || "No se pudo actualizar el estado.", "danger");
+            }
+        } catch (error) {
+            console.error('Error al cambiar estado:', error);
+            mostrarToast("Error de conexión al cambiar el estado.", "danger");
+        }
     };
 
     const handleAbrirEdicion = (usuario: Usuario) => {
         setUsuarioAEditar({ ...usuario });
     };
 
-    const handleGuardarEdicion = (e: React.FormEvent) => {
+    // ✅ FIX 3: Editar ahora hace una llamada real al backend
+    const handleGuardarEdicion = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!usuarioAEditar) return;
-        setUsuarios(prev => prev.map(u => u.id === usuarioAEditar.id ? usuarioAEditar : u));
-        setUsuarioAEditar(null);
-        mostrarToast("Cambios guardados con éxito", "success");
+        setGuardandoEdicion(true);
+        try {
+            const response = await fetch(`${API_URL_ADMIN}/${usuarioAEditar.id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    nombreCompleto: usuarioAEditar.nombre,
+                    email: usuarioAEditar.email,
+                    telefono: usuarioAEditar.telefono || ''
+                })
+            });
+            if (response.ok) {
+                setUsuarios(prev => prev.map(u => 
+                    u.id === usuarioAEditar.id ? usuarioAEditar : u
+                ));
+                setUsuarioAEditar(null);
+                mostrarToast("Cambios guardados con éxito", "success");
+            } else {
+                const data = await response.json().catch(() => null);
+                mostrarToast(data?.message || "No se pudo guardar la edición.", "danger");
+            }
+        } catch (error) {
+            console.error('Error al editar:', error);
+            mostrarToast("Error de conexión al guardar.", "danger");
+        } finally {
+            setGuardandoEdicion(false);
+        }
     };
 
     const usuariosFiltrados = useMemo(() => {
@@ -236,7 +275,6 @@ export const UsuariosView: React.FC = () => {
 
     return (
         <div className="container-fluid p-0 position-relative">
-            {/* ✅ TOAST EMERGENTE FLOTANTE MULTIESTADO */}
             <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1080 }}>
                 <div 
                     className={`toast align-items-center border-0 shadow-lg rounded-3 ${obtenerClaseToastBg(toastInfo.tipo)} ${toastInfo.visible ? 'show' : 'hide'}`} 
@@ -263,7 +301,7 @@ export const UsuariosView: React.FC = () => {
                 <h5 className="fw-bold m-0">Gestión de Emprendedores</h5>
                 <div className="d-flex gap-2">
                     <button className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" onClick={obtenerEmprendedores}>
-                        <RefreshCw size={14} className={cargando ? 'spin' : ''} /> Recargar
+                        <RefreshCw size={14} /> Recargar
                     </button>
                     <button className="btn btn-success d-flex align-items-center gap-1" onClick={() => setIsCrearModalOpen(true)}>
                         <Plus size={16} /> Nuevo Emprendedor
@@ -350,7 +388,6 @@ export const UsuariosView: React.FC = () => {
                                         <tr key={usuario.id}>
                                             <td className="fw-semibold">
                                                 {usuario.nombre}
-                                                {/* ✅ Muestra el nombre del emprendimiento debajo si existe */}
                                                 {usuario.nombreEmprendimiento && (
                                                     <div className="text-muted small fw-normal mt-1">
                                                         🏪 {usuario.nombreEmprendimiento}
@@ -363,7 +400,10 @@ export const UsuariosView: React.FC = () => {
                                             <td className="text-end">
                                                 <div className="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
                                                     <button className="btn btn-sm btn-outline-primary px-2" onClick={() => handleAbrirEdicion(usuario)}><Edit size={14} /> Editar</button>
-                                                    <button className={`btn btn-sm ${usuario.estado === 'SUSPENDIDO' ? 'btn-outline-success' : 'btn-outline-warning'} px-2`} onClick={() => handleToggleSuspender(usuario.id)}>
+                                                    <button 
+                                                        className={`btn btn-sm ${usuario.estado === 'SUSPENDIDO' ? 'btn-outline-success' : 'btn-outline-warning'} px-2`} 
+                                                        onClick={() => handleToggleSuspender(usuario)}
+                                                    >
                                                         {usuario.estado === 'SUSPENDIDO' ? <><CheckCircle2 size={14} /> Activar</> : <><Ban size={14} /> Suspender</>}
                                                     </button>
                                                     <button className="btn btn-sm btn-outline-danger px-2" onClick={() => handleEliminar(usuario.id)}><Trash2 size={14} /> Eliminar</button>
@@ -417,10 +457,16 @@ export const UsuariosView: React.FC = () => {
                                         <label className="form-label small fw-semibold">Email</label>
                                         <input type="email" className="form-control form-control-sm" value={usuarioAEditar.email} onChange={(e) => setUsuarioAEditar({ ...usuarioAEditar, email: e.target.value })} required />
                                     </div>
+                                    <div className="mb-3">
+                                        <label className="form-label small fw-semibold">Teléfono</label>
+                                        <input type="text" className="form-control form-control-sm" value={usuarioAEditar.telefono || ''} onChange={(e) => setUsuarioAEditar({ ...usuarioAEditar, telefono: e.target.value })} />
+                                    </div>
                                 </div>
                                 <div className="modal-footer py-2">
-                                    <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setUsuarioAEditar(null)}>Cancelar</button>
-                                    <button type="submit" className="btn btn-sm btn-primary">Guardar Cambios</button>
+                                    <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setUsuarioAEditar(null)} disabled={guardandoEdicion}>Cancelar</button>
+                                    <button type="submit" className="btn btn-sm btn-primary" disabled={guardandoEdicion}>
+                                        {guardandoEdicion ? 'Guardando...' : 'Guardar Cambios'}
+                                    </button>
                                 </div>
                             </form>
                         </div>
