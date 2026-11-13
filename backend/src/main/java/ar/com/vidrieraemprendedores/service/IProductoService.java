@@ -14,7 +14,7 @@ public interface IProductoService {
     List<Producto> listarPorEmprendedor(Long emprendedorId);
     Producto buscarPorId(Long id);
     Producto guardarProducto(Producto producto);
-    Producto guardarProductoConFoto(String nombre, String descripcion, Long idCategoria, Long emprendedorId, MultipartFile foto);
+    Producto guardarProductoConFoto(String nombre, String descripcion, Double precio, Long idCategoria, Long emprendedorId, MultipartFile foto);
     void eliminarProducto(Long id);
     
     long contarProductos();
@@ -30,5 +30,7 @@ public interface IProductoService {
     Producto crearProductoDesdeDTO(CrearProductoDTO dto);
 
     List<ProductoDTO> listarTodosLosProductos();
+
+    Producto actualizarProductoDesdeDTO(Long id, CrearProductoDTO dto);
 
 }

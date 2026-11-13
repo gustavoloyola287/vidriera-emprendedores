@@ -75,10 +75,12 @@ public class ProductoService implements IProductoService {
 
     @Override
     @Transactional
-    public Producto guardarProductoConFoto(String nombre, String descripcion, Long idCategoria, Long idEmprendedor, MultipartFile foto) {
+    public Producto guardarProductoConFoto(String nombre, String descripcion, Double precio,
+                                           Long idCategoria, Long idEmprendedor, MultipartFile foto) {
         Producto producto = new Producto();
         producto.setNombre(nombre);
         producto.setDescripcion(descripcion);
+        producto.setPrecio(precio);   // ✅ NUEVA LÍNEA — antes se perdía
 
         Categoria cat = categoriaRepository.findById(idCategoria)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada con el ID: " + idCategoria));
@@ -87,6 +89,7 @@ public class ProductoService implements IProductoService {
         Emprendedor emp = emprendedorRepository.findById(idEmprendedor)
                 .orElseThrow(() -> new RuntimeException("Emprendedor no encontrado con el ID: " + idEmprendedor));
         producto.setEmprendedor(emp);
+        // ⚠️ Sin setEstado(): el @PrePersist lo deja en "PENDIENTE" → entra a moderación ✔
 
         Producto guardado = productoRepository.save(producto);
 
@@ -94,17 +97,14 @@ public class ProductoService implements IProductoService {
             try {
                 FotoProducto fotoMongo = new FotoProducto();
                 fotoMongo.setProductoId(guardado.getId());
-                
-                String base64 = "data:" + foto.getContentType() + ";base64," + 
+                String base64 = "data:" + foto.getContentType() + ";base64," +
                                 Base64.getEncoder().encodeToString(foto.getBytes());
                 fotoMongo.setImagenBase64(base64);
-
                 fotoProductoRepository.save(fotoMongo);
             } catch (IOException e) {
                 throw new RuntimeException("Error al procesar el archivo de imagen", e);
             }
         }
-
         return guardado;
     }
 
@@ -229,6 +229,7 @@ public class ProductoService implements IProductoService {
         dto.setNombre(producto.getNombre());
         dto.setDescripcion(producto.getDescripcion());
         dto.setPrecio(producto.getPrecio());
+        dto.setEstado(producto.getEstado());
 
         if (producto.getEmprendedor() != null) {
             dto.setIdEmprendedor(producto.getEmprendedor().getId());
@@ -257,5 +258,25 @@ public class ProductoService implements IProductoService {
         }
 
         return dto;
+    }
+
+    @Override
+    @Transactional
+    public Producto actualizarProductoDesdeDTO(Long id, CrearProductoDTO dto) {
+        Producto producto = buscarPorId(id);
+        producto.setNombre(dto.getNombre());
+        producto.setDescripcion(dto.getDescripcion());
+        producto.setPrecio(dto.getPrecio());
+        if (dto.getImagenUrl() != null && !dto.getImagenUrl().isBlank()) {
+            producto.setUrlImagen(dto.getImagenUrl());
+        }
+        if (dto.getCategoriaId() != null) {
+            Categoria cat = categoriaRepository.findById(dto.getCategoriaId())
+                    .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+            producto.setCategoria(cat);
+        }
+        // Al editar, vuelve a moderación (regla de negocio):
+        producto.setEstado("PENDIENTE");
+        return productoRepository.save(producto);
     }
 }

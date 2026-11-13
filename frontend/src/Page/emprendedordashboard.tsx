@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-// Íconos de lucide-react (incluimos Bell)
-import { Home, Box, User, LogOut, MessagesSquare, Star, Store, Bell, CheckCircle, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { Home, Box, User, LogOut, MessagesSquare, Star, Store, Bell, CheckCircle } from 'lucide-react';
 
-// Importación de las vistas independientes
 import { InicioDash } from './iniciodash';
 import MisProductos from './misproductos';
 import { MiPerfil } from './miperfil';
@@ -10,22 +10,25 @@ import ChatInterno from '../components/ChatInterno';
 import OpinionesYCalificaciones from './opinionesycalificaciones';
 
 export const EmprendedorDashboard: React.FC = () => {
-    // Estado para controlar qué sección del menú lateral está activa
+    const navigate = useNavigate();
+    const { logout } = useAuth(); // ✅ traemos el logout real del contexto
+
     const [activeTab, setActiveTab] = useState<'inicio' | 'productos' | 'perfil' | 'mensajes' | 'opinionesycalificaciones'>('inicio');
-    
-    // Estado para controlar la visibilidad del desplegable de notificaciones
     const [mostrarNotificaciones, setMostrarNotificaciones] = useState<boolean>(false);
-    
-    // Notificaciones de ejemplo (mock)
+
     const [notificaciones, setNotificaciones] = useState([
         { id: 1, texto: "¡Tu perfil fue aprobado por el municipio!", leida: false, tipo: "success" },
         { id: 2, texto: "Nueva reseña de 5 estrellas de Lucía Gómez.", leida: false, tipo: "star" }
     ]);
 
-    const emprendedor = false;
+    // ✅ Nombre real del usuario logueado (lo guarda el Login en localStorage)
+    const nombreEmprendedor = localStorage.getItem('nombreEmprendedor') || 'Emprendedor';
+    const inicial = nombreEmprendedor.charAt(0).toUpperCase();
 
+    // ✅ FIX: logout real + limpieza + redirección
     const handleCerrarSesion = () => {
-        console.log('Cerrando sesión...');
+        logout();
+        navigate('/login');
     };
 
     const marcarComoLeidas = () => {
@@ -72,19 +75,17 @@ export const EmprendedorDashboard: React.FC = () => {
                         <span>Mis Productos</span>
                     </button>
 
-                    {emprendedor === false && (
-                        <button
-                            type="button"
-                            className={`btn w-100 d-flex align-items-center gap-2 py-2 px-3 border-0 fw-medium text-start ${
-                                activeTab === 'mensajes' ? 'btn-primary text-white shadow-sm' : 'btn-light bg-transparent text-dark'
-                            }`}
-                            style={{ borderRadius: '8px' }}
-                            onClick={() => setActiveTab('mensajes')}
-                        >
-                            <MessagesSquare size={18} />
-                            <span>Chat</span>
-                        </button>
-                    )}
+                    <button
+                        type="button"
+                        className={`btn w-100 d-flex align-items-center gap-2 py-2 px-3 border-0 fw-medium text-start ${
+                            activeTab === 'mensajes' ? 'btn-primary text-white shadow-sm' : 'btn-light bg-transparent text-dark'
+                        }`}
+                        style={{ borderRadius: '8px' }}
+                        onClick={() => setActiveTab('mensajes')}
+                    >
+                        <MessagesSquare size={18} />
+                        <span>Chat</span>
+                    </button>
 
                     <button
                         type="button"
@@ -125,12 +126,10 @@ export const EmprendedorDashboard: React.FC = () => {
 
             {/* CONTENEDOR PRINCIPAL */}
             <div className="flex-grow-1 d-flex flex-column">
-                {/* NAVBAR SUPERIOR */}
                 <header className="bg-white border-bottom px-4 py-3 shadow-sm d-flex justify-content-between align-items-center">
                     <h4 className="fw-bold m-0 text-dark">Mi Emprendimiento</h4>
                     
                     <div className="d-flex align-items-center gap-3">
-                        {/* 🔔 CAMANA DE NOTIFICACIONES */}
                         <div className="position-relative">
                             <button
                                 type="button"
@@ -149,7 +148,6 @@ export const EmprendedorDashboard: React.FC = () => {
                                 )}
                             </button>
 
-                            {/* Desplegable de Notificaciones */}
                             {mostrarNotificaciones && (
                                 <div 
                                     className="position-absolute end-0 mt-2 bg-white border shadow-lg rounded-4 p-3" 
@@ -179,20 +177,19 @@ export const EmprendedorDashboard: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Perfil del Usuario */}
+                        {/* ✅ Perfil con nombre real */}
                         <div className="d-flex align-items-center gap-2 border-start ps-3">
                             <div 
                                 className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold shadow-sm"
                                 style={{ width: '36px', height: '36px', fontSize: '14px' }}
                             >
-                                E
+                                {inicial}
                             </div>
-                            <span className="fw-semibold text-secondary small d-none d-md-inline">Emprendedor</span>
+                            <span className="fw-semibold text-secondary small d-none d-md-inline">{nombreEmprendedor}</span>
                         </div>
                     </div>
                 </header>
 
-                {/* ÁREA DE CONTENIDO */}
                 <main className="flex-grow-1 p-4 overflow-auto">
                     {activeTab === 'inicio' && <InicioDash />}
                     {activeTab === 'opinionesycalificaciones' && <OpinionesYCalificaciones />}

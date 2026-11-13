@@ -1,69 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, Edit, Trash2, Image as ImageIcon, Loader2, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 
+// ✅ Interfaz alineada al ProductoDTO del backend
 export interface Producto {
-    id: string | number;
+    id: number;
     nombre: string;
-    categoriaId?: number;
-    nombreCategoria?: string;
-    precio?: number; // Puede ser undefined en datos viejos, pero el formulario lo exigirá
     descripcion: string;
-    imagenUrl?: string;
-    estado: 'Activo' | 'Inactivo';
+    precio?: number;
+    estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+    idCategoria?: number;
+    nombreCategoria?: string;
+    nombreEmprendedor?: string;
+    fotoPrincipal?: { imagenBase64?: string; rutaFoto?: string };
 }
 
 const API_BASE_URL = 'http://localhost:8080/api/productos';
 
 export const MisProductos: React.FC = () => {
-    // Estados principales
     const [productos, setProductos] = useState<Producto[]>([]);
     const [categorias, setCategorias] = useState<any[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [errorApi, setErrorApi] = useState<string | null>(null);
 
-    // Estados de modales
     const [showModal, setShowModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
 
-    // Estados de selección
     const [productoEditar, setProductoEditar] = useState<Producto | null>(null);
     const [productoVer, setProductoVer] = useState<Producto | null>(null);
-    const [productoEliminarId, setProductoEliminarId] = useState<string | number | null>(null);
+    const [productoEliminarId, setProductoEliminarId] = useState<number | null>(null);
 
-    // Estados del Formulario (✅ Precio siempre obligatorio)
     const [nombre, setNombre] = useState('');
     const [categoriaId, setCategoriaId] = useState<number | ''>('');
-    const [precio, setPrecio] = useState<string>(''); // Usamos string para el input, luego lo convertimos a number
+    const [precio, setPrecio] = useState<string>('');
     const [descripcion, setDescripcion] = useState('');
-    const [imagenUrl, setImagenUrl] = useState('');
+    const [imagenUrl, setImagenUrl] = useState('');   // base64 de la previsualización
     const [errorImagen, setErrorImagen] = useState('');
 
-    // Estado para el sistema de Toasts
     const [toastInfo, setToastInfo] = useState<{
-        visible: boolean;
-        mensaje: string;
-        tipo: 'success' | 'warning' | 'danger';
-    }>({
-        visible: false,
-        mensaje: '',
-        tipo: 'success'
-    });
+        visible: boolean; mensaje: string; tipo: 'success' | 'warning' | 'danger';
+    }>({ visible: false, mensaje: '', tipo: 'success' });
 
     const mostrarToast = (mensaje: string, tipo: 'success' | 'warning' | 'danger' = 'success') => {
         setToastInfo({ visible: true, mensaje, tipo });
-        setTimeout(() => {
-            setToastInfo(prev => ({ ...prev, visible: false }));
-        }, 4000);
+        setTimeout(() => setToastInfo(prev => ({ ...prev, visible: false })), 4000);
     };
 
     const getToken = () => localStorage.getItem('token');
     const getEmprendedorId = () => localStorage.getItem('emprendedorId');
 
-    // 1. Obtener productos y categorías al montar
+    // ✅ Helper: lee la imagen desde fotoPrincipal (Mongo), no desde urlImagen
+    const obtenerSrcImagen = (p: Producto): string | null => {
+        const foto = p.fotoPrincipal;
+        if (!foto) return null;
+        if (foto.imagenBase64 && foto.imagenBase64.trim() !== '') {
+            return foto.imagenBase64.startsWith('data:') || foto.imagenBase64.startsWith('http')
+                ? foto.imagenBase64
+                : `data:image/jpeg;base64,${foto.imagenBase64}`;
+        }
+        if (foto.rutaFoto && foto.rutaFoto.trim() !== '') {
+            return foto.rutaFoto.startsWith('http') ? foto.rutaFoto : `http://localhost:8080/${foto.rutaFoto}`;
+        }
+        return null;
+    };
+
+    // ✅ Badge alineado a los estados reales de moderación
+    const renderBadgeEstado = (estado: string) => {
+        switch (estado) {
+            case 'APROBADO':  return <span className="badge bg-success px-2 py-1">Publicado</span>;
+            case 'PENDIENTE': return <span className="badge bg-warning text-dark px-2 py-1">En revisión</span>;
+            case 'RECHAZADO': return <span className="badge bg-danger px-2 py-1">Rechazado</span>;
+            default:          return <span className="badge bg-secondary px-2 py-1">{estado}</span>;
+        }
+    };
+
     useEffect(() => {
         fetchProductos();
-        
         fetch(`${API_BASE_URL}/categorias`)
             .then(res => res.json())
             .then(data => setCategorias(data))
@@ -99,7 +111,6 @@ export const MisProductos: React.FC = () => {
         }
     };
 
-    // 2. Guardar / Editar Producto (POST / PUT)
     const handleGuardar = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -121,8 +132,7 @@ export const MisProductos: React.FC = () => {
             return;
         }
 
-        // ✅ Validar que el precio sea obligatorio y válido
-        if (precio === '' || precio === null || Number(precio) < 0) {
+        if (precio === '' || Number(precio) < 0) {
             mostrarToast('El precio es obligatorio y debe ser mayor o igual a 0', 'warning');
             setLoading(false);
             return;
@@ -131,76 +141,69 @@ export const MisProductos: React.FC = () => {
         try {
             let response;
 
-            // ✅ El precio SIEMPRE se envía como número
-            const productoData = {
-                nombre: nombre.trim(),
-                descripcion: descripcion.trim(),
-                precio: Number(precio), 
-                imagenUrl: imagenUrl,
-                categoriaId: Number(categoriaId),
-                emprendedorId: Number(emprendedorId)
-            };
-
             if (productoEditar) {
+                // ✏️ EDICIÓN: PUT JSON (ahora el endpoint existe en el backend)
                 response = await fetch(`${API_BASE_URL}/${productoEditar.id}`, {
                     method: 'PUT',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify(productoData),
+                    body: JSON.stringify({
+                        nombre: nombre.trim(),
+                        descripcion: descripcion.trim(),
+                        precio: Number(precio),
+                        categoriaId: Number(categoriaId),
+                        emprendedorId: Number(emprendedorId),
+                        imagenUrl: ''
+                    }),
+                });
+            } else if (imagenUrl && imagenUrl.trim() !== '') {
+                // 📸 CREACIÓN CON IMAGEN → multipart a /con-foto (ahora sí envía precio al backend corregido)
+                const formData = new FormData();
+                formData.append('nombre', nombre.trim());
+                formData.append('descripcion', descripcion.trim());
+                formData.append('precio', String(Number(precio)));
+                formData.append('idCategoria', String(categoriaId));
+                formData.append('idEmprendedor', String(emprendedorId));
+
+                const base64Response = await fetch(imagenUrl);
+                const blob = await base64Response.blob();
+                const file = new File([blob], 'producto.jpg', { type: blob.type });
+                formData.append('foto', file);
+
+                response = await fetch(`${API_BASE_URL}/con-foto`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData,
                 });
             } else {
-                if (imagenUrl && imagenUrl.trim() !== '') {
-                    // 📸 CON IMAGEN: Usamos FormData → MongoDB
-                    const formData = new FormData();
-                    formData.append('nombre', productoData.nombre);
-                    formData.append('descripcion', productoData.descripcion);
-                    formData.append('precio', String(productoData.precio)); // ✅ Precio siempre incluido
-                    formData.append('idCategoria', String(productoData.categoriaId));
-                    formData.append('idEmprendedor', String(productoData.emprendedorId));
-
-                    const base64Response = await fetch(imagenUrl);
-                    const blob = await base64Response.blob();
-                    const file = new File([blob], 'producto.jpg', { type: blob.type });
-                    formData.append('foto', file);
-
-                    console.log('📸 Enviando producto CON imagen a MongoDB...');
-
-                    response = await fetch(`${API_BASE_URL}/con-foto`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: formData,
-                    });
-                } else {
-                    // 📝 SIN IMAGEN: JSON normal
-                    console.log('📝 Enviando producto SIN imagen...');
-
-                    response = await fetch(API_BASE_URL, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(productoData),
-                    });
-                }
+                // 📝 CREACIÓN SIN IMAGEN → JSON
+                response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        nombre: nombre.trim(),
+                        descripcion: descripcion.trim(),
+                        precio: Number(precio),
+                        categoriaId: Number(categoriaId),
+                        emprendedorId: Number(emprendedorId),
+                        imagenUrl: ''
+                    }),
+                });
             }
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                console.error('Respuesta de error:', errorData);
                 throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
             }
 
             await fetchProductos();
             setShowModal(false);
-            mostrarToast(
-                productoEditar ? '¡Producto actualizado!' : '¡Producto publicado con éxito!', 
-                'success'
-            );
+            mostrarToast(productoEditar ? '¡Producto actualizado! Volverá a pasar por moderación.' : '¡Producto enviado a moderación!', 'success');
         } catch (err: any) {
             console.error('Error al guardar:', err);
             const msg = err.message || 'Error al guardar cambios.';
@@ -211,7 +214,6 @@ export const MisProductos: React.FC = () => {
         }
     };
 
-    // 3. Eliminar Producto
     const handleConfirmarEliminar = async () => {
         if (productoEliminarId === null) return;
         setLoading(true);
@@ -223,7 +225,6 @@ export const MisProductos: React.FC = () => {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-
             if (!response.ok) throw new Error('No se pudo eliminar el producto.');
 
             setProductoEliminarId(null);
@@ -239,22 +240,20 @@ export const MisProductos: React.FC = () => {
         }
     };
 
-    // --- MANEJO DE INTERFAZ ---
     const handleAbrirModal = (prod?: Producto) => {
         setErrorImagen('');
         if (prod) {
             setProductoEditar(prod);
             setNombre(prod.nombre);
-            setCategoriaId(prod.categoriaId || '');
-            // ✅ Cargar precio de forma segura
+            setCategoriaId(prod.idCategoria || '');          // ✅ idCategoria, no categoriaId
             setPrecio(prod.precio !== undefined && prod.precio !== null ? String(prod.precio) : '');
             setDescripcion(prod.descripcion);
-            setImagenUrl(prod.imagenUrl || '');
+            setImagenUrl('');                                // no se re-sube la imagen al editar
         } else {
             setProductoEditar(null);
             setNombre('');
             setCategoriaId(categorias.length > 0 ? categorias[0].id : '');
-            setPrecio(''); // Resetear precio
+            setPrecio('');
             setDescripcion('');
             setImagenUrl('');
         }
@@ -284,23 +283,11 @@ export const MisProductos: React.FC = () => {
         reader.readAsDataURL(file);
     };
 
-    const obtenerClaseToastBg = (tipo: 'success' | 'warning' | 'danger') => {
-        switch (tipo) {
-            case 'success': return 'bg-success text-white';
-            case 'warning': return 'bg-warning text-dark';
-            case 'danger': return 'bg-danger text-white';
-            default: return 'bg-success text-white';
-        }
-    };
+    const obtenerClaseToastBg = (tipo: 'success' | 'warning' | 'danger') =>
+        tipo === 'success' ? 'bg-success text-white' : tipo === 'warning' ? 'bg-warning text-dark' : 'bg-danger text-white';
 
-    const renderIconoToast = (tipo: 'success' | 'warning' | 'danger') => {
-        switch (tipo) {
-            case 'success': return <CheckCircle2 size={18} />;
-            case 'warning': return <AlertTriangle size={18} />;
-            case 'danger': return <XCircle size={18} />;
-            default: return <CheckCircle2 size={18} />;
-        }
-    };
+    const renderIconoToast = (tipo: 'success' | 'warning' | 'danger') =>
+        tipo === 'success' ? <CheckCircle2 size={18} /> : tipo === 'warning' ? <AlertTriangle size={18} /> : <XCircle size={18} />;
 
     return (
         <div className="container py-4 position-relative">
@@ -347,31 +334,33 @@ export const MisProductos: React.FC = () => {
                         ) : productos.length === 0 ? (
                             <tr><td colSpan={6} className="text-center text-muted py-4">No tenés productos publicados. ¡Comenzá a cargar el primero!</td></tr>
                         ) : (
-                            productos.map((prod) => (
-                                <tr key={prod.id}>
-                                    <td>
-                                        {prod.imagenUrl ? (
-                                            <img src={prod.imagenUrl} alt={prod.nombre} className="rounded object-fit-cover" style={{ width: '48px', height: '48px' }} />
-                                        ) : (
-                                            <div className="rounded border d-flex align-items-center justify-content-center bg-light text-muted" style={{ width: '48px', height: '48px' }}><ImageIcon size={20} /></div>
-                                        )}
-                                    </td>
-                                    <td className="fw-semibold">{prod.nombre}</td>
-                                    <td className="text-secondary">{prod.nombreCategoria || 'Sin categoría'}</td>
-                                    {/* ✅ Muestra el precio o un fallback seguro por si hay datos viejos */}
-                                    <td className="fw-semibold">
-                                        {prod.precio !== null && prod.precio !== undefined ? `$${Number(prod.precio).toLocaleString('es-AR')}` : 'Consultar'}
-                                    </td>
-                                    <td><span className={`badge px-2 py-1 ${prod.estado === 'Activo' ? 'bg-success' : 'bg-secondary'}`}>{prod.estado}</span></td>
-                                    <td className="text-end">
-                                        <div className="d-inline-flex gap-2">
-                                            <button className="btn btn-outline-info btn-sm p-1 rounded" onClick={() => { setProductoVer(prod); setShowViewModal(true); }} title="Ver"><Eye size={16} /></button>
-                                            <button className="btn btn-outline-primary btn-sm p-1 rounded" onClick={() => handleAbrirModal(prod)} title="Editar"><Edit size={16} /></button>
-                                            <button className="btn btn-outline-danger btn-sm p-1 rounded" onClick={() => { setProductoEliminarId(prod.id); setShowDeleteModal(true); }} title="Eliminar"><Trash2 size={16} /></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
+                            productos.map((prod) => {
+                                const srcImg = obtenerSrcImagen(prod);
+                                return (
+                                    <tr key={prod.id}>
+                                        <td>
+                                            {srcImg ? (
+                                                <img src={srcImg} alt={prod.nombre} className="rounded object-fit-cover" style={{ width: '48px', height: '48px' }} />
+                                            ) : (
+                                                <div className="rounded border d-flex align-items-center justify-content-center bg-light text-muted" style={{ width: '48px', height: '48px' }}><ImageIcon size={20} /></div>
+                                            )}
+                                        </td>
+                                        <td className="fw-semibold">{prod.nombre}</td>
+                                        <td className="text-secondary">{prod.nombreCategoria || 'Sin categoría'}</td>
+                                        <td className="fw-semibold">
+                                            {prod.precio !== null && prod.precio !== undefined ? `$${Number(prod.precio).toLocaleString('es-AR')}` : 'Consultar'}
+                                        </td>
+                                        <td>{renderBadgeEstado(prod.estado)}</td>
+                                        <td className="text-end">
+                                            <div className="d-inline-flex gap-2">
+                                                <button className="btn btn-outline-info btn-sm p-1 rounded" onClick={() => { setProductoVer(prod); setShowViewModal(true); }} title="Ver"><Eye size={16} /></button>
+                                                <button className="btn btn-outline-primary btn-sm p-1 rounded" onClick={() => handleAbrirModal(prod)} title="Editar"><Edit size={16} /></button>
+                                                <button className="btn btn-outline-danger btn-sm p-1 rounded" onClick={() => { setProductoEliminarId(prod.id); setShowDeleteModal(true); }} title="Eliminar"><Trash2 size={16} /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
@@ -389,6 +378,11 @@ export const MisProductos: React.FC = () => {
 
                             <form onSubmit={handleGuardar}>
                                 <div className="modal-body p-4">
+                                    {productoEditar && (
+                                        <div className="alert alert-warning py-2 small mb-3">
+                                            Al guardar, el producto volverá a estado <strong>En revisión</strong> hasta que un administrador lo apruebe.
+                                        </div>
+                                    )}
                                     <div className="row g-3">
                                         <div className="col-12 col-md-6">
                                             <label className="form-label fw-semibold">Nombre del Producto *</label>
@@ -405,19 +399,9 @@ export const MisProductos: React.FC = () => {
                                             </select>
                                         </div>
 
-                                        {/* ✅ PRECIO SIEMPRE VISIBLE Y OBLIGATORIO */}
                                         <div className="col-12 col-md-6">
                                             <label className="form-label fw-semibold">Precio ($) *</label>
-                                            <input 
-                                                type="number" 
-                                                className="form-control" 
-                                                min={0} 
-                                                step="0.01" 
-                                                value={precio} 
-                                                onChange={(e) => setPrecio(e.target.value)} 
-                                                placeholder="0.00" 
-                                                required 
-                                            />
+                                            <input type="number" className="form-control" min={0} step="0.01" value={precio} onChange={(e) => setPrecio(e.target.value)} placeholder="0.00" required />
                                         </div>
 
                                         <div className="col-12">
@@ -427,7 +411,7 @@ export const MisProductos: React.FC = () => {
                                         </div>
 
                                         <div className="col-12 col-md-7">
-                                            <label className="form-label fw-semibold">Imagen del Producto</label>
+                                            <label className="form-label fw-semibold">Imagen del Producto {productoEditar ? '(opcional, se mantiene la actual)' : ''}</label>
                                             <input type="file" className="form-control" accept="image/png, image/jpeg, image/webp" onChange={handleImagenChange} />
                                             {errorImagen && <small className="text-danger d-block mt-1">{errorImagen}</small>}
                                         </div>
@@ -436,6 +420,10 @@ export const MisProductos: React.FC = () => {
                                             <label className="form-label fw-semibold mb-2">Previsualización</label>
                                             {imagenUrl ? (
                                                 <img src={imagenUrl} alt="Vista previa" className="rounded border object-fit-cover shadow-sm" style={{ width: '100px', height: '100px' }} />
+                                            ) : productoEditar ? (
+                                                <div className="border rounded d-flex flex-column align-items-center justify-content-center text-muted" style={{ width: '100px', height: '100px', backgroundColor: '#f8f9fa' }}>
+                                                    <ImageIcon size={24} /><span style={{ fontSize: '0.7rem' }}>Sin cambio</span>
+                                                </div>
                                             ) : (
                                                 <div className="border rounded d-flex flex-column align-items-center justify-content-center text-muted" style={{ width: '100px', height: '100px', backgroundColor: '#f8f9fa' }}>
                                                     <ImageIcon size={24} /><span style={{ fontSize: '0.7rem' }}>Sin imagen</span>
@@ -486,17 +474,20 @@ export const MisProductos: React.FC = () => {
                                 <button type="button" className="btn-close" onClick={() => setShowViewModal(false)}></button>
                             </div>
                             <div className="modal-body text-center">
-                                {productoVer.imagenUrl ? (
-                                    <img src={productoVer.imagenUrl} alt={productoVer.nombre} className="img-fluid rounded mb-3 object-fit-cover" style={{ maxHeight: '250px' }} />
+                                {obtenerSrcImagen(productoVer) ? (
+                                    <img src={obtenerSrcImagen(productoVer) || ''} alt={productoVer.nombre} className="img-fluid rounded mb-3 object-fit-cover" style={{ maxHeight: '250px' }} />
                                 ) : (
                                     <div className="border rounded d-flex flex-column align-items-center justify-content-center text-muted mx-auto mb-3" style={{ width: '120px', height: '120px', backgroundColor: '#f8f9fa' }}>
                                         <ImageIcon size={32} />
                                     </div>
                                 )}
                                 <p className="text-muted small mb-2">{productoVer.descripcion}</p>
+                                <p className="fw-bold text-primary fs-5 mb-2">
+                                    {productoVer.precio !== null && productoVer.precio !== undefined ? `$${Number(productoVer.precio).toLocaleString('es-AR')}` : 'Consultar'}
+                                </p>
                                 <div className="d-flex justify-content-center gap-2">
                                     <span className="badge bg-light text-dark border">{productoVer.nombreCategoria || 'Sin categoría'}</span>
-                                    <span className={`badge ${productoVer.estado === 'Activo' ? 'bg-success' : 'bg-secondary'}`}>{productoVer.estado}</span>
+                                    {renderBadgeEstado(productoVer.estado)}
                                 </div>
                             </div>
                             <div className="modal-footer">

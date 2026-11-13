@@ -59,15 +59,18 @@ public class ProductoController {
     public ResponseEntity<?> crearConFoto(
             @RequestParam("nombre") String nombre,
             @RequestParam("descripcion") String descripcion,
+            @RequestParam(value = "precio", required = false) Double precio,
             @RequestParam("idCategoria") Long idCategoria,
             @RequestParam("idEmprendedor") Long idEmprendedor,
             @RequestParam(value = "foto", required = false) MultipartFile foto) {
 
         try {
-            Producto nuevoProducto = productoService.guardarProductoConFoto(nombre, descripcion, idCategoria, idEmprendedor, foto);
+            Producto nuevoProducto = productoService.guardarProductoConFoto(
+                nombre, descripcion, precio, idCategoria, idEmprendedor, foto);
             return new ResponseEntity<>(nuevoProducto, HttpStatus.CREATED);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al guardar el producto con foto: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al guardar el producto con foto: " + e.getMessage());
         }
     }
 
@@ -84,8 +87,19 @@ public class ProductoController {
     }
 
     @GetMapping("/emprendedor/{emprendedorId}")
-    public ResponseEntity<List<Producto>> listarPorEmprendedor(@PathVariable Long emprendedorId) {
-        List<Producto> productos = productoService.listarPorEmprendedor(emprendedorId);
+    public ResponseEntity<List<ProductoDTO>> listarPorEmprendedor(@PathVariable Long emprendedorId) {
+        List<ProductoDTO> productos = productoService.obtenerPorEmprendedor(emprendedorId);
         return ResponseEntity.ok(productos);
     }
+
+        @PutMapping("/{id}")
+    public ResponseEntity<?> actualizar(@PathVariable Long id, @RequestBody @Valid CrearProductoDTO dto) {
+        try {
+            Producto actualizado = productoService.actualizarProductoDesdeDTO(id, dto);
+            return ResponseEntity.ok(actualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
+    }
+
 }

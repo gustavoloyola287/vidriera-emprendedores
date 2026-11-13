@@ -32,4 +32,5 @@ public class ProductoDTO {
     private String nombreCategoria; // Nombre de la categoría a la que pertenece el producto
     private FotoProducto fotoPrincipal; // La foto principal del producto
     private List<FotoProducto> fotos; // Lista de fotos del producto asociadas de MongoDB
+    private String estado; // Estado del producto (DISPONIBLE, NO DISPONIBLE, PENDIENTE)    
 }
