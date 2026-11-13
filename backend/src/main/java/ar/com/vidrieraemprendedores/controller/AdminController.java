@@ -166,12 +166,6 @@ public class AdminController {
         }
     }
 
-    // 12. Moderación reciente (placeholder)
-    @GetMapping("/moderacion/reciente")
-    public ResponseEntity<List<?>> getModeracionReciente() {
-        return ResponseEntity.ok(Collections.emptyList());
-    }
-
     // 13. Notificaciones (placeholder)
     @GetMapping("/notificaciones")
     public ResponseEntity<List<?>> getNotificaciones() {

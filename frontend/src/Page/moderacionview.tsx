@@ -1,175 +1,143 @@
-import React, { useState } from 'react';
-import { 
-    ShieldCheck, 
-    AlertTriangle, 
-    Check, 
-    X, 
-    Eye, 
-    MessageSquare, 
-    UserX, 
-    Package, 
-    Search,
-    CheckCircle2,
-    XCircle,
-    Clock
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+    ShieldCheck, AlertTriangle, Check, X, Eye, MessageSquare,
+    UserX, Package, Search, CheckCircle2, XCircle, Clock, Loader2
 } from 'lucide-react';
+import api from '../services/api';
 
+// id ahora es string (ObjectId de Mongo)
 export interface ModeracionItem {
-    id: number;
+    id: string;
     reportadoPor: string;
     usuarioAfectado: string;
-    tipo: 'contenido' | 'comentario' | 'usuario';
+    tipo: 'CONTENIDO' | 'COMENTARIO' | 'USUARIO';
     motivo: string;
     detalle: string;
     fecha: string;
-    estado: 'Pendiente' | 'Aprobado' | 'Rechazado';
+    estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO'; // ✅ siempre mayúsculas
 }
 
+// ✅ Solo para MOSTRAR en la UI. El valor interno nunca cambia.
+const etiquetaEstado = (estado: ModeracionItem['estado']): string =>
+    estado === 'PENDIENTE' ? 'Pendiente'
+    : estado === 'APROBADO' ? 'Aprobado'
+    : 'Rechazado';
+
+const formatearFecha = (f: any): string => {
+    if (!f) return '';
+    if (typeof f === 'string') return f.replace('T', ' ').slice(0, 16);
+    return new Date(f).toLocaleString('es-AR');
+};
+
 export const ModeracionView: React.FC = () => {
-    // Datos simulados de moderación
-    const [items, setItems] = useState<ModeracionItem[]>([
-        {
-            id: 1,
-            reportadoPor: 'Sistema (Automático)',
-            usuarioAfectado: 'Santiago Rossi',
-            tipo: 'contenido',
-            motivo: 'Imágenes con marca de agua no permitida',
-            detalle: 'Publicación: "Vidrio templado 10mm". La foto contiene logos de terceros no autorizados.',
-            fecha: '2026-09-06 14:30',
-            estado: 'Pendiente'
-        },
-        {
-            id: 2,
-            reportadoPor: 'Laura Benítez',
-            usuarioAfectado: 'Carlos G.',
-            tipo: 'comentario',
-            motivo: 'Lenguaje Inapropiado / Ofensivo',
-            detalle: 'Comentario en publicación de artesanías: "Este producto es una estafa, no le compren".',
-            fecha: '2026-09-06 11:15',
-            estado: 'Pendiente'
-        },
-        {
-            id: 3,
-            reportadoPor: 'Marcos Admin',
-            usuarioAfectado: 'Sofía Martínez',
-            tipo: 'usuario',
-            motivo: 'Perfil sospechoso de Spam',
-            detalle: 'Intentos masivos de registro con datos repetidos y enlaces externos sospechosos.',
-            fecha: '2026-09-05 18:00',
-            estado: 'Rechazado'
-        },
-        {
-            id: 4,
-            reportadoPor: 'Usuario Anónimo',
-            usuarioAfectado: 'Muebles Carlos Paz',
-            tipo: 'contenido',
-            motivo: 'Precio incorrecto / Engañoso',
-            detalle: 'Mesa de madera publicada a \$1 en lugar del precio real.',
-            fecha: '2026-09-04 09:20',
-            estado: 'Aprobado'
-        }
-    ]);
+    const [items, setItems] = useState<ModeracionItem[]>([]);
+    const [stats, setStats] = useState({ pendientes: 0, aprobados: 0, rechazados: 0 });
+    const [cargando, setCargando] = useState(true);
 
     const [filtroTipo, setFiltroTipo] = useState<string>('Todos');
-    const [filtroEstado, setFiltroEstado] = useState<string>('Pendiente');
+    const [filtroEstado, setFiltroEstado] = useState<string>('PENDIENTE'); // ✅ mayúscula
     const [busqueda, setBusqueda] = useState<string>('');
     const [itemSeleccionado, setItemSeleccionado] = useState<ModeracionItem | null>(null);
+    const [actionId, setActionId] = useState<string | null>(null);
 
-    // ✅ Estado para el sistema de Toasts multiestado
-    const [toastInfo, setToastInfo] = useState<{
-        visible: boolean;
-        mensaje: string;
-        tipo: 'success' | 'warning' | 'danger';
-    }>({
-        visible: false,
-        mensaje: '',
-        tipo: 'success'
-    });
-
+    const [toastInfo, setToastInfo] = useState<{ visible: boolean; mensaje: string; tipo: 'success' | 'warning' | 'danger' }>({ visible: false, mensaje: '', tipo: 'success' });
     const mostrarToast = (mensaje: string, tipo: 'success' | 'warning' | 'danger' = 'success') => {
         setToastInfo({ visible: true, mensaje, tipo });
-        setTimeout(() => {
-            setToastInfo(prev => ({ ...prev, visible: false }));
-        }, 4000);
+        setTimeout(() => setToastInfo(p => ({ ...p, visible: false })), 4000);
     };
 
-    // Handlers para aprobar o rechazar
-    const handleAprobar = (id: number) => {
-        setItems(prev => prev.map(item => item.id === id ? { ...item, estado: 'Aprobado' } : item));
-        if (itemSeleccionado?.id === id) setItemSeleccionado(null);
-        mostrarToast('Reporte aprobado y desestimado correctamente', 'success');
+    const cargar = useCallback(async () => {
+        setCargando(true);
+        try {
+            const estadoParam = filtroEstado === 'Todos' ? '' : filtroEstado;
+            const tipoParam = filtroTipo === 'Todos' ? '' : filtroTipo.toUpperCase();
+            const [respItems, respStats] = await Promise.all([
+                api.get('/api/admin/moderacion', { params: { estado: estadoParam, tipo: tipoParam } }),
+                api.get('/api/admin/moderacion/stats'),
+            ]);
+            setItems(respItems.data.map((r: any) => ({
+                ...r,
+                fecha: formatearFecha(r.fecha),
+                estado: (r.estado || 'PENDIENTE').toUpperCase(), // ✅ llega en mayúsculas
+            })));
+            setStats(respStats.data);
+        } catch (e: any) {
+            console.error(e);
+            mostrarToast('No se pudo cargar la moderación', 'danger');
+        } finally {
+            setCargando(false);
+        }
+    }, [filtroEstado, filtroTipo]);
+
+    useEffect(() => { cargar(); }, [cargar]);
+
+    const handleAprobar = async (id: string) => {
+        try {
+            setActionId(id);
+            await api.put(`/api/admin/moderacion/${id}/aprobar`);
+            mostrarToast('Reporte aprobado y desestimado', 'success');
+            if (itemSeleccionado?.id === id) setItemSeleccionado(null);
+            await cargar();
+        } catch (e: any) {
+            mostrarToast(e?.response?.status === 403 ? 'No tenés permiso para moderar' : 'Error al aprobar', 'danger');
+        } finally {
+            setActionId(null);
+        }
     };
 
-    const handleRechazar = (id: number) => {
-        setItems(prev => prev.map(item => item.id === id ? { ...item, estado: 'Rechazado' } : item));
-        if (itemSeleccionado?.id === id) setItemSeleccionado(null);
-        mostrarToast('Reporte rechazado y sanción aplicada', 'warning');
+    const handleRechazar = async (id: string) => {
+        try {
+            setActionId(id);
+            await api.put(`/api/admin/moderacion/${id}/rechazar`);
+            mostrarToast('Reporte rechazado y sanción aplicada', 'warning');
+            if (itemSeleccionado?.id === id) setItemSeleccionado(null);
+            await cargar();
+        } catch (e: any) {
+            mostrarToast(e?.response?.status === 403 ? 'No tenés permiso para moderar' : 'Error al rechazar', 'danger');
+        } finally {
+            setActionId(null);
+        }
     };
 
-    // Filtrado de elementos
     const itemsFiltrados = items.filter(item => {
-        const coincideTipo = filtroTipo === 'Todos' || item.tipo === filtroTipo;
-        const coincideEstado = filtroEstado === 'Todos' || item.estado === filtroEstado;
-        const coincideBusqueda = item.usuarioAfectado.toLowerCase().includes(busqueda.toLowerCase()) || 
-                                item.motivo.toLowerCase().includes(busqueda.toLowerCase());
-        return coincideTipo && coincideEstado && coincideBusqueda;
+        const coincideBusqueda =
+            item.usuarioAfectado?.toLowerCase().includes(busqueda.toLowerCase()) ||
+            item.motivo?.toLowerCase().includes(busqueda.toLowerCase());
+        return coincideBusqueda;
     });
 
-    // Métricas
-    const pendientesCount = items.filter(i => i.estado === 'Pendiente').length;
-    const aprobadosCount = items.filter(i => i.estado === 'Aprobado').length;
-    const rechazadosCount = items.filter(i => i.estado === 'Rechazado').length;
+    const pendientesCount = stats.pendientes;
+    const aprobadosCount = stats.aprobados;
+    const rechazadosCount = stats.rechazados;
 
-    const obtenerClaseToastBg = (tipo: 'success' | 'warning' | 'danger') => {
-        switch (tipo) {
-            case 'success': return 'bg-success text-white';
-            case 'warning': return 'bg-warning text-dark';
-            case 'danger': return 'bg-danger text-white';
-            default: return 'bg-success text-white';
-        }
-    };
-
-    const renderIconoToast = (tipo: 'success' | 'warning' | 'danger') => {
-        switch (tipo) {
-            case 'success': return <CheckCircle2 size={18} />;
-            case 'warning': return <AlertTriangle size={18} />;
-            case 'danger': return <XCircle size={18} />;
-            default: return <CheckCircle2 size={18} />;
-        }
-    };
+    const obtenerClaseToastBg = (tipo: string) => tipo === 'success' ? 'bg-success text-white' : tipo === 'warning' ? 'bg-warning text-dark' : 'bg-danger text-white';
+    const renderIconoToast = (tipo: string) => tipo === 'success' ? <CheckCircle2 size={18} /> : tipo === 'warning' ? <AlertTriangle size={18} /> : <XCircle size={18} />;
 
     return (
         <div className="container-fluid p-0 position-relative">
-            {/* ✅ TOAST EMERGENTE FLOTANTE MULTIESTADO */}
+            {/* TOAST */}
             <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1080 }}>
-                <div 
-                    className={`toast align-items-center border-0 shadow-lg rounded-3 ${obtenerClaseToastBg(toastInfo.tipo)} ${toastInfo.visible ? 'show' : 'hide'}`} 
-                    role="alert" 
-                    aria-live="assertive" 
-                    aria-atomic="true"
-                >
+                <div className={`toast align-items-center border-0 shadow-lg rounded-3 ${obtenerClaseToastBg(toastInfo.tipo)} ${toastInfo.visible ? 'show' : 'hide'}`} role="alert" aria-live="assertive" aria-atomic="true">
                     <div className="d-flex">
                         <div className="toast-body d-flex align-items-center gap-2">
                             {renderIconoToast(toastInfo.tipo)}
                             <span className="fw-semibold">{toastInfo.mensaje}</span>
                         </div>
-                        <button 
-                            type="button" 
-                            className={`btn-close me-2 m-auto ${toastInfo.tipo === 'warning' ? '' : 'btn-close-white'}`} 
-                            onClick={() => setToastInfo(prev => ({ ...prev, visible: false }))}
-                            aria-label="Close"
-                        ></button>
+                        <button type="button" className={`btn-close me-2 m-auto ${toastInfo.tipo === 'warning' ? '' : 'btn-close-white'}`} onClick={() => setToastInfo(p => ({ ...p, visible: false }))} aria-label="Close"></button>
                     </div>
                 </div>
             </div>
-        
-            {/* Header y Métricas */}
+
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5 className="fw-bold m-0 d-flex align-items-center gap-2">
                     <ShieldCheck className="text-primary" /> Centro de Moderación y Reportes
                 </h5>
+                <button className="btn btn-outline-secondary btn-sm" onClick={cargar} disabled={cargando}>
+                    {cargando ? <Loader2 size={14} className="spinner-border spinner-border-sm" /> : 'Recargar'}
+                </button>
             </div>
 
+            {/* Métricas desde /stats (agregación $group) */}
             <div className="row g-3 mb-4">
                 <div className="col-md-4">
                     <div className="card border-0 shadow-sm p-3 border-start border-4 border-warning">
@@ -182,7 +150,6 @@ export const ModeracionView: React.FC = () => {
                         </div>
                     </div>
                 </div>
-
                 <div className="col-md-4">
                     <div className="card border-0 shadow-sm p-3 border-start border-4 border-success">
                         <div className="d-flex align-items-center justify-content-between">
@@ -194,7 +161,6 @@ export const ModeracionView: React.FC = () => {
                         </div>
                     </div>
                 </div>
-
                 <div className="col-md-4">
                     <div className="card border-0 shadow-sm p-3 border-start border-4 border-danger">
                         <div className="d-flex align-items-center justify-content-between">
@@ -208,55 +174,37 @@ export const ModeracionView: React.FC = () => {
                 </div>
             </div>
 
-            {/* Filtros y Buscador */}
+            {/* Filtros */}
             <div className="card border-0 shadow-sm mb-4">
                 <div className="card-body p-3">
                     <div className="row g-2">
                         <div className="col-md-5">
                             <div className="input-group input-group-sm">
-                                <span className="input-group-text bg-white border-end-0">
-                                    <Search size={16} className="text-muted" />
-                                </span>
-                                <input
-                                    type="text"
-                                    className="form-control form-control-sm border-start-0"
-                                    placeholder="Buscar por usuario o motivo..."
-                                    value={busqueda}
-                                    onChange={(e) => setBusqueda(e.target.value)}
-                                />
+                                <span className="input-group-text bg-white border-end-0"><Search size={16} className="text-muted" /></span>
+                                <input type="text" className="form-control form-control-sm border-start-0" placeholder="Buscar por usuario o motivo..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
                             </div>
                         </div>
-
                         <div className="col-md-3">
-                            <select
-                                className="form-select form-select-sm"
-                                value={filtroTipo}
-                                onChange={(e) => setFiltroTipo(e.target.value)}
-                            >
+                            <select className="form-select form-select-sm" value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
                                 <option value="Todos">Todos los tipos</option>
-                                <option value="contenido">Contenido / Productos</option>
-                                <option value="comentario">Comentarios</option>
-                                <option value="usuario">Perfiles de Usuario</option>
+                                <option value="CONTENIDO">Contenido / Productos</option>
+                                <option value="COMENTARIO">Comentarios</option>
+                                <option value="USUARIO">Perfiles de Usuario</option>
                             </select>
                         </div>
-
                         <div className="col-md-4">
-                            <select
-                                className="form-select form-select-sm"
-                                value={filtroEstado}
-                                onChange={(e) => setFiltroEstado(e.target.value)}
-                            >
+                            <select className="form-select form-select-sm" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
                                 <option value="Todos">Todos los Estados</option>
-                                <option value="Pendiente">Solo Pendientes</option>
-                                <option value="Aprobado">Aprobados</option>
-                                <option value="Rechazado">Rechazados</option>
+                                <option value="PENDIENTE">Solo Pendientes</option>
+                                <option value="APROBADO">Aprobados</option>
+                                <option value="RECHAZADO">Rechazados</option>
                             </select>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Tabla de Moderación */}
+            {/* Tabla */}
             <div className="card border-0 shadow-sm">
                 <div className="card-body p-0">
                     <div className="table-responsive">
@@ -273,62 +221,40 @@ export const ModeracionView: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {itemsFiltrados.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={7} className="text-center py-4 text-muted">
-                                            No hay casos de moderación en esta categoría.
-                                        </td>
-                                    </tr>
+                                {cargando ? (
+                                    <tr><td colSpan={7} className="text-center py-4 text-muted">Cargando moderación…</td></tr>
+                                ) : itemsFiltrados.length === 0 ? (
+                                    <tr><td colSpan={7} className="text-center py-4 text-muted">No hay casos de moderación en esta categoría.</td></tr>
                                 ) : (
                                     itemsFiltrados.map((item) => (
                                         <tr key={item.id}>
                                             <td className="ps-3">
                                                 <span className="d-flex align-items-center gap-1 fw-semibold style-micro text-uppercase">
-                                                    {item.tipo === 'contenido' && <Package size={14} className="text-primary" />}
-                                                    {item.tipo === 'comentario' && <MessageSquare size={14} className="text-warning" />}
-                                                    {item.tipo === 'usuario' && <UserX size={14} className="text-danger" />}
-                                                    {item.tipo}
+                                                    {item.tipo === 'CONTENIDO' && <Package size={14} className="text-primary" />}
+                                                    {item.tipo === 'COMENTARIO' && <MessageSquare size={14} className="text-warning" />}
+                                                    {item.tipo === 'USUARIO' && <UserX size={14} className="text-danger" />}
+                                                    {item.tipo.toLowerCase()}
                                                 </span>
                                             </td>
                                             <td className="fw-bold small">{item.usuarioAfectado}</td>
-                                            <td className="small text-truncate" style={{ maxWidth: '220px' }}>
-                                                {item.motivo}
-                                            </td>
+                                            <td className="small text-truncate" style={{ maxWidth: '220px' }}>{item.motivo}</td>
                                             <td className="small text-muted">{item.reportadoPor}</td>
                                             <td className="style-micro text-muted">{item.fecha}</td>
                                             <td>
+                                                {/* ✅ compara en MAYÚSCULAS, muestra con etiquetaEstado() */}
                                                 <span className={`badge ${
-                                                    item.estado === 'Pendiente' ? 'bg-warning text-dark' :
-                                                    item.estado === 'Aprobado' ? 'bg-success' : 'bg-danger'
+                                                    item.estado === 'PENDIENTE' ? 'bg-warning text-dark'
+                                                    : item.estado === 'APROBADO' ? 'bg-success'
+                                                    : 'bg-danger'
                                                 }`}>
-                                                    {item.estado}
+                                                    {etiquetaEstado(item.estado)}
                                                 </span>
                                             </td>
                                             <td className="text-end pe-3">
                                                 <div className="btn-group btn-group-sm" role="group">
-                                                    <button
-                                                        className="btn btn-outline-secondary"
-                                                        onClick={() => setItemSeleccionado(item)}
-                                                        title="Ver detalle del caso"
-                                                    >
-                                                        <Eye size={14} />
-                                                    </button>
-                                                    <button
-                                                        className="btn btn-outline-success"
-                                                        onClick={() => handleAprobar(item.id)}
-                                                        disabled={item.estado === 'Aprobado'}
-                                                        title="Aprobar (No requiere sanción)"
-                                                    >
-                                                        <Check size={14} />
-                                                    </button>
-                                                    <button
-                                                        className="btn btn-outline-danger"
-                                                        onClick={() => handleRechazar(item.id)}
-                                                        disabled={item.estado === 'Rechazado'}
-                                                        title="Rechazar / Aplicar Sanción"
-                                                    >
-                                                        <X size={14} />
-                                                    </button>
+                                                    <button className="btn btn-outline-secondary" onClick={() => setItemSeleccionado(item)} title="Ver detalle"><Eye size={14} /></button>
+                                                    <button className="btn btn-outline-success" onClick={() => handleAprobar(item.id)} disabled={item.estado === 'APROBADO' || actionId === item.id} title="Aprobar"><Check size={14} /></button>
+                                                    <button className="btn btn-outline-danger" onClick={() => handleRechazar(item.id)} disabled={item.estado === 'RECHAZADO' || actionId === item.id} title="Rechazar / Sancionar"><X size={14} /></button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -340,27 +266,22 @@ export const ModeracionView: React.FC = () => {
                 </div>
             </div>
 
-            {/* Modal de Detalle del Reporte */}
+            {/* Modal de detalle */}
             {itemSeleccionado && (
                 <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
                     <div className="modal-dialog modal-dialog-centered">
                         <div className="modal-content border-0 shadow">
                             <div className="modal-header bg-light">
                                 <h6 className="modal-title fw-bold d-flex align-items-center gap-2">
-                                    <AlertTriangle className="text-warning" size={18} /> Detalle del Incidente #{itemSeleccionado.id}
+                                    <AlertTriangle className="text-warning" size={18} /> Detalle del Incidente
                                 </h6>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={() => setItemSeleccionado(null)}
-                                ></button>
+                                <button type="button" className="btn-close" onClick={() => setItemSeleccionado(null)}></button>
                             </div>
                             <div className="modal-body">
                                 <div className="mb-3">
                                     <span className="text-muted style-micro text-uppercase d-block mb-1">Usuario / Publicación Afectada</span>
                                     <h6 className="fw-bold mb-0">{itemSeleccionado.usuarioAfectado}</h6>
                                 </div>
-
                                 <div className="row g-2 mb-3">
                                     <div className="col-6">
                                         <span className="text-muted style-micro text-uppercase d-block">Tipo</span>
@@ -371,49 +292,21 @@ export const ModeracionView: React.FC = () => {
                                         <span className="small fw-semibold">{itemSeleccionado.fecha}</span>
                                     </div>
                                 </div>
-
                                 <div className="mb-3">
                                     <span className="text-muted style-micro text-uppercase d-block mb-1">Motivo principal</span>
                                     <p className="fw-semibold small text-danger mb-0">{itemSeleccionado.motivo}</p>
                                 </div>
-
                                 <div className="mb-3">
                                     <span className="text-muted style-micro text-uppercase d-block mb-1">Detalle del reporte</span>
-                                    <div className="p-2 bg-light rounded border small">
-                                        {itemSeleccionado.detalle}
-                                    </div>
+                                    <div className="p-2 bg-light rounded border small">{itemSeleccionado.detalle}</div>
                                 </div>
-
-                                <div className="small text-muted">
-                                    Reportado por: <strong>{itemSeleccionado.reportadoPor}</strong>
-                                </div>
+                                <div className="small text-muted">Reportado por: <strong>{itemSeleccionado.reportadoPor}</strong></div>
                             </div>
-
                             <div className="modal-footer d-flex justify-content-between">
-                                <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-secondary"
-                                    onClick={() => setItemSeleccionado(null)}
-                                >
-                                    Cerrar
-                                </button>
+                                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setItemSeleccionado(null)}>Cerrar</button>
                                 <div className="d-flex gap-2">
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-danger"
-                                        onClick={() => handleRechazar(itemSeleccionado.id)}
-                                        disabled={itemSeleccionado.estado === 'Rechazado'}
-                                    >
-                                        <X size={14} /> Rechazar / Sancionar
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-success"
-                                        onClick={() => handleAprobar(itemSeleccionado.id)}
-                                        disabled={itemSeleccionado.estado === 'Aprobado'}
-                                    >
-                                        <Check size={14} /> Aprobar / Desestimar
-                                    </button>
+                                    <button type="button" className="btn btn-sm btn-danger" onClick={() => handleRechazar(itemSeleccionado.id)} disabled={itemSeleccionado.estado === 'RECHAZADO'}><X size={14} /> Rechazar / Sancionar</button>
+                                    <button type="button" className="btn btn-sm btn-success" onClick={() => handleAprobar(itemSeleccionado.id)} disabled={itemSeleccionado.estado === 'APROBADO'}><Check size={14} /> Aprobar / Desestimar</button>
                                 </div>
                             </div>
                         </div>
