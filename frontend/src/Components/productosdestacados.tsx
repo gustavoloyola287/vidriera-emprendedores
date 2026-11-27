@@ -21,35 +21,7 @@ export interface ProductoDTO {
 }
 
 // Datos MOCK de respaldo si la API falla
-const MOCK_DESTACADOS: ProductoDTO[] = [
-    {
-        id: 101,
-        nombre: 'AlfaJores Artesanales Carlos Paz',
-        descripcion: 'Caja x 12 unidades elaboradas con chocolate premium local.',
-        precio: 4500,
-        nombreEmprendedor: 'Delicias de las Sierras',
-        nombreCategoria: 'Gastronomía',
-        destacado: true
-    },
-    {
-        id: 102,
-        nombre: 'Buzo Tejido de Lana de Oveja',
-        descripcion: 'Prenda hecha a mano con técnicas tradicionales de tejido.',
-        precio: 18000,
-        nombreEmprendedor: 'Tejidos Punilla',
-        nombreCategoria: 'Indumentaria',
-        destacado: true
-    },
-    {
-        id: 103,
-        nombre: 'Mate Cincelado en Alpaca',
-        descripcion: 'Calabaza seleccionada con virola de alpaca trabajada.',
-        precio: 12500,
-        nombreEmprendedor: 'Artesanías El Reloj',
-        nombreCategoria: 'Artesanías',
-        destacado: true
-    }
-];
+const MOCK_DESTACADOS: ProductoDTO[] = [];
 
 export const ProductosDestacados: React.FC = () => {
     const [destacados, setDestacados] = useState<ProductoDTO[]>([]);
@@ -64,7 +36,7 @@ export const ProductosDestacados: React.FC = () => {
                 if (!res.ok) throw new Error('Respuesta HTTP no OK');
                 
                 const productosData: ProductoDTO[] = await res.json();
-                const listaProductos = productosData.length > 0 ? productosData : MOCK_DESTACADOS;
+                const listaProductos = productosData.length > 0 ? productosData : [];
 
                 // CONEXIÓN A FotoController: Peticiones en paralelo para las fotos de cada producto
                 const productosConFotos = await Promise.all(

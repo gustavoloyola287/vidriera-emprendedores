@@ -24,49 +24,7 @@ interface ChatInternoProps {
 }
 
 export const ChatInterno: React.FC<ChatInternoProps> = ({ esAdmin = true }) => {
-    const [mensajesInternos, setMensajesInternos] = useState<MensajeInterno[]>([
-        {
-            id: '1',
-            adminNombre: 'Soporte Plataforma (Admin)',
-            emprendedorNombre: 'Marcos Pérez',
-            asunto: 'Revisión de productos publicados',
-            categoria: 'Aprobación',
-            leido: false,
-            estado: 'pendiente',
-            mensajes: [
-                {
-                    id: 'm1',
-                    remitente: 'admin',
-                    texto: 'Hola Marcos, revisamos tu nuevo producto "Buzo Hoodie Custom". Ten en cuenta que la imagen tiene baja resolución. ¿Podrías actualizarla a 500x500 px?',
-                    fecha: '10/05/2026 14:30',
-                },
-            ],
-        },
-        {
-            id: '2',
-            adminNombre: 'Administración General',
-            emprendedorNombre: 'Laura Gómez',
-            asunto: 'Verificación de cuenta completada',
-            categoria: 'Notificación',
-            leido: true,
-            estado: 'respondido',
-            mensajes: [
-                {
-                    id: 'm2',
-                    remitente: 'admin',
-                    texto: '¡Bienvenido a la plataforma! Tu perfil fue aprobado correctamente y tu vidriera ya se encuentra activa.',
-                    fecha: '09/05/2026 11:15',
-                },
-                {
-                    id: 'm3',
-                    remitente: 'emprendedor',
-                    texto: '¡Muchas gracias! Ya empecé a cargar mis primeros productos.',
-                    fecha: '09/05/2026 11:45',
-                },
-            ],
-        },
-    ]);
-
+    const [mensajesInternos, setMensajesInternos] = useState<MensajeInterno[]>([]);
     const [conversacionSeleccionada, setConversacionSeleccionada] = useState<MensajeInterno | null>(null);
     const [respuestaTexto, setRespuestaTexto] = useState('');
 

@@ -16,10 +16,7 @@ export const EmprendedorDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'inicio' | 'productos' | 'perfil' | 'mensajes' | 'opinionesycalificaciones'>('inicio');
     const [mostrarNotificaciones, setMostrarNotificaciones] = useState<boolean>(false);
 
-    const [notificaciones, setNotificaciones] = useState([
-        { id: 1, texto: "¡Tu perfil fue aprobado por el municipio!", leida: false, tipo: "success" },
-        { id: 2, texto: "Nueva reseña de 5 estrellas de Lucía Gómez.", leida: false, tipo: "star" }
-    ]);
+    const [notificaciones, setNotificaciones] = useState<{ id: number; texto: string; leida: boolean; tipo: string }[]>([]);
 
     // ✅ Nombre real del usuario logueado (lo guarda el Login en localStorage)
     const nombreEmprendedor = localStorage.getItem('nombreEmprendedor') || 'Emprendedor';
@@ -195,7 +192,7 @@ export const EmprendedorDashboard: React.FC = () => {
                     {activeTab === 'opinionesycalificaciones' && <OpinionesYCalificaciones />}
                     {activeTab === 'productos' && <MisProductos />}
                     {activeTab === 'perfil' && <MiPerfil />}
-                    {activeTab === 'mensajes' && <ChatInterno />}
+                    {activeTab === 'mensajes' && <ChatInterno esAdmin={false} />}
                 </main>
             </div>
         </div>
