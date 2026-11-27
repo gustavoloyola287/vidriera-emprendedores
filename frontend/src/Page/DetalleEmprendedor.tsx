@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { resolverEmprendedorId } from "../utils/idHelper";
 import { productoService, type FotoProducto } from "../services/productoService";
 import { type Emprendedor } from "../types/Emprendedor";
 import type { Producto } from "../types/Producto";
@@ -42,13 +43,18 @@ export function DetalleEmprendedor() {
     };
 
     useEffect(() => {
-        if (!id) return;
+        const idEmprendedor = resolverEmprendedorId(id);
+        if (!idEmprendedor) {
+            setError("Identificador de emprendedor no válido");
+            setCargando(false);
+            return;
+        }
 
         const cargarDatos = async () => {
             setCargando(true);
             try {
                 // 1. Cargar Datos del Emprendedor
-                const resEmprendedor = await fetch(`http://localhost:8080/api/emprendedores/${id}`);
+                const resEmprendedor = await fetch(`http://localhost:8080/api/emprendedores/${idEmprendedor}`);
                 if (!resEmprendedor.ok) {
                     throw new Error("No se pudo obtener el emprendedor");
                 }
@@ -56,7 +62,7 @@ export function DetalleEmprendedor() {
                 setEmprendedor(datosEmprendedor);
 
                 // 2. Cargar Productos del Emprendedor
-                const listaProductos = await productoService.getByEmprendedor(Number(id));
+                const listaProductos = await productoService.getByEmprendedor(idEmprendedor);
 
                 // 3. Enriquecer productos con la primera foto de FotoController
                 const productosConFoto = await Promise.all(

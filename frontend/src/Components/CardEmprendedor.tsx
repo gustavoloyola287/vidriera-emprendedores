@@ -1,4 +1,5 @@
 import type { Emprendedor } from '../types/Emprendedor';
+import { resolverEmprendedorId } from '../utils/idHelper';
 
 interface CardEmprendedorProps {
     emprendedor: Emprendedor;
@@ -6,6 +7,12 @@ interface CardEmprendedorProps {
 }
 
 function CardEmprendedor(props: CardEmprendedorProps) {
+    const handleVerPerfilClick = () => {
+        const idDestino = resolverEmprendedorId(props.emprendedor);
+        if (!idDestino) return;
+        props.verPerfil(idDestino);
+    };
+    
     return (
         <div className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between">
             <div>
@@ -14,7 +21,7 @@ function CardEmprendedor(props: CardEmprendedorProps) {
                 <p className="text-gray-500 mt-2 text-sm">{props.emprendedor.descripcion}</p>
             </div>
             <button 
-                onClick={() => props.verPerfil(props.emprendedor.id)}
+                onClick={handleVerPerfilClick}
                 className="mt-4 bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition-colors"
             >
                 Ver Perfil
